@@ -38,6 +38,8 @@ public class AppPageNames
         public const string Dashboard = "TenantDashboard";
         public const string Settings = "Administration.Settings.Tenant";
         public const string SubscriptionManagement = "Administration.SubscriptionManagement.Tenant";
+        public const string TimeTracking = "TimeTracking";
+        public const string TimeTrackingReports = "TimeTracking.Reports";
     }
 }
 

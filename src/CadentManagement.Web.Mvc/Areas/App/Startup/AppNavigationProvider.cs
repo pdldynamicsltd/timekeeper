@@ -48,6 +48,26 @@ public class AppNavigationProvider : NavigationProvider
                     permissionDependency: new SimplePermissionDependency(AppPermissions.Pages_Tenant_Dashboard)
                 )
             ).AddItem(new MenuItemDefinition(
+                    AppPageNames.Tenant.TimeTracking,
+                    L("TimeTracking"),
+                    icon: "flaticon-time",
+                    permissionDependency: new SimplePermissionDependency(AppPermissions.Pages_TimeTracking)
+                ).AddItem(new MenuItemDefinition(
+                        AppPageNames.Tenant.TimeTracking,
+                        L("Projects"),
+                        url: "App/TimeTracking",
+                        icon: "flaticon-folder",
+                        permissionDependency: new SimplePermissionDependency(AppPermissions.Pages_TimeTracking)
+                    )
+                ).AddItem(new MenuItemDefinition(
+                        AppPageNames.Tenant.TimeTrackingReports,
+                        L("TimeTrackingReports"),
+                        url: "App/TimeTracking/Reports",
+                        icon: "flaticon-analytics",
+                        permissionDependency: new SimplePermissionDependency(AppPermissions.Pages_TimeTracking_Reports)
+                    )
+                )
+            ).AddItem(new MenuItemDefinition(
                     AppPageNames.Common.Administration,
                     L("Administration"),
                     icon: "flaticon-interface-8"

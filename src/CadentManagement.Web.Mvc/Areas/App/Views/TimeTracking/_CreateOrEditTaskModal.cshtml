@@ -1,0 +1,76 @@
+@using CadentManagement.Web.Areas.App.Models.Common.Modals
+@using CadentManagement.TimeTracking.Tasks.Dto
+@model GetTaskForEditOutput
+
+@await Html.PartialAsync("~/Areas/App/Views/Common/Modals/_ModalHeader.cshtml",
+    new ModalHeaderViewModel(Model.Task.Id.HasValue ? L("EditingTask") : L("CreatingNewTask")))
+
+<div class="modal-body">
+    <form name="TaskForm" role="form" novalidate class="form-validation">
+        @if (Model.Task.Id.HasValue)
+        {
+            <input type="hidden" id="TaskId" name="Id" value="@Model.Task.Id" />
+        }
+
+        <div class="mb-5">
+            <label class="form-label required">@L("TaskProject")</label>
+            <select id="TaskProjectId" name="ProjectId" class="form-select" required>
+                @foreach (var option in Model.ProjectOptions)
+                {
+                    <option value="@option.Value" selected="@(Model.Task.ProjectId.ToString() == option.Value)">@option.DisplayText</option>
+                }
+            </select>
+        </div>
+
+        <div class="mb-5">
+            <label class="form-label">@L("TaskParent")</label>
+            <select id="TaskParentTaskId" name="ParentTaskId" class="form-select">
+                <option value="">@L("NoParentTask")</option>
+                @foreach (var option in Model.ParentTaskOptions)
+                {
+                    <option value="@option.Value" selected="@(Model.Task.ParentTaskId?.ToString() == option.Value)">@option.DisplayText</option>
+                }
+            </select>
+        </div>
+
+        <div class="mb-5">
+            <label class="form-label required">@L("TaskName")</label>
+            <input type="text" id="TaskName" name="Name" class="form-control" value="@Model.Task.Name" maxlength="256" required />
+        </div>
+
+        <div class="mb-5">
+            <label class="form-label">@L("TaskDescription")</label>
+            <textarea id="TaskDescription" name="Description" class="form-control" rows="2" maxlength="2000">@Model.Task.Description</textarea>
+        </div>
+
+        <div class="row mb-5">
+            <div class="col-md-6">
+                <label class="form-label required">@L("TaskStatus")</label>
+                <select id="TaskStatus" name="Status" class="form-select">
+                    @foreach (var option in Model.StatusOptions)
+                    {
+                        <option value="@option.Value" selected="@(Model.Task.Status.ToString() == option.Value)">@option.DisplayText</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">@L("TaskBudgetHours")</label>
+                <input type="number" id="TaskBudgetHours" name="BudgetHours" class="form-control"
+                       value="@Model.Task.BudgetHours" min="0" step="0.5" />
+            </div>
+        </div>
+
+        <div class="mb-5">
+            <label class="form-label">@L("TaskAssignedTo")</label>
+            <select id="TaskAssignedToUserId" name="AssignedToUserId" class="form-select">
+                <option value="">@L("NoAssignee")</option>
+                @foreach (var option in Model.UserOptions)
+                {
+                    <option value="@option.Value" selected="@(Model.Task.AssignedToUserId?.ToString() == option.Value)">@option.DisplayText</option>
+                }
+            </select>
+        </div>
+    </form>
+</div>
+
+@await Html.PartialAsync("~/Areas/App/Views/Common/Modals/_ModalFooterWithSaveAndCancel.cshtml")
