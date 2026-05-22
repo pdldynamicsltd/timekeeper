@@ -1,0 +1,4 @@
+{
+  "path" : "pages\\admin\\{{parent_Namespace_Here}}\\{{Parent_Entity_Name_Plural_Here}}\\components\\CreateOrEdit{{Entity_Name_Here}}Modal.tsx",
+  "condition": "false"
+}

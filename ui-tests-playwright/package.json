@@ -1,0 +1,22 @@
+{
+  "name": "ui-tests-playwright",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.31.2"
+  },
+  "scripts": {
+    "test": "npx playwright test",
+    "test:angular": "npx playwright test tests/angular",
+    "test:react": "npx playwright test tests/react",
+    "test:mvc": "npx playwright test tests/mvc",
+    "test:snapshot": "npx playwright test --update-snapshots",
+    "test:snapshot:angular": "npx playwright test tests/angular --update-snapshots",
+    "test:snapshot:react": "npx playwright test tests/react --update-snapshots",
+    "test:snapshot:mvc": "npx playwright test tests/mvc --update-snapshots"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.3"
+  }
+}

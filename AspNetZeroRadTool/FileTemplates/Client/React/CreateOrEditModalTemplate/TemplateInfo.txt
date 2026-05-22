@@ -1,0 +1,4 @@
+{
+  "path" : "pages\\admin\\{{namespace_Relative_Here}}\\{{entity_Name_Plural_Here}}\\components\\CreateOrEdit{{Entity_Name_Here}}Modal.tsx",
+  "condition": ""
+}

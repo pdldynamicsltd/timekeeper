@@ -1,0 +1,39 @@
+import React from "react";
+import { Modal, Descriptions } from "antd";
+import {
+  Get{{Entity_Name_Here}}ForViewDto,
+} from "@api/generated/service-proxies";
+import L from "@/lib/L";{{DateTime_Import_Here}}{{File_Prop_Import_Here}}
+{{Get_Download_Url_Here}}
+interface View{{Entity_Name_Here}}ModalProps {
+  visible: boolean;
+  onClose: () => void;
+  data?: Get{{Entity_Name_Here}}ForViewDto;
+}
+
+const View{{Entity_Name_Here}}Modal: React.FC<View{{Entity_Name_Here}}ModalProps> = ({
+  visible,
+  onClose,
+  data,
+}) => {
+  if (!data) {
+    return null;
+  }
+
+  return (
+    <Modal
+      title={L("View{{Entity_Name_Here}}")}
+      open={visible}
+      onCancel={onClose}
+      footer={null}
+      width={700}
+    >
+      <Descriptions bordered column={1}>
+        {{Property_View_Items_Here}}
+        {{NP_View_Items_Here}}
+      </Descriptions>
+    </Modal>
+  );
+};
+
+export default View{{Entity_Name_Here}}Modal;

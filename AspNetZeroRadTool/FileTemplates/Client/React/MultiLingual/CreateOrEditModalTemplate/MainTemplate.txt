@@ -1,0 +1,186 @@
+import React, { useEffect, useState } from "react";
+import { Modal, Form, Tabs, App } from "antd";
+import { useServiceProxy } from "@/api/service-proxy-factory";
+import {
+  {{Entity_Name_Here}}Dto,
+  CreateOrEdit{{Entity_Name_Here}}Dto,
+  {{Entity_Name_Plural_Here}}ServiceProxy,
+  LanguageServiceProxy,
+  ApplicationLanguageListDto,
+  {{Entity_Name_Here}}TranslationDto,
+} from "@api/generated/service-proxies";
+import L from "@/lib/L";
+import { useLocalization } from "@/hooks/useLocalization";{{DateTime_Import_Here}}{{Lookup_Modal_Imports_Here}}
+
+interface CreateOrEdit{{Entity_Name_Here}}ModalProps {
+  visible: boolean;
+  onClose: () => void;
+  onSaved: () => void;
+  {{entity_Name_Here}}Id?: {{Primary_Key_Type_Here}};
+}
+
+const CreateOrEdit{{Entity_Name_Here}}Modal: React.FC<
+  CreateOrEdit{{Entity_Name_Here}}ModalProps
+> = ({ visible, onClose, onSaved, {{entity_Name_Here}}Id }) => {
+  const [form] = Form.useForm();
+  const { message } = App.useApp();
+  const {{entity_Name_Plural_Here}}Service = useServiceProxy({{Entity_Name_Plural_Here}}ServiceProxy, []);
+  const languageService = useServiceProxy(LanguageServiceProxy, []);
+  
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [languages, setLanguages] = useState<ApplicationLanguageListDto[]>([]);
+  const [defaultLanguage, setDefaultLanguage] = useState<string>("");
+  const [activeLanguageTab, setActiveLanguageTab] = useState<string>("");
+  const [translations, setTranslations] = useState<Map<string, {{Entity_Name_Here}}TranslationDto>>(new Map());
+  {{NP_Lookup_State_Here}}
+
+  const isEditMode = {{entity_Name_Here}}Id !== undefined;
+
+  useEffect(() => {
+    loadLanguages();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (visible) {
+      if (isEditMode) {
+        loadEntity();
+      } else {
+        form.resetFields();
+        resetLookups();
+        initializeTranslations();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, {{entity_Name_Here}}Id]);
+
+  const loadLanguages = async () => {
+    const result = await languageService.getLanguages();
+    setLanguages(result.items ?? []);
+    setDefaultLanguage(result.defaultLanguageName ?? "");
+    if (result.items && result.items.length > 0) {
+      setActiveLanguageTab(result.defaultLanguageName ?? result.items[0].name ?? "");
+    }
+  };
+
+  const initializeTranslations = () => {
+    const newTranslations = new Map<string, {{Entity_Name_Here}}TranslationDto>();
+    languages.forEach(lang => {
+      newTranslations.set(lang.name!, new {{Entity_Name_Here}}TranslationDto({
+        language: lang.name,
+        {{MultiLingual_Property_Init_Here}}
+      }));
+    });
+    setTranslations(newTranslations);
+  };
+
+  const loadEntity = async () => {
+    setLoading(true);
+    try {
+      const result = await {{entity_Name_Plural_Here}}Service.get{{Entity_Name_Here}}ForEdit({{entity_Name_Here}}Id!);
+      form.setFieldsValue(result.{{entity_Name_Here}});
+      {{Set_DateTime_Value_Here}}
+      {{Set_NP_Lookup_Values_Here}}
+      
+      // Load translations
+      const newTranslations = new Map<string, {{Entity_Name_Here}}TranslationDto>();
+      if (result.translations) {
+        result.translations.forEach(t => {
+          newTranslations.set(t.language!, t);
+        });
+      }
+      // Ensure all languages have a translation entry
+      languages.forEach(lang => {
+        if (!newTranslations.has(lang.name!)) {
+          newTranslations.set(lang.name!, new {{Entity_Name_Here}}TranslationDto({
+            language: lang.name,
+            {{MultiLingual_Property_Init_Here}}
+          }));
+        }
+      });
+      setTranslations(newTranslations);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetLookups = () => {
+    {{Reset_NP_Lookups_Here}}
+  };
+
+  const updateTranslation = (language: string, propertyName: string, value: any) => {
+    const newTranslations = new Map(translations);
+    const translation = newTranslations.get(language) ?? new {{Entity_Name_Here}}TranslationDto({ language });
+    (translation as any)[propertyName] = value;
+    newTranslations.set(language, translation);
+    setTranslations(newTranslations);
+  };
+
+  const save = async () => {
+    try {
+      const values = await form.validateFields();
+      setSaving(true);
+
+      const dto = new CreateOrEdit{{Entity_Name_Here}}Dto({
+        ...values,
+        {{Set_NP_Id_Values_Here}}
+        translations: Array.from(translations.values()),
+        id: {{entity_Name_Here}}Id,
+      });
+
+      await {{entity_Name_Plural_Here}}Service.createOrEdit(dto);
+      message.success(L("SavedSuccessfully"));
+      onSaved();
+      onClose();
+    } catch (error) {
+      // Form validation error
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  {{Lookup_Modal_Open_Functions_Here}}
+
+  const languageTabItems = languages.map(lang => ({
+    key: lang.name!,
+    label: lang.displayName + (lang.name === defaultLanguage ? ` (${L("DefaultLanguageName")})` : ""),
+    children: (
+      <div>
+        {{MultiLingual_Property_Form_Items_Here}}
+      </div>
+    ),
+  }));
+
+  return (
+    <>
+      <Modal
+        title={isEditMode ? L("Edit{{Entity_Name_Here}}") : L("CreateNew{{Entity_Name_Here}}")}
+        open={visible}
+        onCancel={onClose}
+        onOk={save}
+        confirmLoading={saving}
+        destroyOnHidden
+        width={800}
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          disabled={loading}
+        >
+          {{Non_MultiLingual_Property_Form_Items_Here}}
+          {{NP_Form_Items_Here}}
+          
+          <Tabs
+            activeKey={activeLanguageTab}
+            onChange={setActiveLanguageTab}
+            items={languageTabItems}
+          />
+        </Form>
+      </Modal>
+      {{Lookup_Modal_Components_Here}}
+    </>
+  );
+};
+
+export default CreateOrEdit{{Entity_Name_Here}}Modal;

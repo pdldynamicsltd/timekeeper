@@ -1,0 +1,11 @@
+{
+  "name": "aspnet-zero-core",
+  "private": true,
+  "description": "Root package for Husky git hooks",
+  "scripts": {
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
+}

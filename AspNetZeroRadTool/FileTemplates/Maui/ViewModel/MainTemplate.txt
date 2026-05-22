@@ -1,0 +1,8 @@
+﻿{{AutoMapper_Using_Here}}using {{Namespace_Here}}.{{Namespace_Relative_Full_Here}}.Dtos;
+
+namespace {{Namespace_Here}}.Maui.Models.{{Namespace_Relative_Full_Here}};
+{{AutoMapFrom_Attribute_Here}}
+public class View{{Entity_Name_Here}}Model : Get{{Entity_Name_Here}}ForViewDto
+{
+	
+}

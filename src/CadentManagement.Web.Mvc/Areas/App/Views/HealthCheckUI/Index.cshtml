@@ -1,0 +1,68 @@
+@using CadentManagement.Web.Areas.App.Models.HealthCheckUI
+@using CadentManagement.Web.Areas.App.Startup
+@using CadentManagement.Web.Common
+@model HealthCheckUIViewModel
+@{
+    ViewBag.CurrentPageName = AppPageNames.Host.HealthCheck;
+}
+
+@section Scripts {
+    <script abp-src="/view-resources/Areas/App/Views/HealthCheckUI/Index.js" asp-append-version="true"></script>
+    <script>
+        var REFRESH_INTERVAL_MS = @WebConsts.HealthCheckUI.RefreshIntervalMs;
+    </script>
+}
+
+<abp-page-subheader title="@L("HealthCheck")">
+</abp-page-subheader>
+
+<div class="@(await GetContainerClass())">
+    <div class="card">
+        <div class="card-body">
+            <div class="d-flex justify-content-end mb-3">
+                <button id="RefreshHealthChecksButton" class="btn btn-primary">
+                    <i class="fa fa-sync"></i> @L("RefreshHealthChecks")
+                </button>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle table-row-dashed fs-6 gy-5 dataTable no-footer" id="HealthChecksTable">
+                    <thead>
+                        <tr class="text-start text-muted fw-bold fs-7 text-uppercase gs-0">
+                            <th>@L("Name")</th>
+                            <th>@L("Status")</th>
+                            <th>@L("Duration")</th>
+                            <th>@L("Description")</th>
+                        </tr>
+                    </thead>
+                    <tbody id="HealthChecksTableBody">
+                        @foreach (var healthCheck in Model.HealthChecks)
+                        {
+                            <tr>
+                                <td>@healthCheck.Name</td>
+                                <td>
+                                    @if (healthCheck.Status == "Healthy")
+                                    {
+                                        <span class="badge badge-success">@L("Healthy")</span>
+                                    }
+                                    else if (healthCheck.Status == "Degraded")
+                                    {
+                                        <span class="badge badge-warning">@L("Degraded")</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-danger">@L("Unhealthy")</span>
+                                    }
+                                </td>
+                                <td>@healthCheck.Duration.TotalMilliseconds.ToString("0.00") ms</td>
+                                <td>@healthCheck.Description</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="text-muted small mt-2">
+                @L("ThisTableIsRefreshedInEveryXSecondsAutomatically", 10)
+            </div>
+        </div>
+    </div>
+</div>

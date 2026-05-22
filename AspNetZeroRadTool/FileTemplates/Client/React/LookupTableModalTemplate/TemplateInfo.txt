@@ -1,0 +1,5 @@
+{
+  "path" : "pages\\admin\\{{namespace_Relative_Here}}\\{{entity_Name_Plural_Here}}\\components\\{{NP_Foreign_Entity_Name_Here}}LookupTableModal.tsx",
+  "condition": "",
+  "foreach": "navigationProperty"
+}

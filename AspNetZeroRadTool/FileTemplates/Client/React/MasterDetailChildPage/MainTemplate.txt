@@ -1,0 +1,197 @@
+import React, { useCallback, useEffect, useState } from "react";
+import { Dropdown, Table, App } from "antd";
+import type { ColumnsType } from "antd/es/table";
+import { usePermissions } from "@/hooks/usePermissions";
+import {
+  {{Entity_Name_Here}}Dto,
+  Get{{Entity_Name_Here}}ForViewDto,
+  {{Entity_Name_Plural_Here}}ServiceProxy,
+} from "@api/generated/service-proxies";
+import { useDataTable } from "@/hooks/useDataTable";
+import { useServiceProxy } from "@/api/service-proxy-factory";
+import CreateOrEdit{{Entity_Name_Here}}Modal from "@/pages/admin/{{namespace_Relative_Here}}/{{entity_Name_Plural_Here}}/components/CreateOrEdit{{Entity_Name_Here}}Modal";{{View_Modal_Import_Here}}
+import L from "@/lib/L";{{DateTime_Import_Here}}{{File_Prop_Import_Here}}
+{{Get_Download_Url_Here}}
+interface {{Entity_Name_Here}}ChildComponentProps {
+  {{parent_Entity_Id_Name_Here}}: {{Parent_Primary_Key_Type_Here}};
+}
+
+const {{Entity_Name_Here}}ChildComponent: React.FC<{{Entity_Name_Here}}ChildComponentProps> = ({
+  {{parent_Entity_Id_Name_Here}},
+}) => {
+  const { isGranted } = usePermissions();
+  const {{entity_Name_Plural_Here}}Service = useServiceProxy({{Entity_Name_Plural_Here}}ServiceProxy, []);
+  const { modal } = App.useApp();
+
+  const [filterText, setFilterText] = useState("");
+  {{Property_Filter_State_Here}}
+
+  const [createVisible, setCreateVisible] = useState(false);
+  const [editing{{Entity_Name_Here}}Id, setEditing{{Entity_Name_Here}}Id] = useState<{{Primary_Key_Type_Here}} | undefined>();
+  {{View_Modal_State_Here}}
+
+  const fetchFn = useCallback(
+    (skipCount: number, maxResultCount: number, sorting: string) => {
+      return {{entity_Name_Plural_Here}}Service.getAll(
+        filterText,
+        {{Property_Filter_Param_Here}}undefined,
+        {{NP_Filter_Param_Here}}{{parent_Entity_Id_Name_Here}},
+        sorting,
+        skipCount,
+        maxResultCount
+      );
+    },
+    [filterText, {{parent_Entity_Id_Name_Here}}, {{Property_Filter_Deps_Here}}{{entity_Name_Plural_Here}}Service]
+  );
+
+  const { records, loading, pagination, handleTableChange, fetchData } =
+    useDataTable<Get{{Entity_Name_Here}}ForViewDto>(fetchFn);
+
+  useEffect(() => {
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [{{parent_Entity_Id_Name_Here}}]);
+
+  const delete{{Entity_Name_Here}} = (record: Get{{Entity_Name_Here}}ForViewDto) => {
+    modal.confirm({
+      title: L("AreYouSure"),
+      content: L("{{Entity_Name_Here}}DeleteWarningMessage"),
+      onOk: async () => {
+        await {{entity_Name_Plural_Here}}Service.delete(record.{{entity_Name_Here}}.id);
+        fetchData();
+      },
+    });
+  };
+
+  const getMenuItems = (record: Get{{Entity_Name_Here}}ForViewDto) => {
+    const items: {
+      key: string;
+      label: string;
+      onClick: () => void;
+      danger?: boolean;
+    }[] = [];
+
+    {{View_Menu_Item_Here}}
+
+    if (isGranted("{{Permission_Value_Here}}.Edit")) {
+      items.push({
+        key: "edit",
+        label: L("Edit")!,
+        onClick: () => {
+          setEditing{{Entity_Name_Here}}Id(record.{{entity_Name_Here}}.id);
+          setCreateVisible(true);
+        },
+      });
+    }
+
+    if (isGranted("{{Permission_Value_Here}}.Delete")) {
+      items.push({
+        key: "delete",
+        label: L("Delete")!,
+        onClick: () => delete{{Entity_Name_Here}}(record),
+        danger: true,
+      });
+    }
+
+    return items;
+  };
+
+  const columns: ColumnsType<Get{{Entity_Name_Here}}ForViewDto> = [
+    {
+      title: L("Actions"),
+      key: "actions",
+      width: 130,
+      render: (_, record) => {
+        const items = getMenuItems(record);
+        if (items.length === 0) return null;
+
+        return (
+          <Dropdown menu={{ items }} trigger={["click"]} placement="bottomLeft">
+            <button
+              type="button"
+              className="btn btn-primary btn-sm dropdown-toggle d-flex align-items-center"
+            >
+              <i className="fa fa-cog"></i>
+              <span className="ms-2">{L("Actions")}</span>
+              <span className="caret ms-1"></span>
+            </button>
+          </Dropdown>
+        );
+      },
+    },
+    {{Property_Column_Def_Here}}
+    {{NP_Column_Def_Here}}
+  ];
+
+  return (
+    <div className="p-3">
+      <div className="row align-items-center mb-3">
+        <div className="col-md-6">
+          <h5 className="mb-0">{L("{{Entity_Name_Plural_Here}}")}</h5>
+        </div>
+        <div className="col-md-6 text-end">
+          {isGranted("{{Permission_Value_Here}}.Create") && (
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() => {
+                setEditing{{Entity_Name_Here}}Id(undefined);
+                setCreateVisible(true);
+              }}
+            >
+              <i className="fa fa-plus"></i> {L("CreateNew{{Entity_Name_Here}}")}
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="row mb-3">
+        <div className="col-md-6">
+          <div className="input-group input-group-sm">
+            <input
+              type="text"
+              className="form-control"
+              placeholder={L("SearchWithThreeDot")}
+              value={filterText}
+              onChange={(e) => setFilterText(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && fetchData()}
+            />
+            <button
+              className="btn btn-primary"
+              type="button"
+              onClick={() => fetchData()}
+            >
+              <i className="flaticon-search-1"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <Table
+        columns={columns}
+        dataSource={records}
+        rowKey={(record) => record.{{entity_Name_Here}}.id}
+        loading={loading}
+        pagination={pagination}
+        onChange={(p, _, s) =>
+          handleTableChange(p, Array.isArray(s) ? s[0] : s)
+        }
+        size="small"
+        scroll={{ x: "max-content" }}
+      />
+
+      <CreateOrEdit{{Entity_Name_Here}}Modal
+        visible={createVisible}
+        onClose={() => {
+          setCreateVisible(false);
+          setEditing{{Entity_Name_Here}}Id(undefined);
+        }}
+        onSaved={() => fetchData()}
+        {{entity_Name_Here}}Id={editing{{Entity_Name_Here}}Id}
+        {{parent_Entity_Id_Name_Here}}={{{parent_Entity_Id_Name_Here}}}
+      />
+      {{View_Modal_Component_Here}}
+    </div>
+  );
+};
+
+export default {{Entity_Name_Here}}ChildComponent;

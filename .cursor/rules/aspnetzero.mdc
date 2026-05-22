@@ -1,0 +1,142 @@
+---
+description: "ASP.NET Zero (ABP) architecture, layering rules, and coding constraints. Core non-negotiables for this repo."
+alwaysApply: true
+---
+
+# ASP.NET Zero Architecture & Coding Rules
+
+This is an **ASP.NET Zero** solution built on **ASP.NET Boilerplate (ABP)**.
+Generate production-ready, layer-correct code. Never use generic ASP.NET Core patterns if they conflict with ABP conventions.
+
+> **Skills & Subagents**: Detailed implementation patterns are provided by skills in `.cursor/skills/` (auto-discovered). Specialized subagents are defined in `.cursor/agents/` (auto-discovered). Use `/skill-name` or `/agent-name` to invoke manually, or let the agent apply them automatically based on context.
+
+---
+
+## Solution Architecture (`aspnet-core/src`)
+
+Follow **strict layer separation**. Never bypass layers.
+
+| Layer | Purpose | Restrictions |
+|-------|---------|-------------|
+| **Core.Shared** | Constants, enums, value objects, helpers | No EF Core, no app logic |
+| **Core** | Entities, aggregates, domain services | No DTOs, no app services, no EF/Web deps |
+| **Application.Shared** | DTOs + app service interfaces | Serializable, validation-ready. No business logic |
+| **Application** | App services + orchestration | Uses repositories (interfaces), DTOs, auth/validation. No direct DbContext |
+| **EntityFrameworkCore** | DbContext, repositories, migrations | No business logic |
+| **Web.Host** | Remote API host (no MVC/views) | Token auth only |
+| **Web.Mvc** | MVC presentation | Thin controllers; delegate to Application layer |
+
+---
+
+## Client Side
+
+### Angular
+- Communicates only with **Web.Host** via token auth
+- **NSwag-generated service proxies** — NEVER manually create. Run Web.Host, then `npm run nswag` in `angular/`
+- Standalone components with signals, `inject()`, PrimeNG tables, Bootstrap modals
+- Don't call `getRecords` in `ngOnInit` when PrimeNG `(onLazyLoad)` is set
+- Don't use `[responsive]` attribute on tables
+
+### React
+- Communicates only with **Web.Host** via token auth
+- **NSwag-generated service proxies** via `useServiceProxy()` — NEVER manually edit `service-proxies.ts`
+- Ant Design v5 for UI, Metronic 8 for layout, Redux Toolkit, Vite 7
+- Regenerate proxies: run Web.Host, then `react/nswag/refresh.bat`
+
+---
+
+## Mandatory Coding Rules
+
+### Entities
+- Default to `FullAuditedEntity` + `IMustHaveTenant`
+- Keep persistence-ignorant, no DTOs in Core
+
+### Application Services
+- Inherit `CadentManagementAppServiceBase`
+- `[AbpAuthorize]` on **all** public methods
+- Return DTOs, never entities
+- Entity → DTO when returning; DTO → Entity when creating/updating
+- Set `TenantId = AbpSession.GetTenantId()` after DTO → Entity mapping
+- **`GetForEdit` must use `NullableIdDto`** as input. When `Id` is null (create mode), return a new DTO with sensible default values plus any lookup/dropdown data as `List<ComboboxItemDto>`. When `Id` has a value (edit mode), load the entity, map to DTO, and return with the same lookup data. All UIs must always call `GetForEdit` — even for create — and use server-returned dropdown options instead of hardcoding them.
+- Use `IRepository<TEntity>`, never inject DbContext
+- **`[HttpPost]` on `Get{Feature}s` list methods** — ABP routes `Get*` as HTTP GET by default, which causes NSwag to emit the custom paging/filter input (e.g. `GetRolesInput`) as individual query-string args instead of a typed DTO class, so it never appears in `service-proxies.ts`. Add `[HttpPost]` only to list methods that take a **custom input DTO** (e.g. `GetRoles(GetRolesInput)`). Do NOT add it to `GetForEdit`, `GetById`, or other `Get*` methods that take standard ABP types (`EntityDto`, `NullableIdDto`) — those are handled correctly as GET.
+
+### Localization
+- **ALWAYS search for existing keys first** — ABP throws `AbpException` on duplicates
+- Search: `Select-String -Pattern 'name="YourKey"' -Path aspnet-core/src/CadentManagement.Core/Localization/CadentManagement/*.xml`
+
+---
+
+## Hard Restrictions
+
+- Never bypass Application layer
+- Never put business logic in Controllers
+- Never access DbContext outside EntityFrameworkCore project
+- Never mix DTOs and Entities
+- Never manually create service proxy classes
+- Never inject one app service into another
+
+---
+
+## Unit Testing (Mandatory)
+
+- **Always write tests** for generated/modified code
+- Location: `aspnet-core/test/CadentManagement.Tests/`
+- Framework: xUnit + Shouldly + NSubstitute, base class: `AppTestBase`
+- Naming: `{ClassName}_Tests.cs` or `{ClassName}_{MethodName}_Tests.cs` (method-scoped), methods: `Should_{ExpectedBehavior}`
+
+---
+
+## Build & Test
+
+```bash
+dotnet build aspnet-core/CadentManagement.All.sln   # Build
+dotnet test aspnet-core/test/CadentManagement.Tests/ # Test
+cd angular && npm run build                                       # Angular
+cd react && npm run build                                         # React
+```
+
+---
+
+## Available Commands (`/command-name`)
+
+| Command | Purpose |
+|---------|---------|
+| `/add-feature` | End-to-end feature generation |
+| `/generate-entity` | Scaffold entity + DbContext + migration |
+| `/generate-appservice` | CRUD app service + DTOs + mappers |
+| `/generate-permission` | Add CRUD permission set |
+| `/generate-localization` | Add localization entries (dedup check) |
+| `/generate-migration` | EF Core migration |
+| `/generate-tests` | xUnit test class |
+| `/generate-angular-crud` | Angular CRUD page |
+| `/generate-react-crud` | React CRUD page |
+| `/smart-debug` | Root cause analysis for errors |
+| `/code-explain` | Explain code's layer and role |
+| `/review-permissions` | Audit permission consistency |
+| `/review-pre-push` | Pre-push quality checks |
+| `/create-bundles` | Dev bundles for Angular/MVC |
+| `/generate-service-proxies` | NSwag service proxy generation |
+
+## Available Skills (auto-loaded from `.cursor/skills/`)
+
+Skills provide detailed implementation patterns. Key skills:
+- `aspnetzero-entity-patterns`, `aspnetzero-dto-patterns`, `aspnetzero-appservice-patterns`
+- `aspnetzero-permission-patterns`, `aspnetzero-localization-patterns`, `aspnetzero-multitenancy-patterns`
+- `mapperly-patterns`, `efcore-patterns`, `error-handling-patterns`, `clean-code-dotnet`
+- `angular-component-patterns`, `angular-primeng-table-patterns`, `angular-modal-patterns`
+- `angular-service-proxy-patterns`, `angular-permission-patterns`
+- `react-component-patterns`, `react-state-patterns`, `react-permission-patterns`
+- `xunit-testing-patterns`, `api-design-patterns`
+
+## Available Subagents (auto-loaded from `.cursor/agents/`)
+
+| Agent | Role |
+|-------|------|
+| `backend-architect` | Design API contracts, entity schemas (read-only) |
+| `aspnetzero-developer` | Implement backend: entities, DTOs, app services, mappers |
+| `angular-developer` | Angular pages: standalone components, PrimeNG, modals |
+| `react-developer` | React pages: Ant Design, Metronic, Redux, hooks |
+| `code-reviewer` | Review for layer violations, ABP anti-patterns |
+| `qa-engineer` | Generate xUnit tests with Shouldly |
+| `debugger` | Diagnose runtime errors, build failures |

@@ -1,0 +1,100 @@
+{
+"propertyTemplates":[
+		{
+			"placeholder" : "{{Property_View_Items_Here}}",
+			"condition" : "{{Property_Listed_Here}} == true",
+			"templates" : [
+					{
+					"type" : "enum",
+					"content" : "        <Descriptions.Item label={L(\"{{Property_Name_Here}}\")}>
+          {L({{Enum_Localization_Before_060600}} {{property_Type_Here}}[data.{{entity_Name_Here}}?.{{property_Name_Here}}])}
+        </Descriptions.Item>
+"
+					},
+					{
+					"type" : "bool",
+					"content" : "        <Descriptions.Item label={L(\"{{Property_Name_Here}}\")}>
+          {data.{{entity_Name_Here}}?.{{property_Name_Here}} ? (
+            <i className=\"fa fa-check-circle text-success\" />
+          ) : (
+            <i className=\"fa fa-times-circle text-muted\" />
+          )}
+        </Descriptions.Item>
+"
+					},
+					{
+					"type" : "DateTime",
+					"content" : "        <Descriptions.Item label={L(\"{{Property_Name_Here}}\")}>
+          {data.{{entity_Name_Here}}?.{{property_Name_Here}}
+            ? dayjs(data.{{entity_Name_Here}}?.{{property_Name_Here}}).format(\"L LT\")
+            : \"-\"}
+        </Descriptions.Item>
+"
+					},
+					{
+					"type" : "file",
+					"content" : "        <Descriptions.Item label={L(\"{{Property_Name_Here}}\")}>
+          {data.{{entity_Name_Here}}?.{{property_Name_Here}} ? (
+          <a
+            href={getDownloadUrl(data.{{entity_Name_Here}}?.{{property_Name_Here}})}
+            target=\"_blank\"
+            rel=\"noreferrer\"
+          >
+            {data.{{entity_Name_Here}}?.{{property_Name_Here}}FileName}
+          </a>
+          ) : \"-\"}
+        </Descriptions.Item>
+"
+					},
+					{
+					"type" : "default",
+					"content" : "        <Descriptions.Item label={L(\"{{Property_Name_Here}}\")}>
+          {data.{{entity_Name_Here}}?.{{property_Name_Here}}}
+        </Descriptions.Item>
+"
+					}
+				]
+		}
+	],
+"navigationPropertyTemplates":[
+		{
+			"placeholder" : "{{NP_View_Items_Here}}",
+			"templates" : [
+					{
+					"relation" : "single",
+					"content" : "        <Descriptions.Item label={L(\"{{NP_Foreign_Entity_Name_Here}}{{NP_Duplication_Number_Here}}\") + \" - \" + L(\"{{NP_Display_Property_Name_Here}}\")}>
+          {data.{{nP_Foreign_Entity_Name_Here}}{{NP_Display_Property_Name_Here}}{{NP_Duplication_Number_Here}}}
+        </Descriptions.Item>
+"
+					}
+				]
+		}
+	],
+"enumTemplates":[
+	],
+"conditionalTemplates":[
+		{
+			"placeholder": "{{DateTime_Import_Here}}",
+			"condition": "{{Has_DateTime_Type_Property}} == true",
+			"content": "
+import dayjs from \"dayjs\";"
+		},
+		{
+			"placeholder": "{{File_Prop_Import_Here}}",
+			"condition": "{{Has_File_Prop}} == true",
+			"content": "
+import AppConsts from \"@/lib/app-consts\";"
+		},
+		{
+			"placeholder": "{{Get_Download_Url_Here}}",
+			"condition": "{{Has_File_Prop}} == true",
+			"content": "
+const getDownloadUrl = (id: string | undefined): string => {
+  return AppConsts.remoteServiceBaseUrl + '/File/DownloadBinaryFile?id=' + id;
+};
+"
+		}
+	],
+"navigationPropertyOneToManyTableTemplates":[
+	]
+}

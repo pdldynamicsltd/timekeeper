@@ -1,0 +1,13 @@
+using Abp.Mapperly;
+using {{Namespace_Here}}.{{Namespace_Relative_Full_Here}};
+using {{Namespace_Here}}.{{Namespace_Relative_Full_Here}}.Importing.Dto;
+using Riok.Mapperly.Abstractions;
+
+namespace {{Namespace_Here}}.Mappers;
+
+[Mapper]
+public partial class Import{{Entity_Name_Here}}DtoTo{{Entity_Name_Here}}Mapper : MapperBase<Import{{Entity_Name_Here}}Dto, {{Entity_Name_Here}}>
+{
+    public override partial {{Entity_Name_Here}} Map(Import{{Entity_Name_Here}}Dto source);
+    public override partial void Map(Import{{Entity_Name_Here}}Dto source, {{Entity_Name_Here}} destination);
+}

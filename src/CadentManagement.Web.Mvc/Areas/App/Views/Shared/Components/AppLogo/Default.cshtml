@@ -1,0 +1,8 @@
+﻿@using Abp.Timing
+@model CadentManagement.Web.Areas.App.Models.Layout.LogoViewModel
+@{
+    Layout = null;
+}
+
+<img alt="Logo" src="@Model.GetLogoUrl(ApplicationPath,  Model.LogoSkinOverride ?? await GetLogoSkin())&t=@Clock.Now.Ticks.ToString()"
+     class="h-25px @(string.IsNullOrEmpty(Model.LogoClassOverride) ? "header-brand-logo-default" : Model.LogoClassOverride)"/>

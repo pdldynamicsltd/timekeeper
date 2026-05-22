@@ -1,0 +1,119 @@
+import React, { useEffect, useState } from "react";
+import { Form, App, Card, Spin } from "antd";
+import { useNavigate, useParams } from "react-router-dom";
+import { useServiceProxy } from "@/api/service-proxy-factory";
+import {
+  {{Entity_Name_Here}}Dto,
+  CreateOrEdit{{Entity_Name_Here}}Dto,
+  {{Entity_Name_Plural_Here}}ServiceProxy,
+} from "@api/generated/service-proxies";
+import L from "@/lib/L";
+import { useTheme } from "@/hooks/useTheme";
+import PageHeader from "@/pages/admin/components/common/PageHeader";{{DateTime_Import_Here}}{{Lookup_Modal_Imports_Here}}{{File_Upload_Import_Here}}
+
+const CreateOrEdit{{Entity_Name_Here}}Page: React.FC = () => {
+  const [form] = Form.useForm();
+  const { message } = App.useApp();
+  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const {{entity_Name_Plural_Here}}Service = useServiceProxy({{Entity_Name_Plural_Here}}ServiceProxy, []);
+  const { containerClass } = useTheme();
+  
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
+  {{NP_Lookup_State_Here}}
+  {{File_Property_State_Here}}
+
+  const {{entity_Name_Here}}Id = id ? ({{Parse_Primary_Key_Here}}) : undefined;
+  const isEditMode = {{entity_Name_Here}}Id !== undefined;
+
+  useEffect(() => {
+    if (isEditMode) {
+      loadEntity();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [{{entity_Name_Here}}Id]);
+
+  const loadEntity = async () => {
+    setLoading(true);
+    try {
+      const result = await {{entity_Name_Plural_Here}}Service.get{{Entity_Name_Here}}ForEdit({{entity_Name_Here}}Id!);
+      form.setFieldsValue(result.{{entity_Name_Here}});
+      {{Set_DateTime_Value_Here}}
+      {{Set_NP_Lookup_Values_Here}}
+      {{Set_File_Download_Url_Here}}
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const save = async () => {
+    try {
+      const values = await form.validateFields();
+      setSaving(true);
+
+      const dto = new CreateOrEdit{{Entity_Name_Here}}Dto({
+        ...values,
+        {{Set_NP_Id_Values_Here}}
+        {{Set_File_Token_Dto_Here}}
+        id: {{entity_Name_Here}}Id,
+      });
+
+      await {{entity_Name_Plural_Here}}Service.createOrEdit(dto);
+      message.success(L("SavedSuccessfully"));
+      navigate(-1);
+    } catch (error) {
+      // Form validation error
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  {{Lookup_Modal_Open_Functions_Here}}
+{{File_Upload_Handler_Here}}
+  return (
+    <>
+      <PageHeader
+        title={isEditMode ? L("Edit{{Entity_Name_Here}}") : L("CreateNew{{Entity_Name_Here}}")}
+        description={L("{{Entity_Name_Plural_Here}}HeaderInfo")}
+        actions={
+          <div className="d-flex gap-2">
+            <button
+              className="btn btn-light"
+              onClick={() => navigate(-1)}
+              disabled={saving}
+            >
+              {L("Cancel")}
+            </button>
+            <button
+              className="btn btn-primary"
+              onClick={save}
+              disabled={saving}
+            >
+              {saving ? <Spin size="small" /> : <i className="fa fa-save me-2" />}
+              {L("Save")}
+            </button>
+          </div>
+        }
+      />
+
+      <div className={containerClass}>
+        <Card loading={loading}>
+          <Form
+            form={form}
+            layout="vertical"
+            disabled={loading || saving}
+          >
+            <div className="row">
+              {{Property_Form_Items_Here}}
+              {{NP_Form_Items_Here}}
+            </div>
+          </Form>
+        </Card>
+      </div>
+      {{Lookup_Modal_Components_Here}}
+    </>
+  );
+};
+
+export default CreateOrEdit{{Entity_Name_Here}}Page;

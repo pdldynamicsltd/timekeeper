@@ -1,0 +1,20 @@
+{
+"propertyTemplates":[
+	],
+"navigationPropertyTemplates":[
+	],
+"enumTemplates":[
+	],
+"conditionalTemplates":[
+		{
+			"placeholder": "{{AutoMapper_Using_Here}}",
+			"condition": "{{Project_Version_Here}} < 150200",
+			"content": "using Abp.AutoMapper;\n"
+		},
+		{
+			"placeholder": "{{AutoMapFrom_LookupListModel_Attribute_Here}}",
+			"condition": "{{Project_Version_Here}} < 150200",
+			"content": "[AutoMapFrom(typeof({{Entity_Name_Here}}{{NP_Foreign_Entity_Name_Here}}LookupTableDto))]"
+		}
+	]
+}

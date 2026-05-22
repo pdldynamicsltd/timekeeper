@@ -1,0 +1,4 @@
+{
+	"path" : "{{Namespace_Here}}.Maui\\Mappers\\{{Entity_Name_Here}}Mappers.cs",
+	"condition": "{{Project_Version_Here}} >= 150200 && {{Generate_Maui_Code}} == true"
+}

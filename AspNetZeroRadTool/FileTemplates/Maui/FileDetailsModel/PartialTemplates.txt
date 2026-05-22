@@ -1,0 +1,15 @@
+{
+"propertyTemplates":[
+	],
+"navigationPropertyTemplates":[
+	],
+"enumTemplates":[
+	],
+"conditionalTemplates":[
+		{
+			"placeholder": "{{AutoMapper_Using_Here}}",
+			"condition": "{{Project_Version_Here}} < 150200",
+			"content": "using Abp.AutoMapper;\n"
+		}
+	]
+}

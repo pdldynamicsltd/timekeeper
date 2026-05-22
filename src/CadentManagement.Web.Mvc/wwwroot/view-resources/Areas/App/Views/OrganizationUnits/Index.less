@@ -1,0 +1,33 @@
+﻿.ou-text {
+    color: #999;
+
+    &.ou-text-has-members {
+        color: #000;
+
+        .ou-text-member-count, .ou-text-role-count {
+            font-weight: bold;
+        }
+    }
+}
+
+#OuMembersTable, #OuRolesTable {
+    margin-top: 62px;
+}
+
+.vakata-context li a {
+    text-shadow: none !important;
+    color: var(--bs-text-gray-900);
+}
+
+.selected:not(.form-switch) .form-check-input[type=checkbox],
+.dt-column-title .form-check-input[type=checkbox] {
+    background-size: 60% 60%;
+}
+
+table.table.dataTable > tbody > tr.selected .form-check-input:checked {
+    border-color: white !important;
+}
+
+.dt-info{
+    white-space: nowrap !important; 
+}

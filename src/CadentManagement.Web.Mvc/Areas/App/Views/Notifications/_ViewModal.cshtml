@@ -1,0 +1,60 @@
+﻿@using Abp.Notifications
+@model CadentManagement.Web.Areas.App.Models.Notifications.NotificationDetailViewModel
+
+@{
+    string severityClass = Model.Severity switch
+    {
+        NotificationSeverity.Success => "success",
+        NotificationSeverity.Warn => "warning",
+        NotificationSeverity.Error => "danger",
+        NotificationSeverity.Fatal => "danger",
+        _ => "info"
+    };
+
+    string severityIcon = Model.Severity switch
+    {
+        NotificationSeverity.Success => "bi-check-circle",
+        NotificationSeverity.Warn => "bi-exclamation-triangle",
+        NotificationSeverity.Error => "bi-x-circle",
+        NotificationSeverity.Fatal => "bi-x-octagon",
+        _ => "bi-info-circle"
+    };
+}
+
+<div class="modal-header border-0 pb-0">
+    <div class="d-flex align-items-center">
+        <span class="svg-icon svg-icon-2 text-@severityClass me-3">
+            <i class="bi @severityIcon fs-2 text-@severityClass"></i>
+        </span>
+        <h5 class="modal-title fw-semibold">
+            @Model.Title
+        </h5>
+    </div>
+
+    <button type="button" class="btn btn-icon btn-sm btn-light ms-2" data-bs-dismiss="modal">
+        <i class="bi bi-x fs-2"></i>
+    </button>
+</div>
+
+<div class="modal-body pt-4">
+
+    <div class="d-flex align-items-center mb-4 text-muted fs-7">
+        <i class="bi bi-clock me-2"></i>
+        <span>@Model.CreationTime.ToString("f")</span>
+    </div>
+
+    <div class="card bg-light-@severityClass border-0">
+        <div class="card-body p-4">
+            <div class="notification-content fs-6 text-gray-800">
+                @Model.Message
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="modal-footer border-0 pt-0">
+    <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+        @L("Close")
+    </button>
+</div>

@@ -1,0 +1,129 @@
+import React, { useCallback, useEffect, useState } from "react";
+import { Modal, Table, Radio } from "antd";
+import type { ColumnsType } from "antd/es/table";
+import {
+  {{Entity_Name_Plural_Here}}ServiceProxy,
+  {{Entity_Name_Here}}{{NP_Foreign_Entity_Name_Here}}LookupTableDto,
+} from "@api/generated/service-proxies";
+import { useServiceProxy } from "@/api/service-proxy-factory";
+import { useDataTable } from "@/hooks/useDataTable";
+import L from "@/lib/L";
+
+interface {{NP_Foreign_Entity_Name_Here}}LookupTableModalProps {
+  visible: boolean;
+  onClose: () => void;
+  onSelect: (id: {{NP_Id_Type_TS_Here}}, displayValue: string) => void;
+}
+
+const {{NP_Foreign_Entity_Name_Here}}LookupTableModal: React.FC<{{NP_Foreign_Entity_Name_Here}}LookupTableModalProps> = ({
+  visible,
+  onClose,
+  onSelect,
+}) => {
+  const {{entity_Name_Plural_Here}}Service = useServiceProxy({{Entity_Name_Plural_Here}}ServiceProxy, []);
+  const [filterText, setFilterText] = useState("");
+  const [selectedRow, setSelectedRow] = useState<{{Entity_Name_Here}}{{NP_Foreign_Entity_Name_Here}}LookupTableDto | null>(null);
+
+  const fetchFn = useCallback(
+    (skipCount: number, maxResultCount: number, sorting: string) => {
+      return {{entity_Name_Plural_Here}}Service.getAll{{NP_Foreign_Entity_Name_Here}}ForLookupTable(
+        filterText,
+        sorting,
+        skipCount,
+        maxResultCount
+      );
+    },
+    [filterText, {{entity_Name_Plural_Here}}Service]
+  );
+
+  const { records, loading, pagination, handleTableChange, fetchData } =
+    useDataTable<{{Entity_Name_Here}}{{NP_Foreign_Entity_Name_Here}}LookupTableDto>(fetchFn);
+
+  useEffect(() => {
+    if (visible) {
+      setSelectedRow(null);
+      fetchData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
+
+  const handleSelect = () => {
+    if (selectedRow) {
+      onSelect(selectedRow.id!, selectedRow.displayName ?? "");
+    }
+  };
+
+  const columns: ColumnsType<{{Entity_Name_Here}}{{NP_Foreign_Entity_Name_Here}}LookupTableDto> = [
+    {
+      title: "",
+      key: "selection",
+      width: 50,
+      render: (_, record) => (
+        <Radio
+          checked={selectedRow?.id === record.id}
+          onChange={() => setSelectedRow(record)}
+        />
+      ),
+    },
+    {
+      title: L("DisplayName"),
+      dataIndex: "displayName",
+      key: "displayName",
+    },
+  ];
+
+  return (
+    <Modal
+      title={L("Pick{{NP_Foreign_Entity_Name_Here}}")}
+      open={visible}
+      onCancel={onClose}
+      onOk={handleSelect}
+      okButtonProps={{ disabled: !selectedRow }}
+      width={600}
+      zIndex={1100}
+    >
+      <div className="mb-3">
+        <div className="input-group">
+          <input
+            type="text"
+            className="form-control"
+            placeholder={L("SearchWithThreeDot")}
+            value={filterText}
+            onChange={(e) => setFilterText(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && fetchData()}
+          />
+          <button
+            className="btn btn-primary"
+            type="button"
+            onClick={() => fetchData()}
+          >
+            <i className="flaticon-search-1"></i>
+          </button>
+        </div>
+      </div>
+
+      <Table
+        columns={columns}
+        dataSource={records}
+        rowKey="id"
+        loading={loading}
+        pagination={pagination}
+        onChange={(p, _, s) =>
+          handleTableChange(p, Array.isArray(s) ? s[0] : s)
+        }
+        size="small"
+        onRow={(record) => ({
+          onClick: () => setSelectedRow(record),
+          onDoubleClick: () => {
+            setSelectedRow(record);
+            if (record) {
+              onSelect(record.id!, record.displayName ?? "");
+            }
+          },
+        })}
+      />
+    </Modal>
+  );
+};
+
+export default {{NP_Foreign_Entity_Name_Here}}LookupTableModal;

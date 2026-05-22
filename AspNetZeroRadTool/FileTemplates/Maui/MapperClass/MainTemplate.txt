@@ -1,0 +1,21 @@
+using Abp.Mapperly;
+using {{Namespace_Here}}.{{Namespace_Relative_Full_Here}}.Dtos;
+using {{Namespace_Here}}.Maui.Models.{{Namespace_Relative_Full_Here}};
+using Riok.Mapperly.Abstractions;
+
+namespace {{Namespace_Here}}.Maui.Mappers;
+{{View_Model_Mapper_Here}}
+[Mapper]
+public partial class Get{{Entity_Name_Here}}ForViewDtoTo{{Entity_Name_Here}}ListModelMapper : MapperBase<Get{{Entity_Name_Here}}ForViewDto, {{Entity_Name_Here}}ListModel>
+{
+    public override partial {{Entity_Name_Here}}ListModel Map(Get{{Entity_Name_Here}}ForViewDto source);
+    public override partial void Map(Get{{Entity_Name_Here}}ForViewDto source, {{Entity_Name_Here}}ListModel destination);
+}
+
+[Mapper]
+public partial class CreateOrEdit{{Entity_Name_Here}}DtoToCreateOrEdit{{Entity_Name_Here}}ModelMapper : MapperBase<CreateOrEdit{{Entity_Name_Here}}Dto, CreateOrEdit{{Entity_Name_Here}}Model>
+{
+    public override partial CreateOrEdit{{Entity_Name_Here}}Model Map(CreateOrEdit{{Entity_Name_Here}}Dto source);
+    public override partial void Map(CreateOrEdit{{Entity_Name_Here}}Dto source, CreateOrEdit{{Entity_Name_Here}}Model destination);
+}
+{{NP_Lookup_Mapper_Looped_Template_Here}}

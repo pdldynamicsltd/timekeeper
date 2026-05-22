@@ -1,0 +1,189 @@
+#!/bin/sh
+
+# =============================================================================
+# Pre-commit hook: ESLint (with Prettier) + Full Build verification
+# =============================================================================
+# This hook runs automatically before each commit. It detects which project(s)
+# have staged changes and runs lint + build checks only for affected projects.
+#
+# - ESLint includes Prettier enforcement via eslint-plugin-prettier in both
+#   Angular and React projects, so formatting issues are caught by ESLint.
+# - Full build is run to catch type errors and bundling issues.
+#
+# To disable per project:
+#   Set SKIP_HOOKS=true in angular/.env.development or react/.env.development
+#
+# To disable for a single commit:
+#   SKIP_HOOKS=true git commit -m "message"
+#
+# To disable for your shell session:
+#   export SKIP_HOOKS=true
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Global skip via environment variable
+# ---------------------------------------------------------------------------
+if [ "$SKIP_HOOKS" = "true" ]; then
+  echo "SKIP_HOOKS is true. Skipping all pre-commit checks."
+  exit 0
+fi
+
+echo "Running pre-commit checks..."
+echo ""
+
+# Helper: read SKIP_HOOKS from a project's .env.development
+read_skip_hooks() {
+  ENV_FILE="$1/.env.development"
+  if [ -f "$ENV_FILE" ]; then
+    VALUE=$(grep -E "^SKIP_HOOKS=" "$ENV_FILE" | cut -d '=' -f2 | tr -d '"' | tr -d "'" | tr -d ' ')
+    echo "$VALUE"
+  else
+    echo "false"
+  fi
+}
+
+# Get staged files (excluding deleted files)
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=d)
+
+if [ -z "$STAGED_FILES" ]; then
+  echo "No staged files found. Skipping checks."
+  exit 0
+fi
+
+# Track overall exit status
+EXIT_CODE=0
+
+# ---------------------------------------------------------------------------
+# Angular checks
+# ---------------------------------------------------------------------------
+ANGULAR_TS_FILES=$(echo "$STAGED_FILES" | grep "^angular/.*\.ts$" | sed "s|^angular/||" || true)
+
+if [ -n "$ANGULAR_TS_FILES" ]; then
+  ANGULAR_SKIP=$(read_skip_hooks "angular")
+
+  if [ "$ANGULAR_SKIP" = "true" ]; then
+    echo "=========================================="
+    echo " Angular: SKIPPED (SKIP_HOOKS=true in angular/.env.development)"
+    echo "=========================================="
+    echo ""
+  else
+    echo "=========================================="
+    echo " Angular: Running checks"
+    echo "=========================================="
+
+    cd angular
+
+    # Step 1: ESLint (includes Prettier checks via eslint-plugin-prettier)
+    echo ""
+    echo "[Angular] Running ESLint..."
+    echo "$ANGULAR_TS_FILES" | tr '\n' '\0' | xargs -0 -s 8000 npx eslint --no-warn-ignored 2>&1
+    ANGULAR_LINT_EXIT=$?
+
+    if [ $ANGULAR_LINT_EXIT -ne 0 ]; then
+      echo ""
+      echo "[Angular] ESLint check FAILED!"
+      echo "   Fix lint/formatting errors and try again."
+      EXIT_CODE=1
+    else
+      echo "[Angular] ESLint passed."
+    fi
+
+    # Step 2: Full build (gulp buildDev && ng build)
+    echo ""
+    echo "[Angular] Running full build (gulp buildDev && ng build)..."
+    npx gulp buildDev && npx ng build 2>&1
+    ANGULAR_BUILD_EXIT=$?
+
+    if [ $ANGULAR_BUILD_EXIT -ne 0 ]; then
+      echo ""
+      echo "[Angular] Build FAILED!"
+      echo "   Fix build errors and try again."
+      EXIT_CODE=1
+    else
+      echo "[Angular] Build passed."
+    fi
+
+    cd ..
+    echo ""
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# React checks
+# ---------------------------------------------------------------------------
+REACT_TS_FILES=$(echo "$STAGED_FILES" | grep "^react/.*\.tsx\?$" | grep -v "^react/metronic/" | sed "s|^react/||" || true)
+
+if [ -n "$REACT_TS_FILES" ]; then
+  REACT_SKIP=$(read_skip_hooks "react")
+
+  if [ "$REACT_SKIP" = "true" ]; then
+    echo "=========================================="
+    echo " React: SKIPPED (SKIP_HOOKS=true in react/.env.development)"
+    echo "=========================================="
+    echo ""
+  else
+    echo "=========================================="
+    echo " React: Running checks"
+    echo "=========================================="
+
+    cd react
+
+    # Step 1: ESLint (includes Prettier checks via eslint-plugin-prettier)
+    echo ""
+    echo "[React] Running ESLint..."
+    echo "$REACT_TS_FILES" | tr '\n' '\0' | xargs -0 -s 8000 npx eslint --no-warn-ignored 2>&1
+    REACT_LINT_EXIT=$?
+
+    if [ $REACT_LINT_EXIT -ne 0 ]; then
+      echo ""
+      echo "[React] ESLint check FAILED!"
+      echo "   Fix lint/formatting errors and try again."
+      EXIT_CODE=1
+    else
+      echo "[React] ESLint passed."
+    fi
+
+    # Step 2: Full build (tsc -b && vite build)
+    echo ""
+    echo "[React] Running full build (tsc -b && vite build)..."
+    npx tsc -b && npx vite build 2>&1
+    REACT_BUILD_EXIT=$?
+
+    if [ $REACT_BUILD_EXIT -ne 0 ]; then
+      echo ""
+      echo "[React] Build FAILED!"
+      echo "   Fix build errors and try again."
+      EXIT_CODE=1
+    else
+      echo "[React] Build passed."
+    fi
+
+    cd ..
+    echo ""
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# Summary
+# ---------------------------------------------------------------------------
+if [ $EXIT_CODE -ne 0 ]; then
+  echo "=========================================="
+  echo " Pre-commit checks FAILED"
+  echo "=========================================="
+  echo "Commit aborted. Fix the errors above and try again."
+  echo "To bypass: git commit --no-verify (not recommended)"
+  exit 1
+fi
+
+# Check if any frontend files were checked at all
+ANGULAR_CHANGED=$(echo "$STAGED_FILES" | grep "^angular/" || true)
+REACT_CHANGED=$(echo "$STAGED_FILES" | grep "^react/" || true)
+
+if [ -z "$ANGULAR_CHANGED" ] && [ -z "$REACT_CHANGED" ]; then
+  echo "No Angular or React files changed. Skipping frontend checks."
+fi
+
+echo "=========================================="
+echo " All pre-commit checks passed"
+echo "=========================================="
+exit 0

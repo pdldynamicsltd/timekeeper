@@ -1,0 +1,171 @@
+﻿@using System.Globalization
+@using Abp.AspNetZeroCore.Timing
+@using Abp.Configuration.Startup
+@using Abp.Web.Security.AntiForgery
+@using CultureHelper = CadentManagement.Localization.CultureHelper
+@using CadentManagement.MultiTenancy
+@using CadentManagement.UiCustomization.Dto
+@using CadentManagement.Url
+@using CadentManagement.Web.Url
+@model CadentManagement.Web.Models.Install.InstallSetupViewModel
+@inject AppTimes AppTimes
+@inject IAbpAntiForgeryManager AbpAntiForgeryManager
+
+@{
+    Layout = null;
+    AbpAntiForgeryManager.SetCookie(Context);
+}
+<!DOCTYPE html>
+<html lang="en" dir="@(CultureHelper.IsRtl ? "rtl" : "")" data-bs-theme="light">
+<head>
+    <title>CadentManagement Installation</title>
+
+    <link rel="shortcut icon" href="~/favicon.ico" />
+    <link rel="stylesheet" abp-href="/view-resources/Areas/App/Views/_Bundles/vendors.bundle.css" asp-append-version="true" />
+    <link rel="stylesheet" href="@(ApplicationPath)metronic/themes/default/css/style.bundle@(CultureHelper.IsRtl ? ".rtl" : "").css" asp-append-version="true" />
+    <link rel="stylesheet" href="@(ApplicationPath)metronic/themes/default/plugins/global/plugins.bundle.css" asp-append-version="true" />
+    <link rel="stylesheet" abp-href="/view-resources/Areas/App/Views/_Bundles/app-layout-libs.css" asp-append-version="true" />
+    <link rel="stylesheet" abp-href="/view-resources/Areas/App/Views/_Bundles/common-styles.css" asp-append-version="true" />
+
+    @if (CultureHelper.IsRtl)
+    {
+        <link rel="stylesheet" href="/Common/Styles/abp-zero-template-rtl.css" asp-append-version="true" />
+    }
+
+    <link rel="stylesheet" abp-href="/view-resources/Views/Install/Index.css" asp-append-version="true" />
+</head>
+<body class="page-fixed header-static">
+    <div class="d-flex flex-column flex-root">
+        <div class="d-flex flex-column flex-column-fluid bgi-position-y-bottom position-x-center bgi-no-repeat bgi-size-contain bgi-attachment-fixed"
+             style="background-image: url(@(ApplicationPath)metronic/assets/media/svg/illustrations/login.png)">
+            <div class="d-flex flex-center flex-column flex-column-fluid p-10 pb-lg-20">
+                @* <vc:account-logo skin="light"></vc:account-logo> *@
+                <div class="bg-body rounded shadow-sm p-10 p-lg-15 mx-auto w-lg-800px">
+                    <div class="content">
+                        <div class="symbol symbol-35px mb-5">
+                            <span class="symbol-label bg-light-primary">
+                                <i class="la la-gear fs-2x text-primary"></i>
+                            </span>
+                        </div>
+                        <h3 class="text-dark fw-bold mb-5">
+                            CadentManagement Installation
+                        </h3>
+                        <form asp-action="Index" method="post" asp-antiforgery="true" id="installForm" class="form w-100 fv-plugins-bootstrap5 fv-plugins-framework">
+                            <div class="mb-5">
+                                <label class="form-label required">Connection String</label>
+                                <input type="text" class="form-control" name="connectionString" placeholder="Connection string" autocomplete="new-password" required>
+                            </div>
+
+                            <div class="separator my-4"></div>
+                            <div class="mb-5">
+                                <label class="form-label required">Admin Password</label>
+                                <input type="password" class="form-control" id="adminPassword" name="adminPassword" placeholder="Admin password" autocomplete="new-password" required>
+                            </div>
+                            <div class="mb-5">
+                                <label class="form-label required">Repeat Admin Password</label>
+                                <input type="password" class="form-control" id="adminPasswordRepeat" name="adminPasswordRepeat" placeholder="Admin password again" autocomplete="new-password" required>
+                            </div>
+
+                            <div class="separator my-4"></div>
+
+                            <div class="mb-5">
+                                <label class="form-label required">Web Site URL</label>
+                                <input type="text" class="form-control" name="webSiteUrl" value="@Model.AppSettingsJson.WebSiteUrl" placeholder="Web site URL" required>
+                            </div>
+
+                            <div class="separator my-4"></div>
+
+                            <div class="mb-5">
+                                <label class="form-label required">Default Language</label>
+                                <select class="form-select" name="defaultLanguage" required>
+                                    @foreach (var language in Model.Languages)
+                                    {
+                                        <option value="@language.Name">@language.DisplayName</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="separator my-4"></div>
+
+                            <div class="mb-5">
+                                <label class="form-label required">Default From Address</label>
+                                <input type="text" class="form-control" name="defaultFromAddress" placeholder="Default from address" regex="@Tenant.AdminEmailRegex" required>
+                            </div>
+                            <div class="mb-5">
+                                <label class="form-label required">Default From Display Name</label>
+                                <input type="text" class="form-control" name="defaultFromDisplayName" placeholder="Default from display name" required>
+                            </div>
+                            <div class="mb-5">
+                                <label class="form-label">SMTP Host</label>
+                                <input type="text" class="form-control" name="smtpHost" placeholder="SMTP host">
+                            </div>
+                            <div class="mb-5">
+                                <label class="form-label">SMTP Port</label>
+                                <input type="text" class="form-control" name="smtpPort" placeholder="SMTP port">
+                            </div>
+
+                            <div class="mb-5">
+                                <label class="form-check form-switch form-check-custom form-check-solid">
+                                    <input class="form-check-input" type="checkbox" name="smtpEnableSsl" value="true">
+                                    <span class="form-check-label">Use SSL</span>
+                                </label>
+                                <label class="form-check form-switch form-check-custom form-check-solid mt-3">
+                                    <input class="form-check-input" type="checkbox" name="smtpUseAuthentication" value="true">
+                                    <span class="form-check-label">Use Default Credentials</span>
+                                </label>
+                            </div>
+
+                            <div class="smtp-group">
+                                <div class="mb-5">
+                                    <label class="form-label">SMTP Domain</label>
+                                    <input type="text" class="form-control" name="smtpDomain" placeholder="Domain name">
+                                </div>
+                                <div class="mb-5">
+                                    <label class="form-label">SMTP Username</label>
+                                    <input type="text" class="form-control" name="smtpUserName" placeholder="User name">
+                                </div>
+                                <div class="mb-5">
+                                    <label class="form-label">SMTP Password</label>
+                                    <input type="password" class="form-control" name="smtpPassword" id="SmtpPassword" placeholder="Password" autocomplete="new-password">
+                                </div>
+                            </div>
+
+                            <div class="separator my-4"></div>
+
+                            <div class="mb-5">
+                                <label class="form-label">Legal Name</label>
+                                <input type="text" class="form-control" name="legalName" placeholder="Legal name">
+                            </div>
+                            <div class="mb-5">
+                                <label class="form-label">Billing Address</label>
+                                <textarea class="form-control" name="billAddress" rows="5" placeholder="Address"></textarea>
+                            </div>
+
+                            <div class="d-flex justify-content-end pt-3">
+                                <button id="SaveButton" type="submit" class="btn btn-primary">
+                                    <span class="indicator-label">Save</span>
+                                </button>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script abp-src="/view-resources/Areas/App/Views/_Bundles/app-layout-libs.js" asp-append-version="true"></script>
+
+    <!-- Dynamic scripts of ABP system (They are created on runtime and can not be bundled) -->
+    <script src="/AbpServiceProxies/GetAll?v=@(AppTimes.StartupTime.Ticks)" type="text/javascript"></script>
+
+    <script type="text/javascript">
+        abp.localization.currentCulture = $.extend({},
+            abp.localization.currentCulture,
+            { displayNameEnglish: '@CultureInfo.CurrentUICulture.EnglishName' });
+    </script>
+
+    <script abp-src="/view-resources/Areas/App/Views/_Bundles/install-page-scripts.js" asp-append-version="true"></script>
+    <script abp-src="/view-resources/Views/Install/Index.js" asp-append-version="true"></script>
+</body>
+</html>

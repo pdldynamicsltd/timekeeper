@@ -1,0 +1,45 @@
+{
+"propertyTemplates":[
+	],
+"navigationPropertyTemplates":[
+		{
+			"placeholder" : "{{NP_Lookup_Mapper_Looped_Template_Here}}",
+			"preventDuplicate":true,
+			"templates" : [
+					{
+					"relation" : "single",
+					"content" : "
+[Mapper]
+public partial class {{Entity_Name_Here}}{{NP_Foreign_Entity_Name_Here}}LookupTableDtoTo{{Entity_Name_Here}}{{NP_Foreign_Entity_Name_Here}}LookupListModelMapper : MapperBase<{{Entity_Name_Here}}{{NP_Foreign_Entity_Name_Here}}LookupTableDto, {{Entity_Name_Here}}{{NP_Foreign_Entity_Name_Here}}LookupListModel>
+{
+    public override partial {{Entity_Name_Here}}{{NP_Foreign_Entity_Name_Here}}LookupListModel Map({{Entity_Name_Here}}{{NP_Foreign_Entity_Name_Here}}LookupTableDto source);
+    public override partial void Map({{Entity_Name_Here}}{{NP_Foreign_Entity_Name_Here}}LookupTableDto source, {{Entity_Name_Here}}{{NP_Foreign_Entity_Name_Here}}LookupListModel destination);
+}
+"
+					},
+					{
+					"relation" : "single",
+					"viewType": "Dropdown",
+					"preventDuplicate":true,
+					"content" : ""
+					}
+				]
+		}
+	],
+"enumTemplates":[
+	],
+"conditionalTemplates":[
+		{
+			"placeholder": "{{View_Model_Mapper_Here}}",
+			"condition": "{{Create_Maui_View_Here}} == true",
+			"content": "
+[Mapper]
+public partial class Get{{Entity_Name_Here}}ForViewDtoToView{{Entity_Name_Here}}ModelMapper : MapperBase<Get{{Entity_Name_Here}}ForViewDto, View{{Entity_Name_Here}}Model>
+{
+    public override partial View{{Entity_Name_Here}}Model Map(Get{{Entity_Name_Here}}ForViewDto source);
+    public override partial void Map(Get{{Entity_Name_Here}}ForViewDto source, View{{Entity_Name_Here}}Model destination);
+}
+"
+		}
+	]
+}

@@ -1,0 +1,128 @@
+@using CadentManagement.Web.Areas.App.Models.Common.Modals
+@using CadentManagement.Web.Areas.App.Models.RateLimiting
+@model CreateOrEditRateLimitPolicyModalViewModel
+
+@await Html.PartialAsync("~/Areas/App/Views/Common/Modals/_ModalHeader.cshtml",
+    new ModalHeaderViewModel(Model.IsEditMode ? (L("EditRateLimitPolicy") + ": " + Model.Policy.Name) : L("CreateNewRateLimitPolicy")))
+
+<div class="modal-body">
+    <form name="PolicyForm" role="form" novalidate class="form-validation">
+        @if (Model.IsEditMode)
+        {
+            <input type="hidden" name="Id" value="@Model.Policy.Id" />
+        }
+
+        <!-- Policy Name -->
+        <div class="mb-5">
+            <label for="PolicyName" class="form-label required">@L("PolicyName")</label>
+            <input id="PolicyName" class="form-control" type="text" name="Name"
+                   value="@Model.Policy.Name" required maxlength="128" />
+        </div>
+
+        <!-- IsEnabled -->
+        <div class="mb-5">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="PolicyIsEnabled" name="IsEnabled"
+                       value="true" @(Model.Policy.IsEnabled ? "checked" : "") />
+                <label class="form-check-label" for="PolicyIsEnabled">@L("IsEnabled")</label>
+            </div>
+        </div>
+
+        <!-- Algorithm -->
+        <div class="mb-5">
+            <label for="PolicyAlgorithm" class="form-label required">@L("Algorithm")</label>
+            <select id="PolicyAlgorithm" class="form-select" name="Algorithm" required>
+                @foreach (var item in Model.Algorithms)
+                {
+                    <option value="@item.Value" selected="@item.IsSelected">@L(item.DisplayText)</option>
+                }
+            </select>
+        </div>
+
+        <!-- Partition Type -->
+        <div class="mb-5">
+            <label for="PolicyPartitionType" class="form-label required">@L("PartitionType")</label>
+            <select id="PolicyPartitionType" class="form-select" name="PartitionType" required>
+                @foreach (var item in Model.PartitionTypes)
+                {
+                    <option value="@item.Value" selected="@item.IsSelected">@L(item.DisplayText)</option>
+                }
+            </select>
+        </div>
+
+        <!-- IsGlobal -->
+        <div class="mb-5">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="PolicyIsGlobal" name="IsGlobal"
+                       value="true" @(Model.Policy.IsGlobal ? "checked" : "") />
+                <label class="form-check-label" for="PolicyIsGlobal">@L("IsGlobal")</label>
+            </div>
+        </div>
+
+        <!-- Endpoint Pattern (shown when not global) -->
+        <div class="mb-5" id="EndpointPatternDiv" style="@(Model.Policy.IsGlobal ? "display:none" : "")">
+            <label for="PolicyEndpointPattern" class="form-label">@L("EndpointPattern")</label>
+            <input id="PolicyEndpointPattern" class="form-control mb-2" type="text" name="EndpointPattern"
+                   value="@Model.Policy.EndpointPattern" maxlength="256" />
+            <small class="form-text text-muted">@L("EndpointPatternHelpText")</small>
+        </div>
+
+        <!-- Permit Limit -->
+        <div class="mb-5">
+            <label for="PolicyPermitLimit" class="form-label required">@L("PermitLimit")</label>
+            <input id="PolicyPermitLimit" class="form-control" type="number" name="PermitLimit"
+                   value="@Model.Policy.PermitLimit" required min="1" />
+        </div>
+
+        <!-- Window In Seconds (FixedWindow / SlidingWindow) -->
+        <div class="mb-5 window-field" id="WindowInSecondsDiv">
+            <label for="PolicyWindowInSeconds" class="form-label required">@L("WindowInSeconds")</label>
+            <input id="PolicyWindowInSeconds" class="form-control" type="number" name="WindowInSeconds"
+                   value="@Model.Policy.WindowInSeconds" required min="1" />
+        </div>
+
+        <!-- Segments Per Window (SlidingWindow only) -->
+        <div class="mb-5 sliding-window-field" id="SegmentsPerWindowDiv">
+            <label for="PolicySegmentsPerWindow" class="form-label required">@L("SegmentsPerWindow")</label>
+            <input id="PolicySegmentsPerWindow" class="form-control" type="number" name="SegmentsPerWindow"
+                   value="@Model.Policy.SegmentsPerWindow" required min="1" />
+        </div>
+
+        <!-- Tokens Per Period (TokenBucket only) -->
+        <div class="mb-5 token-bucket-field" id="TokensPerPeriodDiv">
+            <label for="PolicyTokensPerPeriod" class="form-label required">@L("TokensPerPeriod")</label>
+            <input id="PolicyTokensPerPeriod" class="form-control" type="number" name="TokensPerPeriod"
+                   value="@Model.Policy.TokensPerPeriod" required min="1" />
+        </div>
+
+        <!-- Replenishment Period In Seconds (TokenBucket only) -->
+        <div class="mb-5 token-bucket-field" id="ReplenishmentPeriodDiv">
+            <label for="PolicyReplenishmentPeriod" class="form-label required">@L("ReplenishmentPeriodInSeconds")</label>
+            <input id="PolicyReplenishmentPeriod" class="form-control" type="number" name="ReplenishmentPeriodInSeconds"
+                   value="@Model.Policy.ReplenishmentPeriodInSeconds" required min="1" />
+        </div>
+
+        <!-- Queue Limit -->
+        <div class="mb-5">
+            <label for="PolicyQueueLimit" class="form-label">@L("QueueLimit")</label>
+            <input id="PolicyQueueLimit" class="form-control" type="number" name="QueueLimit"
+                   value="@Model.Policy.QueueLimit" min="0" />
+        </div>
+
+        <!-- HTTP Status Code -->
+        <div class="mb-5">
+            <label for="PolicyHttpStatusCode" class="form-label">@L("HttpStatusCode")</label>
+            <input id="PolicyHttpStatusCode" class="form-control" type="number" name="HttpStatusCode"
+                   value="@Model.Policy.HttpStatusCode" min="400" max="599" />
+        </div>
+
+        <!-- Custom Message -->
+        <div class="mb-5">
+            <label for="PolicyCustomMessage" class="form-label">@L("CustomMessage")</label>
+            <textarea id="PolicyCustomMessage" class="form-control" name="CustomMessage"
+                      maxlength="512" rows="3">@Model.Policy.CustomMessage</textarea>
+        </div>
+    </form>
+</div>
+
+@await Html.PartialAsync("~/Areas/App/Views/Common/Modals/_ModalFooterWithSaveAndCancel.cshtml")

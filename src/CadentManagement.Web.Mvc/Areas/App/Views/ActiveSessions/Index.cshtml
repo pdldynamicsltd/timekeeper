@@ -1,0 +1,32 @@
+@using CadentManagement.Web.Areas.App.Startup
+@{
+    ViewBag.CurrentPageName = AppPageNames.Common.ActiveSessions;
+    var isRevocationEnabled = (bool)(ViewBag.IsSessionRevocationEnabled ?? false);
+}
+
+@section Scripts {
+    <script>
+        var isSessionRevocationEnabled = @(isRevocationEnabled.ToString().ToLower());
+    </script>
+    <script abp-src="/view-resources/Areas/App/Views/ActiveSessions/Index.js" asp-append-version="true"></script>
+}
+
+<abp-page-subheader title="@L("ActiveSessions")">
+    @if (isRevocationEnabled)
+    {
+        <button id="RevokeAllOtherSessionsButton" class="btn btn-danger" style="display:none">
+            <i class="fa fa-ban"></i> @L("RevokeAllOtherSessions")
+        </button>
+    }
+</abp-page-subheader>
+
+<div class="@(await GetContainerClass())">
+    <div class="card card-custom gutter-b">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table id="ActiveSessionsTable" class="table align-middle table-row-dashed fs-6 gy-5 dataTable">
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,72 @@
+import React, { useEffect, useState } from "react";
+import { Card, Descriptions } from "antd";
+import { useNavigate, useParams } from "react-router-dom";
+import { useServiceProxy } from "@/api/service-proxy-factory";
+import {
+  {{Entity_Name_Here}}Dto,
+  Get{{Entity_Name_Here}}ForViewDto,
+  {{Entity_Name_Plural_Here}}ServiceProxy,
+} from "@api/generated/service-proxies";
+import L from "@/lib/L";
+import { useTheme } from "@/hooks/useTheme";
+import PageHeader from "@/pages/admin/components/common/PageHeader";{{DateTime_Import_Here}}{{File_Prop_Import_Here}}
+{{Get_Download_Url_Here}}
+const View{{Entity_Name_Here}}Page: React.FC = () => {
+  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const {{entity_Name_Plural_Here}}Service = useServiceProxy({{Entity_Name_Plural_Here}}ServiceProxy, []);
+  const { containerClass } = useTheme();
+  
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<Get{{Entity_Name_Here}}ForViewDto | undefined>();
+
+  const {{entity_Name_Here}}Id = id ? ({{Parse_Primary_Key_Here}}) : undefined;
+
+  useEffect(() => {
+    if ({{entity_Name_Here}}Id) {
+      loadEntity();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [{{entity_Name_Here}}Id]);
+
+  const loadEntity = async () => {
+    setLoading(true);
+    try {
+      const result = await {{entity_Name_Plural_Here}}Service.get{{Entity_Name_Here}}ForView({{entity_Name_Here}}Id!);
+      setData(result);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <>
+      <PageHeader
+        title={L("View{{Entity_Name_Here}}")}
+        description={L("{{Entity_Name_Plural_Here}}HeaderInfo")}
+        actions={
+          <button
+            className="btn btn-light"
+            onClick={() => navigate(-1)}
+          >
+            <i className="fa fa-arrow-left me-2" />
+            {L("Back")}
+          </button>
+        }
+      />
+
+      <div className={containerClass}>
+        <Card loading={loading}>
+          {data && (
+            <Descriptions bordered column={2}>
+              {{Property_View_Items_Here}}
+              {{NP_View_Items_Here}}
+            </Descriptions>
+          )}
+        </Card>
+      </div>
+    </>
+  );
+};
+
+export default View{{Entity_Name_Here}}Page;

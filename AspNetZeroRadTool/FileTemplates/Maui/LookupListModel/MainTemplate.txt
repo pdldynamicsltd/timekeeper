@@ -1,0 +1,7 @@
+﻿{{AutoMapper_Using_Here}}using {{Namespace_Here}}.{{Namespace_Relative_Full_Here}}.Dtos;
+
+namespace {{Namespace_Here}}.Maui.Models.{{Namespace_Relative_Full_Here}};
+{{AutoMapFrom_LookupListModel_Attribute_Here}}
+public class {{Entity_Name_Here}}{{NP_Foreign_Entity_Name_Here}}LookupListModel : {{Entity_Name_Here}}{{NP_Foreign_Entity_Name_Here}}LookupTableDto
+{
+}

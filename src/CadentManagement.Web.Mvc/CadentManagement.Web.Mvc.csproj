@@ -1,0 +1,71 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <Import Project="..\..\common.props"></Import>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssetTargetFallback>$(AssetTargetFallback);portable-net45+win8+wp8+wpa81;</AssetTargetFallback>
+    <PreserveCompilationContext>true</PreserveCompilationContext>
+    <AssemblyName>CadentManagement.Web.Mvc</AssemblyName>
+    <OutputType>Exe</OutputType>
+    <PackageId>CadentManagement.Web.Mvc</PackageId>
+    <UserSecretsId>MyCompanyName-CadentManagement-894FDFC1-6482-4A56-926A-3C46C9FE0329</UserSecretsId>
+    <RootNamespace>CadentManagement.Web</RootNamespace>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+    <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
+    <TypeScriptToolsVersion>4.3</TypeScriptToolsVersion>
+    <PreserveCompilationReferences>true</PreserveCompilationReferences>
+    <GenerateDocumentationFile>False</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="App_Data\**" />
+    <Content Remove="App_Data\**" />
+    <EmbeddedResource Remove="App_Data\**" />
+    <None Remove="App_Data\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Remove="wwwroot\swagger\ui\index.html" />
+  </ItemGroup>
+  <!-- Workaround for .NET 10 SDK MSBuild bug: MakeRelative fails on file names containing commas/parentheses -->
+  <ItemGroup>
+    <Content Update="wwwroot\Common\Scripts\Datatables\Translations\Chinese %28Simplified, China%29.json">
+      <TargetPath>wwwroot\Common\Scripts\Datatables\Translations\Chinese (Simplified, China).json</TargetPath>
+    </Content>
+    <Content Update="wwwroot\Common\Scripts\Datatables\Translations\English %28United Kingdom%29.json">
+      <TargetPath>wwwroot\Common\Scripts\Datatables\Translations\English (United Kingdom).json</TargetPath>
+    </Content>
+    <Content Update="wwwroot\Common\Scripts\Datatables\Translations\Portuguese %28Brazil%29.json">
+      <TargetPath>wwwroot\Common\Scripts\Datatables\Translations\Portuguese (Brazil).json</TargetPath>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="wwwroot\swagger\ui\index.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="wwwroot\Plugins\.gitkeep" />
+    <None Update="Dockerfile">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="log4net.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+    <None Update="wwwroot\**\*;Areas\**\*;Views\**\*">
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CadentManagement.Web.Core\CadentManagement.Web.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Abp.Mapperly" Version="11.2.0" />
+    <PackageReference Include="Abp.Castle.Log4Net" Version="11.2.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.7">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Twitter" Version="10.0.7" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="10.0.7" />
+  </ItemGroup>
+</Project>

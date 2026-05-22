@@ -1,0 +1,92 @@
+import React, { useEffect, useState } from "react";
+import { Modal, Descriptions, Tabs, Spin } from "antd";
+import { {{Entity_Name_Plural_Here}}ServiceProxy } from "@api/generated/service-proxies";
+import { useServiceProxy } from "@/api/service-proxy-factory";
+import L from "@/lib/L";{{DateTime_Import_Here}}{{File_Prop_Import_Here}}
+{{Get_Download_Url_Here}}
+interface View{{Entity_Name_Here}}ModalProps {
+  visible: boolean;
+  onClose: () => void;
+  {{entity_Name_Here}}Id: {{Primary_Key_Type_Here}} | undefined;
+}
+
+const View{{Entity_Name_Here}}Modal: React.FC<View{{Entity_Name_Here}}ModalProps> = ({
+  visible,
+  onClose,
+  {{entity_Name_Here}}Id,
+}) => {
+  const {{entity_Name_Plural_Here}}Service = useServiceProxy({{Entity_Name_Plural_Here}}ServiceProxy, []);
+  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState<any>(null);
+  const [translations, setTranslations] = useState<any[]>([]);
+  const [activeLanguage, setActiveLanguage] = useState<string | undefined>();
+
+  useEffect(() => {
+    if (visible && {{entity_Name_Here}}Id) {
+      loadData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, {{entity_Name_Here}}Id]);
+
+  const loadData = async () => {
+    if (!{{entity_Name_Here}}Id) return;
+    setLoading(true);
+    try {
+      const result = await {{entity_Name_Plural_Here}}Service.get{{Entity_Name_Here}}ForView({{entity_Name_Here}}Id);
+      setData(result.{{entity_Name_Here}});
+      setTranslations(result.translations ?? []);
+      if (result.translations && result.translations.length > 0) {
+        setActiveLanguage(result.translations[0].language);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getTranslationValue = (propertyName: string) => {
+    const translation = translations.find((t) => t.language === activeLanguage);
+    return translation ? translation[propertyName] : "";
+  };
+
+  const languageTabs = translations.map((t) => ({
+    key: t.language,
+    label: t.language,
+  }));
+
+  return (
+    <Modal
+      title={L("View{{Entity_Name_Here}}")}
+      open={visible}
+      onCancel={onClose}
+      footer={null}
+      width={800}
+    >
+      <Spin spinning={loading}>
+        {data && (
+          <>
+            <Descriptions bordered column={2}>
+              {{Property_View_Items_Here}}
+              {{NP_View_Items_Here}}
+            </Descriptions>
+
+            {translations.length > 0 && (
+              <div className="mt-4">
+                <h6>{L("Translations")}</h6>
+                <Tabs
+                  activeKey={activeLanguage}
+                  onChange={setActiveLanguage}
+                  items={languageTabs}
+                />
+                <Descriptions bordered column={1}>
+                  {{MultiLingual_Property_View_Items_Here}}
+                </Descriptions>
+              </div>
+            )}
+          </>
+        )}
+      </Spin>
+    </Modal>
+  );
+};
+
+export default View{{Entity_Name_Here}}Modal;

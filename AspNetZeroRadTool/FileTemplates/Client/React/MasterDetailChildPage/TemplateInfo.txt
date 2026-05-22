@@ -1,0 +1,4 @@
+{
+  "path" : "pages\\admin\\{{parent_Namespace_Here}}\\{{Parent_Entity_Name_Plural_Here}}\\components\\{{Entity_Name_Here}}ChildComponent.tsx",
+  "condition": "{{Is_Master_Detail_Page_Child_Here}} == true"
+}

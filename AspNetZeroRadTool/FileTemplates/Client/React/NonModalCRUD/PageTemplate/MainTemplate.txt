@@ -1,0 +1,227 @@
+import React, { useCallback, useEffect, useState } from "react";
+import { Dropdown, Table, App } from "antd";
+import type { ColumnsType } from "antd/es/table";
+import { useNavigate } from "react-router-dom";
+import { usePermissions } from "@/hooks/usePermissions";
+import PageHeader from "@/pages/admin/components/common/PageHeader";
+import { downloadTempFile } from "@/lib/file-download-helper";
+import {
+  {{Entity_Name_Here}}Dto,
+  Get{{Entity_Name_Here}}ForViewDto,
+  {{Entity_Name_Plural_Here}}ServiceProxy,{{File_Dto_Import_Here}}
+} from "@api/generated/service-proxies";
+import { useDataTable } from "@/hooks/useDataTable";
+import { useServiceProxy } from "@/api/service-proxy-factory";
+import L from "@/lib/L";
+import { useTheme } from "@/hooks/useTheme";{{DateTime_Import_Here}}{{File_Prop_Import_Here}}
+{{Get_Download_Url_Here}}
+const {{Entity_Name_Plural_Here}}Page: React.FC = () => {
+  const { isGranted } = usePermissions();
+  const navigate = useNavigate();
+  const {{entity_Name_Plural_Here}}Service = useServiceProxy({{Entity_Name_Plural_Here}}ServiceProxy, []);
+  const { containerClass } = useTheme();
+  const { modal } = App.useApp();
+
+  const [filterText, setFilterText] = useState("");
+  {{Property_Filter_State_Here}}
+  {{NP_Filter_State_Here}}
+  const [advancedFiltersAreShown, setAdvancedFiltersAreShown] = useState(false);
+
+  const fetchFn = useCallback(
+    (skipCount: number, maxResultCount: number, sorting: string) => {
+      return {{entity_Name_Plural_Here}}Service.getAll(
+        filterText,
+        {{Property_Filter_Param_Here}}{{NP_Filter_Param_Here}}sorting,
+        skipCount,
+        maxResultCount
+      );
+    },
+    [filterText, {{Property_Filter_Deps_Here}}{{NP_Filter_Deps_Here}}{{entity_Name_Plural_Here}}Service],
+  );
+
+  const { records, loading, pagination, handleTableChange, fetchData } =
+    useDataTable<Get{{Entity_Name_Here}}ForViewDto>(fetchFn);
+
+  useEffect(() => {
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const delete{{Entity_Name_Here}} = (record: Get{{Entity_Name_Here}}ForViewDto) => {
+    modal.confirm({
+      title: L("AreYouSure"),
+      content: L("{{Entity_Name_Here}}DeleteWarningMessage"),
+      onOk: async () => {
+        await {{entity_Name_Plural_Here}}Service.delete(record.{{entity_Name_Here}}.id);
+        fetchData();
+      },
+    });
+  };
+
+  {{Excel_Export_Function_Here}}
+
+  const getMenuItems = (record: Get{{Entity_Name_Here}}ForViewDto) => {
+    const items: {
+      key: string;
+      label: string;
+      onClick: () => void;
+      danger?: boolean;
+    }[] = [];
+
+    {{View_Menu_Item_Here}}
+
+    if (isGranted("{{Permission_Value_Here}}.Edit")) {
+      items.push({
+        key: "edit",
+        label: L("Edit")!,
+        onClick: () => {
+          navigate(`createOrEdit/${record.{{entity_Name_Here}}.id}`);
+        },
+      });
+    }
+
+    {{Entity_History_Menu_Item_Here}}
+
+    if (isGranted("{{Permission_Value_Here}}.Delete")) {
+      items.push({
+        key: "delete",
+        label: L("Delete")!,
+        onClick: () => delete{{Entity_Name_Here}}(record),
+        danger: true,
+      });
+    }
+
+    return items;
+  };
+
+  const columns: ColumnsType<Get{{Entity_Name_Here}}ForViewDto> = [
+    {
+      title: L("Actions"),
+      key: "actions",
+      width: 130,
+      render: (_, record) => {
+        const items = getMenuItems(record);
+        if (items.length === 0) return null;
+
+        return (
+          <Dropdown menu={{ items }} trigger={["click"]} placement="bottomLeft">
+            <button
+              type="button"
+              className="btn btn-primary btn-sm dropdown-toggle d-flex align-items-center"
+            >
+              <i className="fa fa-cog"></i>
+              <span className="ms-2">{L("Actions")}</span>
+              <span className="caret ms-1"></span>
+            </button>
+          </Dropdown>
+        );
+      },
+    },
+    {{Property_Column_Def_Here}}
+    {{NP_Column_Def_Here}}
+  ];
+
+  return (
+    <>
+      <PageHeader
+        title={L("{{Entity_Name_Plural_Here}}")}
+        description={L("{{Entity_Name_Plural_Here}}HeaderInfo")}
+        actions={
+          <div className="d-flex gap-2">
+            {{Excel_Export_Button_Here}}
+            {isGranted("{{Permission_Value_Here}}.Create") && (
+              <button
+                className="btn btn-primary"
+                onClick={() => navigate("createOrEdit")}
+              >
+                <i className="fa fa-plus btn-md-icon"></i>
+                <span className="d-none d-md-inline-block">
+                  {L("CreateNew{{Entity_Name_Here}}")}
+                </span>
+              </button>
+            )}
+          </div>
+        }
+      />
+
+      <div className={containerClass}>
+        <div className="card">
+          <div className="card-body">
+            <div className="row align-items-center mb-4">
+              <div className="col-xl-12">
+                <div className="input-group">
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder={L("SearchWithThreeDot")}
+                    value={filterText}
+                    onChange={(e) => setFilterText(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && fetchData()}
+                  />
+                  <button
+                    className="btn btn-primary"
+                    type="button"
+                    onClick={() => fetchData()}
+                  >
+                    <i className="flaticon-search-1"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {advancedFiltersAreShown && (
+              <div className="row mb-4">
+                {{Advanced_Filter_Inputs_Here}}
+                {{NP_Advanced_Filter_Inputs_Here}}
+              </div>
+            )}
+
+            {advancedFiltersAreShown && (
+              <div className="row mb-4">
+                <div className="col-sm-12 text-end">
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => fetchData()}
+                    type="button"
+                  >
+                    <i className="fa fa-sync btn-md-icon"></i>
+                    <span className="d-none d-md-inline-block ms-2">
+                      {L("Refresh")}
+                    </span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="row mb-4">
+              <div className="col-sm-12">
+                <span
+                  className="clickable-item text-muted"
+                  style={{ cursor: "pointer" }}
+                  onClick={() => setAdvancedFiltersAreShown(!advancedFiltersAreShown)}
+                >
+                  <i className={`fa ${advancedFiltersAreShown ? "fa-angle-up" : "fa-angle-down"}`}></i>{" "}
+                  {advancedFiltersAreShown ? L("HideAdvancedFilters") : L("ShowAdvancedFilters")}
+                </span>
+              </div>
+            </div>
+
+            <Table
+              columns={columns}
+              dataSource={records}
+              rowKey={(record) => record.{{entity_Name_Here}}.id}
+              loading={loading}
+              pagination={pagination}
+              onChange={(p, _, s) =>
+                handleTableChange(p, Array.isArray(s) ? s[0] : s)
+              }
+              scroll={{ x: "max-content" }}
+            />
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default {{Entity_Name_Plural_Here}}Page;

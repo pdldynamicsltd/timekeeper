@@ -1,0 +1,110 @@
+﻿<div [@routerTransition]>
+  {{Content_Class_After_Metronic_V606}}
+  {{Content_Class_After_Metronic_V90}}
+  {{Page_Header_Here}}
+    
+    <div {{Container_Class_Here}}{{Container_Class_V2_Here}}{{Container_Class_V3_Here}}>
+        <div class="{{Portlet_Class_Here}}{{Card_Class_Here}}">
+            <div class="{{Portlet_Body_Here}}{{Card_Body_Here}}">
+                <form class="{{Form_Class_Here}}" autocomplete="off">
+                    <div>
+                        <div class="row align-items-center">
+                            <div class="col-xl-12">
+                                {{Filter_Form_Group_Before_V110000_Here}}
+                                {{Filter_Form_Group_After_V110000_Here}}
+                            </div>
+                        </div>
+						 <div class="row" [hidden]="!advancedFiltersAreShown{{Signal_Read_v152_Here}}">
+						 	<div class="col-md-12">
+						         {{Seperator_Div_Here}}
+						     </div>
+
+{{Property_Filter_Template_Before_V110000_Here}}
+{{Property_Filter_Template_After_V110000_Here}}
+{{NP_Filter_Template_Before_V110000_Here}}
+{{NP_Filter_Template_After_V110000_Here}}
+                            <div class="col-md-3 d-flex align-items-center justify-content-end ms-auto">
+                                <div class="my-3">
+                                    <button (click)="resetFilters()" class="btn btn-secondary btn-sm me-2" id="btn-reset-filters">{{'Reset' | localize}}</button>
+                                    <button name="RefreshButton" class="btn btn-primary btn-sm" (click)="get{{Entity_Name_Plural_Here}}()">
+                                        <i class="la la-refresh"></i>
+                                        <span class="d-none d-md-inline-block">
+                                            {{'Refresh' | localize}}
+                                        </span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row my-4">
+                            <div class="col-sm-12">
+                                {{NgIf_Hide_Advanced_Filter_Condition_IfSyntax}}
+                                    <span class="clickable-item text-muted" {{NgIf_Hide_Advanced_Filter_Condition_NgIfSyntax}} (click)="{{Toggle_Advanced_Filters_Here}}"><i class="fa fa-angle-down"></i> {{l("ShowAdvancedFilters")}}</span>
+                                {{If_Syntax_Close}}
+                                {{NgIf_Show_Advanced_Filter_Condition_IfSyntax}}
+                                    <span class="clickable-item text-muted" {{NgIf_Show_Advanced_Filter_Condition_NgIfSyntax}} (click)="{{Toggle_Advanced_Filters_Here}}"><i class="fa fa-angle-up"></i> {{l("HideAdvancedFilters")}}</span>
+                                {{If_Syntax_Close}}
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="row align-items-center">
+                    <!--<Primeng-Datatable-Start>-->
+                    <div class="primeng-datatable-container col-12"
+                     [busyIf]="primengTableHelper.isLoading{{Signal_Read_v152_Here}}">
+                        {{Action_Menu_Shared_Here}}
+                        <p-table #dataTable
+                                     (onLazyLoad)="get{{Entity_Name_Plural_Here}}($event)"
+                                     [value]="primengTableHelper.records{{Signal_Read_v152_Here}} ?? []"
+                                     rows="{{primengTableHelper.defaultRecordsCountPerPage}}"
+                                     [paginator]="false"
+                                     [lazy]="true"
+                                     [scrollable]="true"
+                                     {{PrimeNG_Scroll_Width_Attribute}}
+                                     [tableStyle]="{'min-width': '50rem'}"
+                                     [resizableColumns]="primengTableHelper.resizableColumns">
+                            <ng-template {{PrimeNG_PTemplate_Header_Attribute}}>
+                                <tr>
+                                    <th style="width: 130px" [hidden]="!isGrantedAny('{{Permission_Value_Here}}.Edit', '{{Permission_Value_Here}}.Delete')">{{l('Actions')}}</th>
+{{NP_Looped_Header_Template_Here}}{{Property_Looped_Header_Template_Here}}{{NP_OneToMany_Looped_Table_Header_Here}}
+                                </tr>
+                            </ng-template>                           
+							<ng-template {{PrimeNG_PTemplate_Body_Attribute}} let-record="$implicit" let-i="rowIndex">
+                                <tr>
+                                    <td style="width: 130px"
+                                        [hidden]="!isGrantedAny('{{Permission_Value_Here}}.Edit', '{{Permission_Value_Here}}.Delete')">
+                                       {{Action_Column_Here}}
+                                    </td>
+{{NP_Looped_Template_Here}}{{Property_Looped_Template_Here}}{{NP_OneToMany_Looped_Table_Button_Here}}
+                                </tr>
+                               {{NP_OneToMany_Looped_Table_Content_Here}}
+                            </ng-template>
+                        </p-table>
+                        {{NgIf_NoData_Condition_IfSyntax}}
+						    <div class="primeng-no-data" {{NgIf_NoData_Condition_NgIfSyntax}}>
+                                {{l('NoData')}}
+                            </div>
+                        {{If_Syntax_Close}}
+                        <div class="primeng-paging-container">
+                            <p-paginator [rows]="primengTableHelper.defaultRecordsCountPerPage"
+                                         #paginator
+                                         (onPageChange)="get{{Entity_Name_Plural_Here}}($event)"
+                                         [totalRecords]="primengTableHelper.totalRecordsCount{{Signal_Read_v152_Here}}"
+                                         [rowsPerPageOptions]="primengTableHelper.predefinedRecordsCountPerPage"
+                                         [showCurrentPageReport]="true"
+                                         [currentPageReportTemplate]="'TotalRecordsCount' | localize:primengTableHelper.totalRecordsCount{{Signal_Read_v152_Here}}"    
+                            >
+                            </p-paginator>
+                        </div>
+                    </div>
+                    <!--<Primeng-Datatable-End>-->
+                </div>
+            </div>
+        </div>
+    </div>
+    {{Create_Or_Edit_Modal_Tag_Here}}    
+    {{View_Modal_Tag_Here}}
+    {{Excel_Column_Selection_Modal_Tag_Here}}
+    {{History_Modal_Tag_Here}}
+  {{Div_After_Metronic_V606}}
+{{Div_Before_Metronic_V812}}

@@ -1,0 +1,68 @@
+@using CadentManagement.Authorization
+@using CadentManagement.Web.Areas.App.Startup
+@{
+    ViewBag.CurrentPageName = AppPageNames.Host.RateLimiting;
+}
+
+@section Scripts
+{
+    <script abp-src="/view-resources/Areas/App/Views/RateLimiting/_CreateOrEditModal.js" asp-append-version="true"></script>
+    <script abp-src="/view-resources/Areas/App/Views/RateLimiting/Index.js" asp-append-version="true"></script>
+}
+
+<abp-page-subheader title="@L("RateLimiting")" description="@L("RateLimitingHeaderInfo")">
+    @if (IsGranted(AppPermissions.Pages_Administration_RateLimiting_Create))
+    {
+        <button id="CreateNewPolicyButton" class="btn btn-primary">
+            <i class="fa fa-plus btn-md-icon"></i>
+            <span class="d-none d-md-inline-block">
+                @L("CreateNewPolicy")
+            </span>
+        </button>
+    }
+</abp-page-subheader>
+
+<div class="@(await GetContainerClass())">
+    <div class="card">
+        <div class="card-body">
+            <!-- Master Toggle -->
+            <div class="d-flex align-items-center mb-5">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="RateLimitingEnabledToggle">
+                    <label class="form-check-label fw-bold" id="RateLimitingEnabledLabel" for="RateLimitingEnabledToggle"></label>
+                </div>
+            </div>
+
+            <!-- Filter -->
+            <div class="row mb-4">
+                <div class="col-md-6 col-sm-12">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="PoliciesTableFilter" placeholder="@L("SearchWithThreeDot")" />
+                        <button class="btn btn-primary" type="button" id="GetPoliciesButton">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="align-items-center">
+                <table id="PoliciesTable" class="table align-middle table-row-dashed fs-6 gy-5 dataTable dtr-inline no-footer" width="100%">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>@L("Actions")</th>
+                            <th>@L("Name")</th>
+                            <th>@L("Algorithm")</th>
+                            <th>@L("PartitionType")</th>
+                            <th>@L("PermitLimit")</th>
+                            <th>@L("WindowInSeconds")</th>
+                            <th>@L("IsGlobal")</th>
+                            <th>@L("IsEnabled")</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

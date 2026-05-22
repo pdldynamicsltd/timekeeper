@@ -1,0 +1,4 @@
+{
+  "path" : "pages\\admin\\{{namespace_Relative_Here}}\\{{entity_Name_Plural_Here}}\\createOrEdit\\index.tsx",
+  "condition": "{{Is_Non_Modal_CRUD_Page}} == true && {{Is_Master_Detail_Page_Child_Here}} == false"
+}

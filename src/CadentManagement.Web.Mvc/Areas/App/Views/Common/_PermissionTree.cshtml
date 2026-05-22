@@ -1,0 +1,42 @@
+﻿@using CadentManagement.Web.Areas.App.Models.Common
+@model IPermissionsEditViewModel
+
+<div class="mb-5">
+    <input id="PermissionTreeFilter" type="text" class="form-control" placeholder="@L("SearchWithThreeDot")">
+</div>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <button type="button" id="toggle-expand-collapse-button"
+                class="btn btn-sm btn-outline-secondary d-flex align-items-center" title="@L("CollapseAll")"
+                data-bs-toggle="tooltip"
+                data-state="expanded"
+                data-expand-title="@L("ExpandAll")"
+                data-collapse-title="@L("CollapseAll")">
+            <i class="fa-solid fa-angles-up"></i>
+            <span class="ms-2 text-muted">@L("CollapseAll")</span>
+        </button>
+    </div>
+
+    <div class="form-check form-switch toggle-permissions-visibility-button">
+        <input class="form-check-input" type="checkbox" id="onlyShowEnabledPermissionsSwitch">
+        <label id="permissionsSwitchLabel" class="form-check-label"
+               for="onlyShowEnabledPermissionsSwitch"
+               data-bs-toggle="tooltip"
+               data-bs-placement="top"
+               title="@L("OnlyShowEnabledPermissionsTooltip")"
+               data-enabled-text="@L("OnlyShowEnabledPermissions")"
+               data-all-text="@L("ShowAllPermissions")"
+               data-tooltip-enabled="@L("OnlyShowEnabledPermissionsTooltip")"
+               data-tooltip-all="@L("ShowAllPermissionsTooltip")">
+            @L("OnlyShowEnabledPermissions")
+        </label>
+    </div>
+</div>
+
+
+<div class="permission-tree scroll h-400px">
+    @await Html.PartialAsync("~/Areas/App/Views/Common/_PermissionTreeItem.cshtml", new PermissionTreeItemModel(Model, null))
+    <div id="noGrantedPermissionsMessage" class="alert alert-warning text-center" style="display: none;">
+        @L("NoPermissionsAvailable")
+    </div>
+</div>

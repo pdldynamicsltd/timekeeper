@@ -1,0 +1,465 @@
+{
+"propertyTemplates":[
+		{
+			"placeholder" : "{{Property_Filter_State_Here}}",
+			"condition" : "{{Property_Advanced_Filter_Here}} == true",
+			"templates" : [
+					{
+					"type" : "enum",
+					"content" : "  const [{{property_Name_Here}}Filter, set{{Property_Name_Here}}Filter] = useState<number>(-1);
+"
+					},
+					{
+					"type" : "bool",
+					"content" : "  const [{{property_Name_Here}}Filter, set{{Property_Name_Here}}Filter] = useState<number>(-1);
+"
+					},
+					{
+					"type" : "DateTime",
+					"content" : "  const [min{{Property_Name_Here}}Filter, setMin{{Property_Name_Here}}Filter] = useState<dayjs.Dayjs | null>(null);
+  const [max{{Property_Name_Here}}Filter, setMax{{Property_Name_Here}}Filter] = useState<dayjs.Dayjs | null>(null);
+"
+					},
+					{
+					"type" : "numeric",
+					"content" : "  const [min{{Property_Name_Here}}Filter, setMin{{Property_Name_Here}}Filter] = useState<number | undefined>(undefined);
+  const [max{{Property_Name_Here}}Filter, setMax{{Property_Name_Here}}Filter] = useState<number | undefined>(undefined);
+"
+					},
+					{
+					"type" : "file",
+					"content" : ""
+					},
+					{
+					"type" : "default",
+					"content" : "  const [{{property_Name_Here}}Filter, set{{Property_Name_Here}}Filter] = useState(\"\");
+"
+					}
+				]
+		},
+		{
+			"placeholder" : "{{Property_Filter_Input_Here}}",
+			"condition" : "{{Property_Advanced_Filter_Here}} == true",
+			"templates" : [
+					{
+					"type" : "enum",
+					"content" : "        {{property_Name_Here}}Filter: {{property_Name_Here}}Filter === -1 ? undefined : {{property_Name_Here}}Filter,
+"
+					},
+					{
+					"type" : "bool",
+					"content" : "        {{property_Name_Here}}Filter: {{property_Name_Here}}Filter === -1 ? undefined : {{property_Name_Here}}Filter === 1,
+"
+					},
+					{
+					"type" : "DateTime",
+					"content" : "        min{{Property_Name_Here}}Filter: min{{Property_Name_Here}}Filter,
+        max{{Property_Name_Here}}Filter: max{{Property_Name_Here}}Filter,
+"
+					},
+					{
+					"type" : "numeric",
+					"content" : "        min{{Property_Name_Here}}Filter: min{{Property_Name_Here}}Filter,
+        max{{Property_Name_Here}}Filter: max{{Property_Name_Here}}Filter,
+"
+					},
+					{
+					"type" : "file",
+					"content" : ""
+					},
+					{
+					"type" : "default",
+					"content" : "        {{property_Name_Here}}Filter: {{property_Name_Here}}Filter,
+"
+					}
+				]
+		},
+		{
+			"placeholder" : "{{Property_Filter_Deps_Here}}",
+			"condition" : "{{Property_Advanced_Filter_Here}} == true",
+			"templates" : [
+					{
+					"type" : "DateTime",
+					"content" : "min{{Property_Name_Here}}Filter, max{{Property_Name_Here}}Filter, "
+					},
+					{
+					"type" : "numeric",
+					"content" : "min{{Property_Name_Here}}Filter, max{{Property_Name_Here}}Filter, "
+					},
+					{
+					"type" : "file",
+					"content" : ""
+					},
+					{
+					"type" : "default",
+					"content" : "{{property_Name_Here}}Filter, "
+					}
+				]
+		},
+		{
+			"placeholder" : "{{Property_Filter_Param_Here}}",
+			"condition" : "{{Property_Advanced_Filter_Here}} == true",
+			"templates" : [
+					{
+					"type" : "DateTime",
+					"content" : "max{{Property_Name_Here}}Filter, min{{Property_Name_Here}}Filter, "
+					},
+					{
+					"type" : "numeric",
+					"content" : "max{{Property_Name_Here}}Filter, min{{Property_Name_Here}}Filter, "
+					},
+					{
+					"type" : "file",
+					"content" : ""
+					},
+					{
+					"type" : "default",
+					"content" : "{{property_Name_Here}}Filter, "
+					}
+				]
+		},
+		{
+			"placeholder" : "{{Property_Column_Def_Here}}",
+			"condition" : "{{Property_Listed_Here}} == true",
+			"templates" : [
+					{
+					"type" : "enum",
+					"content" : "    {
+      title: L(\"{{Property_Name_Here}}\"),
+      dataIndex: [\"{{entity_Name_Here}}\", \"{{property_Name_Here}}\"],
+      key: \"{{property_Name_Here}}\",
+      sorter: true,
+      render: (value: number) => L({{Enum_Localization_Before_060600}} {{property_Type_Here}}[value]),
+    },
+"
+					},
+					{
+					"type" : "bool",
+					"content" : "    {
+      title: L(\"{{Property_Name_Here}}\"),
+      dataIndex: [\"{{entity_Name_Here}}\", \"{{property_Name_Here}}\"],
+      key: \"{{property_Name_Here}}\",
+      sorter: true,
+      render: (value: boolean) =>
+        value ? (
+          <i className=\"fa fa-check-circle text-success\" />
+        ) : (
+          <i className=\"fa fa-times-circle text-muted\" />
+        ),
+    },
+"
+					},
+					{
+					"type" : "DateTime",
+					"content" : "    {
+      title: L(\"{{Property_Name_Here}}\"),
+      dataIndex: [\"{{entity_Name_Here}}\", \"{{property_Name_Here}}\"],
+      key: \"{{property_Name_Here}}\",
+      sorter: true,
+      render: (value: string | undefined) =>
+        value ? dayjs(value).format(\"L LT\") : \"-\",
+    },
+"
+					},
+					{
+					"type" : "file",
+					"content" : "    {
+      title: L(\"{{Property_Name_Here}}\"),
+      dataIndex: [\"{{entity_Name_Here}}\", \"{{property_Name_Here}}\"],
+      key: \"{{property_Name_Here}}\",
+      render: (_: any, record: Get{{Entity_Name_Here}}ForViewDto) => (
+        <a
+          href={getDownloadUrl(record.{{entity_Name_Here}}.{{property_Name_Here}})}
+          target=\"_blank\"
+          rel=\"noreferrer\"
+        >
+          {record.{{entity_Name_Here}}.{{property_Name_Here}}FileName}
+        </a>
+      ),
+    },
+"
+					},
+					{
+					"type" : "default",
+					"content" : "    {
+      title: L(\"{{Property_Name_Here}}\"),
+      dataIndex: [\"{{entity_Name_Here}}\", \"{{property_Name_Here}}\"],
+      key: \"{{property_Name_Here}}\",
+      sorter: true,
+    },
+"
+					}
+				]
+		},
+		{
+			"placeholder" : "{{Advanced_Filter_Inputs_Here}}",
+			"condition" : "{{Property_Advanced_Filter_Here}} == true",
+			"templates" : [
+					{
+					"type" : "enum",
+					"content" : "                <div className=\"col-md-3 mb-3\">
+                  <label className=\"form-label\">{L(\"{{Property_Name_Here}}\")}</label>
+                  <select
+                    className=\"form-select\"
+                    value={{{property_Name_Here}}Filter}
+                    onChange={(e) => set{{Property_Name_Here}}Filter(Number(e.target.value))}
+                  >
+                    <option value={-1}>{L(\"All\")}</option>
+                    {{Enum_Option_Looped_Template_Here}}
+                  </select>
+                </div>
+"
+					},
+					{
+					"type" : "bool",
+					"content" : "                <div className=\"col-md-3 mb-3\">
+                  <label className=\"form-label\">{L(\"{{Property_Name_Here}}\")}</label>
+                  <select
+                    className=\"form-select\"
+                    value={{{property_Name_Here}}Filter}
+                    onChange={(e) => set{{Property_Name_Here}}Filter(Number(e.target.value))}
+                  >
+                    <option value={-1}>{L(\"All\")}</option>
+                    <option value={0}>{L(\"False\")}</option>
+                    <option value={1}>{L(\"True\")}</option>
+                  </select>
+                </div>
+"
+					},
+					{
+					"type" : "DateTime",
+					"content" : "                <div className=\"col-md-3 mb-3\">
+                  <label className=\"form-label\">{L(\"{{Property_Name_Here}}Range\")}</label>
+                  <div className=\"input-group\">
+                    <DatePicker
+                      showTime
+                      className=\"form-control\"
+                      value={min{{Property_Name_Here}}Filter}
+                      onChange={(date) => setMin{{Property_Name_Here}}Filter(date)}
+                      placeholder={L(\"MinValue\")}
+                    />
+                    <DatePicker
+                      showTime
+                      className=\"form-control\"
+                      value={max{{Property_Name_Here}}Filter}
+                      onChange={(date) => setMax{{Property_Name_Here}}Filter(date)}
+                      placeholder={L(\"MaxValue\")}
+                    />
+                  </div>
+                </div>
+"
+					},
+					{
+					"type" : "numeric",
+					"content" : "                <div className=\"col-md-3 mb-3\">
+                  <label className=\"form-label\">{L(\"MinMax\")} {L(\"{{Property_Name_Here}}\")}</label>
+                  <div className=\"input-group\">
+                    <input
+                      type=\"number\"
+                      className=\"form-control\"
+                      value={min{{Property_Name_Here}}Filter ?? \"\"}
+                      onChange={(e) => setMin{{Property_Name_Here}}Filter(e.target.value ? Number(e.target.value) : undefined)}
+                      placeholder={L(\"MinValue\")}
+                    />
+                    <input
+                      type=\"number\"
+                      className=\"form-control\"
+                      value={max{{Property_Name_Here}}Filter ?? \"\"}
+                      onChange={(e) => setMax{{Property_Name_Here}}Filter(e.target.value ? Number(e.target.value) : undefined)}
+                      placeholder={L(\"MaxValue\")}
+                    />
+                  </div>
+                </div>
+"
+					},
+					{
+					"type" : "file",
+					"content" : ""
+					},
+					{
+					"type" : "default",
+					"content" : "                <div className=\"col-md-3 mb-3\">
+                  <label className=\"form-label\">{L(\"{{Property_Name_Here}}\")}</label>
+                  <input
+                    type=\"text\"
+                    className=\"form-control\"
+                    value={{{property_Name_Here}}Filter}
+                    onChange={(e) => set{{Property_Name_Here}}Filter(e.target.value)}
+                    onKeyDown={(e) => e.key === \"Enter\" && fetchData()}
+                  />
+                </div>
+"
+					}
+				]
+		}
+	],
+"navigationPropertyTemplates":[
+		{
+			"placeholder" : "{{NP_Filter_State_Here}}",
+			"templates" : [
+					{
+					"relation" : "single",
+					"content" : "  const [{{nP_Foreign_Entity_Name_Here}}{{NP_Display_Property_Name_Here}}{{NP_Duplication_Number_Here}}Filter, set{{NP_Foreign_Entity_Name_Here}}{{NP_Display_Property_Name_Here}}{{NP_Duplication_Number_Here}}Filter] = useState(\"\");
+"
+					}
+				]
+		},
+		{
+			"placeholder" : "{{NP_Filter_Input_Here}}",
+			"templates" : [
+					{
+					"relation" : "single",
+					"content" : "        {{nP_Foreign_Entity_Name_Here}}{{NP_Display_Property_Name_Here}}{{NP_Duplication_Number_Here}}Filter: {{nP_Foreign_Entity_Name_Here}}{{NP_Display_Property_Name_Here}}{{NP_Duplication_Number_Here}}Filter,
+"
+					}
+				]
+		},
+		{
+			"placeholder" : "{{NP_Filter_Deps_Here}}",
+			"templates" : [
+					{
+					"relation" : "single",
+					"content" : "{{nP_Foreign_Entity_Name_Here}}{{NP_Display_Property_Name_Here}}{{NP_Duplication_Number_Here}}Filter, "
+					}
+				]
+		},
+		{
+			"placeholder" : "{{NP_Filter_Param_Here}}",
+			"templates" : [
+					{
+					"relation" : "single",
+					"content" : "{{nP_Foreign_Entity_Name_Here}}{{NP_Display_Property_Name_Here}}{{NP_Duplication_Number_Here}}Filter, "
+					}
+				]
+		},
+		{
+			"placeholder" : "{{NP_Column_Def_Here}}",
+			"templates" : [
+					{
+					"relation" : "single",
+					"content" : "    {
+      title: L(\"{{NP_Display_Property_Name_Here}}\") + \" (\" + L(\"{{NP_Foreign_Entity_Name_Here}}{{NP_Duplication_Number_Here}}\") + \")\",
+      dataIndex: \"{{nP_Foreign_Entity_Name_Here}}{{NP_Display_Property_Name_Here}}{{NP_Duplication_Number_Here}}\",
+      key: \"{{nP_Foreign_Entity_Name_Here}}{{NP_Display_Property_Name_Here}}{{NP_Duplication_Number_Here}}\",
+      sorter: true,
+    },
+"
+					}
+				]
+		},
+		{
+			"placeholder" : "{{NP_Advanced_Filter_Inputs_Here}}",
+			"templates" : [
+					{
+					"relation" : "single",
+					"content" : "                <div className=\"col-md-3 mb-3\">
+                  <label className=\"form-label\">
+                    ({L(\"{{NP_Foreign_Entity_Name_Here}}{{NP_Duplication_Number_Here}}\")}) {L(\"{{NP_Display_Property_Name_Here}}\")}
+                  </label>
+                  <input
+                    type=\"text\"
+                    className=\"form-control\"
+                    value={{{nP_Foreign_Entity_Name_Here}}{{NP_Display_Property_Name_Here}}{{NP_Duplication_Number_Here}}Filter}
+                    onChange={(e) => set{{NP_Foreign_Entity_Name_Here}}{{NP_Display_Property_Name_Here}}{{NP_Duplication_Number_Here}}Filter(e.target.value)}
+                    onKeyDown={(e) => e.key === \"Enter\" && fetchData()}
+                  />
+                </div>
+"
+					}
+				]
+		}
+	],
+"enumTemplates":[
+		{
+			"placeholder" : "{{Enum_Option_Looped_Template_Here}}",
+			"content" : "                    <option value={{{Enum_Property_Value_Here}}}>{L(\"{{Enum_Property_Name_Here}}\")}</option>
+"
+		}
+	],
+"conditionalTemplates":[
+		{
+			"placeholder": "{{View_Menu_Item_Here}}",
+			"condition": "{{Create_View_Only_Here}} == true",
+			"content": "    items.push({
+      key: \"view\",
+      label: L(\"View\")!,
+      onClick: () => {
+        navigate(`view/${record.{{entity_Name_Here}}.id}`);
+      },
+    });
+"
+		},
+		{
+			"placeholder": "{{Excel_Export_Function_Here}}",
+			"condition": "{{Create_Excel_Export_Here}} == true",
+			"content": "  const exportToExcel = async () => {
+    const columns = await {{entity_Name_Plural_Here}}Service.get{{Entity_Name_Here}}ExcelColumnsToExcel();
+    const result = await {{entity_Name_Plural_Here}}Service.get{{Entity_Name_Plural_Here}}ToExcel(
+      filterText,
+      columns,
+      {{Property_Filter_Param_Here}}{{NP_Filter_Param_Here}}
+    );
+    downloadTempFile(result);
+  };
+"
+		},
+		{
+			"placeholder": "{{Excel_Export_Button_Here}}",
+			"condition": "{{Create_Excel_Export_Here}} == true",
+			"content": "<button
+                  type=\"button\"
+                  className=\"btn btn-outline btn-outline-success btn-active-light-success\"
+                  onClick={() => exportToExcel()}
+                >
+                  <i className=\"far fa-file-excel btn-md-icon\"></i>
+                  <span className=\"d-none d-md-inline-block ms-2\">
+                    {L(\"ExportToExcel\")}
+                  </span>
+                </button>"
+		},
+		{
+			"placeholder": "{{File_Dto_Import_Here}}",
+			"condition": "{{Create_Excel_Export_Here}} == true",
+			"content": "
+  FileDto,"
+		},
+		{
+			"placeholder": "{{Entity_History_Menu_Item_Here}}",
+			"condition": "{{Entity_History_Here}} == true",
+			"content": "    if (isGranted(\"Pages.Administration.AuditLogs\")) {
+      items.push({
+        key: \"history\",
+        label: L(\"History\")!,
+        onClick: () => {
+          navigate(`/app/admin/entity-changes/${record.id}/${encodeURIComponent(\"{{Entity_Name_Here}}\")}`);
+        },
+      });
+    }
+"
+		},
+		{
+			"placeholder": "{{DateTime_Import_Here}}",
+			"condition": "{{Has_DateTime_Type_Property}} == true",
+			"content": "
+import { DatePicker } from \"antd\";
+import dayjs from \"dayjs\";"
+		},
+		{
+			"placeholder": "{{File_Prop_Import_Here}}",
+			"condition": "{{Has_File_Prop}} == true",
+			"content": "
+import AppConsts from \"@/lib/app-consts\";"
+		},
+		{
+			"placeholder": "{{Get_Download_Url_Here}}",
+			"condition": "{{Has_File_Prop}} == true",
+			"content": "
+const getDownloadUrl = (id: string | undefined): string => {
+  return AppConsts.remoteServiceBaseUrl + '/File/DownloadBinaryFile?id=' + id;
+};
+"
+		}
+	],
+"navigationPropertyOneToManyTableTemplates":[
+	]
+}

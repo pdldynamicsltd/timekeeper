@@ -1,0 +1,4 @@
+{
+	"targetPath" : "{{Menu_Position_Here}}/{{entity_Name_Plural_Here}}/components/View{{Entity_Name_Here}}Modal.tsx",
+	"condition" : "{{Create_View_Only_Here}} == true && {{Is_MultiLingual_Entity}} == true"
+}

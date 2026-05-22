@@ -1,0 +1,12 @@
+{
+"propertyTemplates":[
+	],
+"navigationPropertyTemplates":[
+	],
+"enumTemplates":[
+	],
+"conditionalTemplates":[
+	],
+"navigationPropertyOneToManyTableTemplates":[
+	]
+}

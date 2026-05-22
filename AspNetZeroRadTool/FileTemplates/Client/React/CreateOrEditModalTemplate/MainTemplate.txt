@@ -1,0 +1,115 @@
+import React, { useEffect, useState } from "react";
+import { Modal, Form, App, Input, InputNumber } from "antd";
+import { useServiceProxy } from "@/api/service-proxy-factory";
+import {
+  {{Entity_Name_Here}}Dto,
+  CreateOrEdit{{Entity_Name_Here}}Dto,
+  {{Entity_Name_Plural_Here}}ServiceProxy,
+} from "@api/generated/service-proxies";
+import L from "@/lib/L";{{DateTime_Import_Here}}{{Lookup_Modal_Imports_Here}}{{MultiLingual_Imports_Here}}{{File_Upload_Import_Here}}
+
+interface CreateOrEdit{{Entity_Name_Here}}ModalProps {
+  visible: boolean;
+  onClose: () => void;
+  onSaved: () => void;
+  {{entity_Name_Here}}Id?: {{Primary_Key_Type_Here}};{{NP_Optional_Props_Here}}
+}
+
+const CreateOrEdit{{Entity_Name_Here}}Modal: React.FC<
+  CreateOrEdit{{Entity_Name_Here}}ModalProps
+> = ({ visible, onClose, onSaved, {{entity_Name_Here}}Id{{NP_Optional_Props_Destructure_Here}} }) => {
+  const [form] = Form.useForm();
+  const { message } = App.useApp();
+  const {{entity_Name_Plural_Here}}Service = useServiceProxy({{Entity_Name_Plural_Here}}ServiceProxy, []);
+  
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
+  {{NP_Lookup_State_Here}}
+  {{MultiLingual_State_Here}}
+  {{File_Property_State_Here}}
+
+  const isEditMode = {{entity_Name_Here}}Id !== undefined;
+
+  useEffect(() => {
+    if (visible) {
+      if (isEditMode) {
+        loadEntity();
+      } else {
+        form.resetFields();
+        resetLookups();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, {{entity_Name_Here}}Id]);
+
+  const loadEntity = async () => {
+    setLoading(true);
+    try {
+      const result = await {{entity_Name_Plural_Here}}Service.get{{Entity_Name_Here}}ForEdit({{entity_Name_Here}}Id!);
+      form.setFieldsValue(result.{{entity_Name_Here}});
+      {{Set_DateTime_Value_Here}}
+      {{Set_NP_Lookup_Values_Here}}
+      {{Set_MultiLingual_Values_Here}}
+      {{Set_File_Download_Url_Here}}
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetLookups = () => {
+    {{Reset_NP_Lookups_Here}}
+  };
+
+  const save = async () => {
+    try {
+      const values = await form.validateFields();
+      setSaving(true);
+
+      const dto = new CreateOrEdit{{Entity_Name_Here}}Dto({
+        ...values,
+        {{Set_NP_Id_Values_Here}}
+        {{Set_MultiLingual_Dto_Values_Here}}
+        {{Set_File_Token_Dto_Here}}
+        id: {{entity_Name_Here}}Id,
+      });
+
+      await {{entity_Name_Plural_Here}}Service.createOrEdit(dto);
+      message.success(L("SavedSuccessfully"));
+      onSaved();
+      onClose();
+    } catch (error) {
+      // Form validation error
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  {{Lookup_Modal_Open_Functions_Here}}
+{{File_Upload_Handler_Here}}
+  return (
+    <>
+      <Modal
+        title={isEditMode ? L("Edit{{Entity_Name_Here}}") : L("CreateNew{{Entity_Name_Here}}")}
+        open={visible}
+        onCancel={onClose}
+        onOk={save}
+        confirmLoading={saving}
+        destroyOnHidden
+        width={700}
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          disabled={loading}
+        >
+          {{Property_Form_Items_Here}}
+          {{NP_Form_Items_Here}}
+          {{MultiLingual_Form_Items_Here}}
+        </Form>
+      </Modal>
+      {{Lookup_Modal_Components_Here}}
+    </>
+  );
+};
+
+export default CreateOrEdit{{Entity_Name_Here}}Modal;

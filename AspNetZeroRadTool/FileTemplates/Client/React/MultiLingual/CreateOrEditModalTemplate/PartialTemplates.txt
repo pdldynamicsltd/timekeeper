@@ -1,0 +1,269 @@
+{
+"propertyTemplates":[
+		{
+			"placeholder" : "{{Non_MultiLingual_Property_Form_Items_Here}}",
+			"condition" : "{{Property_CreateOrEdit_Here}} == true && {{Property_Is_MultiLingual_Here}} == false",
+			"templates" : [
+				{
+				"type" : "enum",
+				"content" : "          <Form.Item
+            className=\"my-5\"
+            label={L(\"{{Property_Name_Here}}\")}
+            name=\"{{property_Name_Here}}\"
+            rules={[{{Required_Rule_Here}}]}
+          >
+            <select className=\"form-select\">
+              {{Enum_Option_Looped_Template_Here}}
+            </select>
+          </Form.Item>
+"
+				},
+				{
+				"type" : "bool",
+				"content" : "          <Form.Item
+            className=\"my-5\"
+            label={L(\"{{Property_Name_Here}}\")}
+            name=\"{{property_Name_Here}}\"
+            valuePropName=\"checked\"
+          >
+            <div className=\"form-check form-check-custom form-check-solid\">
+              <input type=\"checkbox\" className=\"form-check-input\" />
+            </div>
+          </Form.Item>
+"
+				},
+				{
+				"type" : "DateTime",
+				"content" : "          <Form.Item
+            className=\"my-5\"
+            label={L(\"{{Property_Name_Here}}\")}
+            name=\"{{property_Name_Here}}\"
+            rules={[{{Required_Rule_Here}}]}
+          >
+            <DatePicker showTime className=\"form-control w-100\" />
+          </Form.Item>
+"
+				},
+				{
+				"type" : "file",
+				"content" : "          <Form.Item
+            className=\"my-5\"
+            label={L(\"{{Property_Name_Here}}\")}
+            name=\"{{property_Name_Here}}\"
+          >
+            <input type=\"file\" className=\"form-control\" />
+          </Form.Item>
+"
+				},
+				{
+				"type" : "numeric",
+				"content" : "          <Form.Item
+            className=\"my-5\"
+            label={L(\"{{Property_Name_Here}}\")}
+            name=\"{{property_Name_Here}}\"
+            rules={[{{Required_Rule_Here}}]}
+          >
+            <input type=\"number\" className=\"form-control\" />
+          </Form.Item>
+"
+				},
+				{
+				"type" : "default",
+				"content" : "          <Form.Item
+            className=\"my-5\"
+            label={L(\"{{Property_Name_Here}}\")}
+            name=\"{{property_Name_Here}}\"
+            rules={[{{Required_Rule_Here}}]}
+          >
+            <input type=\"text\" className=\"form-control\" />
+          </Form.Item>
+"
+				}
+				]
+		},
+		{
+			"placeholder" : "{{MultiLingual_Property_Form_Items_Here}}",
+			"condition" : "{{Property_CreateOrEdit_Here}} == true && {{Property_Is_MultiLingual_Here}} == true",
+			"templates" : [
+					{
+					"type" : "default",
+					"content" : "        <div className=\"mb-3\">
+          <label className=\"form-label\">{L(\"{{Property_Name_Here}}\")}</label>
+          <input
+            type=\"text\"
+            className=\"form-control\"
+            value={translations.get(activeLanguageTab)?.{{property_Name_Here}} ?? \"\"}
+            onChange={(e) => updateTranslation(activeLanguageTab, \"{{property_Name_Here}}\", e.target.value)}
+          />
+        </div>
+"
+					}
+				]
+		},
+		{
+			"placeholder" : "{{MultiLingual_Property_Init_Here}}",
+			"condition" : "{{Property_Is_MultiLingual_Here}} == true",
+			"templates" : [
+					{
+					"type" : "default",
+					"content" : "        {{property_Name_Here}}: \"\",
+"
+					}
+				]
+		},
+		{
+			"placeholder" : "{{Set_DateTime_Value_Here}}",
+			"condition" : "{{Property_CreateOrEdit_Here}} == true",
+			"templates" : [
+					{
+					"type" : "DateTime",
+					"content" : "      if (result.{{entity_Name_Here}}.{{property_Name_Here}}) {\n        form.setFieldValue(\"{{property_Name_Here}}\", dayjs(result.{{entity_Name_Here}}.{{property_Name_Here}}));\n      }\n"
+					},
+					{
+					"type" : "default",
+					"content" : ""
+					}
+				]
+		}
+	],
+"navigationPropertyTemplates":[
+		{
+			"placeholder" : "{{NP_Lookup_State_Here}}",
+			"templates" : [
+					{
+					"relation" : "single",
+					"content" : "  const [{{nP_Foreign_Entity_Name_Here}}{{NP_Duplication_Number_Here}}Id, set{{NP_Foreign_Entity_Name_Here}}{{NP_Duplication_Number_Here}}Id] = useState<{{NP_Id_Type_TS_Here}} | undefined>();
+  const [{{nP_Foreign_Entity_Name_Here}}{{NP_Duplication_Number_Here}}DisplayValue, set{{NP_Foreign_Entity_Name_Here}}{{NP_Duplication_Number_Here}}DisplayValue] = useState(\"\");
+  const [{{nP_Foreign_Entity_Name_Here}}{{NP_Duplication_Number_Here}}LookupVisible, set{{NP_Foreign_Entity_Name_Here}}{{NP_Duplication_Number_Here}}LookupVisible] = useState(false);
+"
+					}
+				]
+		},
+		{
+			"placeholder" : "{{Set_NP_Lookup_Values_Here}}",
+			"templates" : [
+					{
+					"relation" : "single",
+					"content" : "      set{{NP_Foreign_Entity_Name_Here}}{{NP_Duplication_Number_Here}}Id(result.{{entity_Name_Here}}.{{nP_Name_Here}});
+      set{{NP_Foreign_Entity_Name_Here}}{{NP_Duplication_Number_Here}}DisplayValue(result.{{nP_Foreign_Entity_Name_Here}}{{NP_Display_Property_Name_Here}}{{NP_Duplication_Number_Here}} ?? \"\");
+"
+					}
+				]
+		},
+		{
+			"placeholder" : "{{Reset_NP_Lookups_Here}}",
+			"templates" : [
+					{
+					"relation" : "single",
+					"content" : "    set{{NP_Foreign_Entity_Name_Here}}{{NP_Duplication_Number_Here}}Id(undefined);
+    set{{NP_Foreign_Entity_Name_Here}}{{NP_Duplication_Number_Here}}DisplayValue(\"\");
+"
+					}
+				]
+		},
+		{
+			"placeholder" : "{{Set_NP_Id_Values_Here}}",
+			"templates" : [
+					{
+					"relation" : "single",
+					"content" : "        {{nP_Name_Here}}: {{nP_Foreign_Entity_Name_Here}}{{NP_Duplication_Number_Here}}Id,
+"
+					}
+				]
+		},
+		{
+			"placeholder" : "{{Lookup_Modal_Open_Functions_Here}}",
+			"templates" : [
+					{
+					"relation" : "single",
+					"content" : "  const open{{NP_Foreign_Entity_Name_Here}}{{NP_Duplication_Number_Here}}Lookup = () => {
+    set{{NP_Foreign_Entity_Name_Here}}{{NP_Duplication_Number_Here}}LookupVisible(true);
+  };
+
+  const on{{NP_Foreign_Entity_Name_Here}}{{NP_Duplication_Number_Here}}Selected = (id: {{NP_Id_Type_TS_Here}}, displayValue: string) => {
+    set{{NP_Foreign_Entity_Name_Here}}{{NP_Duplication_Number_Here}}Id(id);
+    set{{NP_Foreign_Entity_Name_Here}}{{NP_Duplication_Number_Here}}DisplayValue(displayValue);
+    set{{NP_Foreign_Entity_Name_Here}}{{NP_Duplication_Number_Here}}LookupVisible(false);
+  };
+"
+					}
+				]
+		},
+		{
+			"placeholder" : "{{NP_Form_Items_Here}}",
+			"templates" : [
+					{
+					"relation" : "single",
+					"content" : "          <Form.Item
+            label={L(\"{{NP_Foreign_Entity_Name_Here}}{{NP_Duplication_Number_Here}}\")}
+            className=\"mb-3\"
+          >
+            <div className=\"input-group\">
+              <input
+                type=\"text\"
+                className=\"form-control\"
+                value={{{nP_Foreign_Entity_Name_Here}}{{NP_Duplication_Number_Here}}DisplayValue}
+                readOnly
+              />
+              <button
+                type=\"button\"
+                className=\"btn btn-primary\"
+                onClick={open{{NP_Foreign_Entity_Name_Here}}{{NP_Duplication_Number_Here}}Lookup}
+              >
+                <i className=\"fa fa-search\"></i>
+              </button>
+            </div>
+          </Form.Item>
+"
+					}
+				]
+		},
+		{
+			"placeholder" : "{{Lookup_Modal_Components_Here}}",
+			"templates" : [
+					{
+					"relation" : "single",
+					"content" : "      <{{NP_Foreign_Entity_Name_Here}}LookupTableModal
+        visible={{{nP_Foreign_Entity_Name_Here}}{{NP_Duplication_Number_Here}}LookupVisible}
+        onClose={() => set{{NP_Foreign_Entity_Name_Here}}{{NP_Duplication_Number_Here}}LookupVisible(false)}
+        onSelect={on{{NP_Foreign_Entity_Name_Here}}{{NP_Duplication_Number_Here}}Selected}
+      />
+"
+					}
+				]
+		},
+		{
+			"placeholder" : "{{Lookup_Modal_Imports_Here}}",
+			"templates" : [
+					{
+					"relation" : "single",
+					"content" : "
+import {{NP_Foreign_Entity_Name_Here}}LookupTableModal from \"./{{NP_Foreign_Entity_Name_Here}}LookupTableModal\";"
+					}
+				]
+		}
+	],
+"enumTemplates":[
+		{
+			"placeholder" : "{{Enum_Option_Looped_Template_Here}}",
+			"content" : "              <option value={{{Enum_Property_Value_Here}}}>{L(\"{{Enum_Property_Name_Here}}\")}</option>
+"
+		}
+	],
+"conditionalTemplates":[
+		{
+			"placeholder": "{{Required_Rule_Here}}",
+			"condition": "{{Property_Is_Required_Here}} == true",
+			"content": "{ required: true, message: L(\"ThisFieldIsRequired\") }"
+		},
+		{
+			"placeholder": "{{DateTime_Import_Here}}",
+			"condition": "{{Has_DateTime_Type_Property}} == true",
+			"content": "
+import { DatePicker } from \"antd\";
+import dayjs from \"dayjs\";"
+		}
+	],
+"navigationPropertyOneToManyTableTemplates":[
+	]
+}

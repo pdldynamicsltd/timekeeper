@@ -1,0 +1,4 @@
+{
+	"path" : "{{Namespace_Here}}.Application\\Mappers\\{{Entity_Name_Here}}Mappers.cs",
+	"condition": "{{Project_Version_Here}} >= 150200 && {{Is_Master_Detail_Page_Child_Here}} == false && {{Is_Multi_Lingual_Entity}} == true"
+}
