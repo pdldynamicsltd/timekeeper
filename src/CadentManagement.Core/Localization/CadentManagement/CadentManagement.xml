@@ -1547,7 +1547,7 @@
     <text name="AddNewProject">Add New Project</text>
     <text name="AddNewTask">Add New Task</text>
     <text name="AddNewTimeEntry">Add New Time Entry</text>
-    <text name="ExportToExcel">Export to Excel</text>
+ 
     <text name="BudgetExceeded">Budget Exceeded</text>
     <text name="BudgetWarning">Budget Warning</text>
     <text name="FilterByProject">Filter by Project</text>
@@ -1567,5 +1567,21 @@
     <text name="TimeEntryDate">Date</text>
     <text name="ReportSummary">Summary</text>
     <text name="ReportDetail">Detail</text>
+    <text name="MyWeek">My Week</text>
+    <text name="MyWeekDescription">Weekly time entry view</text>
+    <text name="LogTime">Log Time</text>
+    <text name="LoadError">Failed to load data. Please try again.</text>
+    <text name="ViewDetails">View Details</text>
+    <text name="NoProjects">No projects found. Create your first project to get started.</text>
+    <text name="WeekOf">Week of {0}</text>
+    <text name="TotalThisWeek">Total this week</text>
+    <text name="TodayTotal">Today</text>
+    <text name="NewTimeEntry">New Time Entry</text>
+    <text name="QuickLogTime">Quick Log Time</text>
+    <text name="PreviousWeek">Previous Week</text>
+    <text name="NextWeek">Next Week</text>
+    <text name="CurrentWeek">This Week</text>
+    <text name="DailyTotal">Daily Total</text>
+    <text name="HoursLogged">hrs logged</text>
   </texts>
 </localizationDictionary>

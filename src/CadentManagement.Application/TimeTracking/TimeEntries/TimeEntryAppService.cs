@@ -166,6 +166,7 @@ public class TimeEntryAppService : CadentManagementAppServiceBase, ITimeEntryApp
     {
         var query = _timeEntryRepository.GetAll()
             .Where(e => e.TenantId == AbpSession.TenantId)
+            .WhereIf(input.ForCurrentUserOnly && AbpSession.UserId.HasValue, e => e.UserId == AbpSession.UserId.Value)
             .WhereIf(input.ProjectId.HasValue, e => e.ProjectId == input.ProjectId.Value)
             .WhereIf(input.StartDate.HasValue, e => e.EndTime >= input.StartDate.Value)
             .WhereIf(input.EndDate.HasValue, e => e.StartTime <= input.EndDate.Value);

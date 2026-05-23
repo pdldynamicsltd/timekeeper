@@ -60,6 +60,13 @@ public class AppNavigationProvider : NavigationProvider
                         permissionDependency: new SimplePermissionDependency(AppPermissions.Pages_TimeTracking)
                     )
                 ).AddItem(new MenuItemDefinition(
+                        AppPageNames.Tenant.TimeTrackingMyWeek,
+                        L("MyWeek"),
+                        url: "App/TimeTracking/MyWeek",
+                        icon: "flaticon-calendar-1",
+                        permissionDependency: new SimplePermissionDependency(AppPermissions.Pages_TimeTracking_TimeEntries)
+                    )
+                ).AddItem(new MenuItemDefinition(
                         AppPageNames.Tenant.TimeTrackingReports,
                         L("TimeTrackingReports"),
                         url: "App/TimeTracking/Reports",

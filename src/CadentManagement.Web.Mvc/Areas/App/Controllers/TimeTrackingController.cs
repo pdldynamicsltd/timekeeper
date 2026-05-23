@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Abp.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -43,6 +44,11 @@ public class TimeTrackingController : CadentManagementControllerBase
         return View();
     }
 
+    public IActionResult MyWeek()
+    {
+        return View();
+    }
+
     [AbpMvcAuthorize(AppPermissions.Pages_TimeTracking_Projects_Create, AppPermissions.Pages_TimeTracking_Projects_Edit)]
     public async Task<IActionResult> CreateOrEditProjectModal(int? id)
     {
@@ -62,12 +68,19 @@ public class TimeTrackingController : CadentManagementControllerBase
     }
 
     [AbpMvcAuthorize(AppPermissions.Pages_TimeTracking_TimeEntries_Create, AppPermissions.Pages_TimeTracking_TimeEntries_Edit)]
-    public async Task<IActionResult> CreateOrEditTimeEntryModal(int? id, int? projectId)
+    public async Task<IActionResult> CreateOrEditTimeEntryModal(int? id, int? projectId, string startTime = null, string endTime = null)
     {
         var output = await _timeEntryAppService.GetForEditAsync(new Abp.Application.Services.Dto.NullableIdDto<int>(id));
-        if (!id.HasValue && projectId.HasValue)
+        if (!id.HasValue)
         {
-            output.TimeEntry.ProjectId = projectId.Value;
+            if (projectId.HasValue)
+                output.TimeEntry.ProjectId = projectId.Value;
+
+            if (DateTime.TryParse(startTime, out var parsedStart))
+                output.TimeEntry.StartTime = parsedStart;
+
+            if (DateTime.TryParse(endTime, out var parsedEnd))
+                output.TimeEntry.EndTime = parsedEnd;
         }
         return PartialView("_CreateOrEditTimeEntryModal", output);
     }

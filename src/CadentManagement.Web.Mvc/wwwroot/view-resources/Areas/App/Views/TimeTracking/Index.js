@@ -7,12 +7,15 @@
     });
 
     function getProjects() {
+        var statusVal = $('#ProjectStatusFilter').val();
         var input = {
             filter: $('#ProjectFilterText').val(),
-            status: $('#ProjectStatusFilter').val() ? parseInt($('#ProjectStatusFilter').val()) : null,
+            statusFilter: statusVal ? parseInt(statusVal) : null,
             maxResultCount: 100,
             skipCount: 0
         };
+
+        $('#ProjectsContainer').html('<div class="col-12 text-center py-10"><i class="ki-outline ki-loading fs-3x spin"></i></div>');
 
         _projectService.getProjects(input).done(function (result) {
             var container = $('#ProjectsContainer');
@@ -27,8 +30,8 @@
             }
 
             $.each(result.items, function (i, project) {
-                var budgetPercent = project.totalBudgetHours > 0
-                    ? Math.min(Math.round((project.usedHours / project.totalBudgetHours) * 100), 100)
+                var budgetPercent = project.budgetHours > 0
+                    ? Math.min(Math.round((project.usedHours / project.budgetHours) * 100), 100)
                     : 0;
                 var budgetClass = budgetPercent >= 90 ? 'danger' : budgetPercent >= 75 ? 'warning' : 'success';
                 var statusBadge = getStatusBadge(project.status);
@@ -52,16 +55,24 @@
                     '</div>' +
                     '<div class="card-body py-3">' +
                     (project.description ? '<p class="text-muted fs-6 mb-3">' + project.description + '</p>' : '') +
-                    '<div class="d-flex justify-content-between mb-2">' +
-                    '<span class="text-muted fs-7">' + app.localize('BudgetHours') + '</span>' +
-                    '<span class="fw-bold fs-7 text-' + budgetClass + '">' + (project.usedHours || 0).toFixed(1) + ' / ' + (project.totalBudgetHours || 0).toFixed(1) + ' hrs</span>' +
-                    '</div>' +
-                    '<div class="progress h-6px mb-3">' +
-                    '<div class="progress-bar bg-' + budgetClass + '" style="width:' + budgetPercent + '%"></div>' +
-                    '</div>' +
-                    '<a href="/App/TimeTracking/ProjectDetail/' + project.id + '" class="btn btn-sm btn-light-primary w-100">' +
+                    (project.budgetHours > 0
+                        ? '<div class="d-flex justify-content-between mb-2">' +
+                          '<span class="text-muted fs-7">' + app.localize('BudgetHours') + '</span>' +
+                          '<span class="fw-bold fs-7 text-' + budgetClass + '">' + (project.usedHours || 0).toFixed(1) + ' / ' + project.budgetHours.toFixed(1) + ' hrs</span>' +
+                          '</div>' +
+                          '<div class="progress h-6px mb-3">' +
+                          '<div class="progress-bar bg-' + budgetClass + '" style="width:' + budgetPercent + '%"></div>' +
+                          '</div>'
+                        : '<div class="text-muted fs-7 mb-3">' + app.localize('NoBudget') + '</div>') +
+                    '<div class="d-flex gap-2">' +
+                    '<a href="/App/TimeTracking/ProjectDetail/' + project.id + '" class="btn btn-sm btn-light-primary flex-grow-1">' +
                     '<i class="ki-outline ki-arrow-right fs-3 me-1"></i>' + app.localize('ViewDetails') +
                     '</a>' +
+                    (abp.auth.isGranted('Pages.TimeTracking.TimeEntries.Create')
+                        ? '<a href="/App/TimeTracking/MyWeek?projectId=' + project.id + '" class="btn btn-sm btn-light-success" title="' + app.localize('LogTime') + '">' +
+                          '<i class="ki-outline ki-time fs-3"></i></a>'
+                        : '') +
+                    '</div>' +
                     '</div>' +
                     '</div>' +
                     '</div>');
@@ -70,6 +81,7 @@
             });
         }).fail(function () {
             abp.notify.error(app.localize('LoadError'));
+            $('#ProjectsContainer').empty();
         });
     }
 
@@ -102,7 +114,11 @@
         _createOrEditModal.open();
     });
 
-    $('#GetProjectsButton, #ProjectStatusFilter').on('click change', function () {
+    $('#GetProjectsButton').click(function () {
+        getProjects();
+    });
+
+    $('#ProjectStatusFilter').change(function () {
         getProjects();
     });
 
@@ -124,3 +140,4 @@
 
     getProjects();
 })();
+
