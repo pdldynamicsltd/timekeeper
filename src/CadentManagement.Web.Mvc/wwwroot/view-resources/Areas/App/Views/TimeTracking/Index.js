@@ -5,6 +5,7 @@
         scriptUrl: abp.appPath + 'view-resources/Areas/App/Views/TimeTracking/_CreateOrEditProjectModal.js',
         modalClass: 'CreateOrEditProjectModal'
     });
+    var _filterDebounceTimer = null;
 
     function getProjects() {
         var statusVal = $('#ProjectStatusFilter').val();
@@ -122,9 +123,15 @@
         getProjects();
     });
 
-    $('#ProjectFilterText').keyup(abp.utils.debounce(function () {
-        getProjects();
-    }, 300));
+    $('#ProjectFilterText').keyup(function () {
+        if (_filterDebounceTimer) {
+            clearTimeout(_filterDebounceTimer);
+        }
+
+        _filterDebounceTimer = setTimeout(function () {
+            getProjects();
+        }, 300);
+    });
 
     $('#ProjectsContainer').on('click', '.edit-project-btn', function () {
         _createOrEditModal.open({ id: $(this).data('id') });
