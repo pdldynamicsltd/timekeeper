@@ -1583,5 +1583,12 @@
     <text name="CurrentWeek">This Week</text>
     <text name="DailyTotal">Daily Total</text>
     <text name="HoursLogged">hrs logged</text>
+    <text name="TimeTrackingImports">CSV Imports</text>
+    <text name="ImportProjectsCsv">Import Projects CSV</text>
+    <text name="ImportTimeEntriesCsv">Import Time Entries CSV</text>
+    <text name="PleaseSelectCsvFile">Please select a CSV file first.</text>
+    <text name="Importing">Importing...</text>
+    <text name="CsvImportFailed">CSV import failed. Please check the file and try again.</text>
+    <text name="CsvImportCompletedMessage">Import complete. Projects created: {0}, projects updated: {1}, tasks created: {2}, time entries created: {3}, skipped rows: {4}.</text>
   </texts>
 </localizationDictionary>

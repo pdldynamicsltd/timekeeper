@@ -1,5 +1,6 @@
 (function () {
     var _projectService = abp.services.app.project;
+    var _timeEntryService = abp.services.app.timeEntry;
     var _createOrEditModal = new app.ModalManager({
         viewUrl: abp.appPath + 'App/TimeTracking/CreateOrEditProjectModal',
         scriptUrl: abp.appPath + 'view-resources/Areas/App/Views/TimeTracking/_CreateOrEditProjectModal.js',
@@ -111,8 +112,89 @@
         );
     }
 
+    function setImportButtonBusy(buttonSelector, busy) {
+        var button = $(buttonSelector);
+        button.prop('disabled', busy);
+        if (busy) {
+            button.data('original-text', button.text());
+            button.text(app.localize('Importing'));
+            return;
+        }
+
+        var originalText = button.data('original-text');
+        if (originalText) {
+            button.text(originalText);
+        }
+    }
+
+    function readFileAsText(file) {
+        return new Promise(function (resolve, reject) {
+            var reader = new FileReader();
+            reader.onload = function (event) {
+                resolve(event.target.result);
+            };
+            reader.onerror = function () {
+                reject(new Error('File read failed'));
+            };
+            reader.readAsText(file);
+        });
+    }
+
+    function showImportResult(result) {
+        abp.notify.success(app.localize(
+            'CsvImportCompletedMessage',
+            result.createdProjects || 0,
+            result.updatedProjects || 0,
+            result.createdTasks || 0,
+            result.createdTimeEntries || 0,
+            result.skippedRows || 0));
+    }
+
+    function importCsv(fileInputSelector, buttonSelector, importFunc) {
+        var input = $(fileInputSelector)[0];
+        if (!input || !input.files || input.files.length === 0) {
+            abp.notify.warn(app.localize('PleaseSelectCsvFile'));
+            return;
+        }
+
+        var file = input.files[0];
+        setImportButtonBusy(buttonSelector, true);
+
+        readFileAsText(file)
+            .then(function (content) {
+                importFunc({ csvContent: content })
+                    .done(function (result) {
+                        showImportResult(result);
+                        input.value = '';
+                        getProjects();
+                    })
+                    .fail(function () {
+                        abp.notify.error(app.localize('CsvImportFailed'));
+                    })
+                    .always(function () {
+                        setImportButtonBusy(buttonSelector, false);
+                    });
+            })
+            .catch(function () {
+                abp.notify.error(app.localize('CsvImportFailed'));
+                setImportButtonBusy(buttonSelector, false);
+            });
+    }
+
     $('#CreateNewProjectButton').click(function () {
         _createOrEditModal.open();
+    });
+
+    $('#ImportProjectsCsvButton').click(function () {
+        importCsv('#ProjectsCsvFileInput', '#ImportProjectsCsvButton', function (request) {
+            return _projectService.importProjectsFromCsv(request);
+        });
+    });
+
+    $('#ImportTimeEntriesCsvButton').click(function () {
+        importCsv('#TimeEntriesCsvFileInput', '#ImportTimeEntriesCsvButton', function (request) {
+            return _timeEntryService.importTimeEntriesFromCsv(request);
+        });
     });
 
     $('#GetProjectsButton').click(function () {

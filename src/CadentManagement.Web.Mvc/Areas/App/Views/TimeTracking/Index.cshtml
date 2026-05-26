@@ -25,6 +25,40 @@
 </abp-page-subheader>
 
 <div class="@(await GetContainerClass())">
+    <div class="card mb-5">
+        <div class="card-header">
+            <div class="card-title fw-bold">@L("TimeTrackingImports")</div>
+        </div>
+        <div class="card-body">
+            <div class="row g-4">
+                @if (IsGranted(AppPermissions.Pages_TimeTracking_Projects_Create))
+                {
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">@L("ImportProjectsCsv")</label>
+                        <div class="input-group">
+                            <input type="file" id="ProjectsCsvFileInput" class="form-control" accept=".csv" />
+                            <button id="ImportProjectsCsvButton" class="btn btn-light-primary" type="button">
+                                @L("Import")
+                            </button>
+                        </div>
+                    </div>
+                }
+                @if (IsGranted(AppPermissions.Pages_TimeTracking_TimeEntries_Create))
+                {
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">@L("ImportTimeEntriesCsv")</label>
+                        <div class="input-group">
+                            <input type="file" id="TimeEntriesCsvFileInput" class="form-control" accept=".csv" />
+                            <button id="ImportTimeEntriesCsvButton" class="btn btn-light-success" type="button">
+                                @L("Import")
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
     <div class="card">
         <div class="card-header">
             <div class="card-title">
