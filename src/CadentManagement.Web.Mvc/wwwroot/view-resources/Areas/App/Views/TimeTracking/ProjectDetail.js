@@ -4,6 +4,8 @@
     var _projectService = abp.services.app.project;
 
     var projectId = parseInt($('#CurrentProjectId').val());
+    var _currentDate = new Date();
+    var _currentMode = 'month';
 
     var _createOrEditTaskModal = new app.ModalManager({
         viewUrl: abp.appPath + 'App/TimeTracking/CreateOrEditTaskModal',
@@ -25,6 +27,7 @@
         scheduler.config.multi_day = true;
         scheduler.config.details_on_create = true;
         scheduler.config.details_on_dblclick = true;
+        scheduler.config.header = ['day', 'week', 'month', 'date', 'prev', 'today', 'next'];
 
         scheduler.locale.labels.dhx_cal_today_button = app.localize('Today');
 
@@ -87,7 +90,7 @@
             return false;
         });
 
-        scheduler.init('scheduler_here', new Date(), 'week');
+        scheduler.init('scheduler_here', _currentDate, _currentMode);
         loadSchedulerEntries();
     }
 
@@ -185,7 +188,9 @@
         loadTaskTree();
     });
 
-    scheduler.attachEvent('onNavigate', function () {
+    scheduler.attachEvent('onViewChange', function (new_mode, new_date) {
+        _currentMode = new_mode || _currentMode;
+        _currentDate = new_date ? new Date(new_date) : _currentDate;
         loadSchedulerEntries();
     });
 
