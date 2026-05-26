@@ -1,0 +1,103 @@
+@using CadentManagement.Authorization
+@using CadentManagement.Web.Areas.App.Startup
+@{
+    ViewBag.CurrentPageName = AppPageNames.Tenant.TimeTracking;
+}
+
+@section Styles
+{
+    <link rel="stylesheet" abp-href="/view-resources/Areas/App/Views/TimeTracking/Index.css" asp-append-version="true" />
+}
+
+@section Scripts
+{
+    <script src="/view-resources/Areas/App/Views/TimeTracking/Index.js" asp-append-version="true"></script>
+}
+
+<abp-page-subheader title="@L("TimeTracking")" description="@L("TimeTrackingDashboard")">
+    @if (IsGranted(AppPermissions.Pages_TimeTracking_Projects_Create))
+    {
+        <button id="CreateNewProjectButton" class="btn btn-primary">
+            <i class="fa fa-plus btn-md-icon"></i>
+            <span class="d-none d-md-inline-block">@L("AddNewProject")</span>
+        </button>
+    }
+</abp-page-subheader>
+
+<div class="@(await GetContainerClass())">
+    <div class="card mb-5">
+        <div class="card-header">
+            <div class="card-title fw-bold">@L("TimeTrackingImports")</div>
+        </div>
+        <div class="card-body">
+            <div class="row g-4">
+                @if (IsGranted(AppPermissions.Pages_TimeTracking_Projects_Create))
+                {
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">@L("ImportProjectsCsv")</label>
+                        <div class="input-group">
+                            <input type="file" id="ProjectsCsvFileInput" class="form-control" accept=".csv" />
+                            <button id="ImportProjectsCsvButton" class="btn btn-light-primary" type="button">
+                                @L("Import")
+                            </button>
+                        </div>
+                    </div>
+                }
+                @if (IsGranted(AppPermissions.Pages_TimeTracking_TimeEntries_Create))
+                {
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">@L("ImportTimeEntriesCsv")</label>
+                        <div class="input-group">
+                            <input type="file" id="TimeEntriesCsvFileInput" class="form-control" accept=".csv" />
+                            <button id="ImportTimeEntriesCsvButton" class="btn btn-light-success" type="button">
+                                @L("Import")
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <div class="input-group">
+                    <input type="text" id="ProjectFilterText" class="form-control" placeholder="@L("SearchWithThreeDot")" />
+                    <select id="ProjectStatusFilter" class="form-select" style="max-width:160px;">
+                        <option value="">@L("All")</option>
+                        <option value="1">@L("ActiveStatus")</option>
+                        <option value="2">@L("ArchivedStatus")</option>
+                        <option value="3">@L("CompletedStatus")</option>
+                    </select>
+                    <button id="GetProjectsButton" class="btn btn-light-primary">
+                        <i class="ki-outline ki-magnifier fs-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-row-dashed align-middle gy-4" id="ProjectsTable">
+                    <thead>
+                        <tr class="fw-semibold text-muted">
+                            <th>@L("ProjectName")</th>
+                            <th>@L("ProjectStatus")</th>
+                            <th>@L("ProjectBudgetType")</th>
+                            <th>@L("BudgetHours")</th>
+                            <th>@L("UsedHours")</th>
+                            <th>@L("RemainingHours")</th>
+                            <th>@L("UtilizationPercentage")</th>
+                            <th class="text-end">@L("Actions")</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ProjectsTableBody">
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-10">@L("Loading")...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

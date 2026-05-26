@@ -20,6 +20,9 @@ using CadentManagement.MultiTenancy.Accounting;
 using CadentManagement.MultiTenancy.Payments;
 using CadentManagement.RateLimiting;
 using CadentManagement.Storage;
+using CadentManagement.TimeTracking.Projects;
+using CadentManagement.TimeTracking.Tasks;
+using CadentManagement.TimeTracking.TimeEntries;
 
 namespace CadentManagement.EntityFrameworkCore;
 
@@ -60,6 +63,13 @@ public class CadentManagementDbContext : AbpZeroDbContext<Tenant, Role, User, Ca
     public virtual DbSet<UserSession> UserSessions { get; set; }
 
     public virtual DbSet<RateLimitPolicy> RateLimitPolicies { get; set; }
+
+    // Time Tracking
+    public virtual DbSet<Project> Projects { get; set; }
+    public virtual DbSet<ProjectBudgetTracking> ProjectBudgetTrackings { get; set; }
+    public virtual DbSet<ProjectTask> ProjectTasks { get; set; }
+    public virtual DbSet<TaskBudgetTracking> TaskBudgetTrackings { get; set; }
+    public virtual DbSet<TimeEntry> TimeEntries { get; set; }
 
     public CadentManagementDbContext(DbContextOptions<CadentManagementDbContext> options)
         : base(options)
@@ -168,6 +178,71 @@ public class CadentManagementDbContext : AbpZeroDbContext<Tenant, Role, User, Ca
         {
             b.HasIndex(e => e.Name);
             b.HasIndex(e => e.IsEnabled);
+        });
+
+        // Time Tracking
+        modelBuilder.Entity<Project>(b =>
+        {
+            b.ToTable("TT_Projects");
+            b.HasIndex(e => new { e.TenantId, e.Status });
+            b.Property(e => e.BudgetHours).HasPrecision(18, 2);
+        });
+
+        modelBuilder.Entity<ProjectBudgetTracking>(b =>
+        {
+            b.ToTable("TT_ProjectBudgetTrackings");
+            b.HasOne(e => e.Project)
+                .WithOne(e => e.BudgetTracking)
+                .HasForeignKey<ProjectBudgetTracking>(e => e.ProjectId);
+            b.Property(e => e.TotalBudgetHours).HasPrecision(18, 2);
+            b.Property(e => e.UsedHours).HasPrecision(18, 2);
+            b.Property(e => e.RemainingHours).HasPrecision(18, 2);
+            b.Ignore(e => e.UtilizationPercentage);
+        });
+
+        modelBuilder.Entity<ProjectTask>(b =>
+        {
+            b.ToTable("TT_Tasks");
+            b.HasIndex(e => new { e.TenantId, e.ProjectId });
+            b.HasIndex(e => e.ParentTaskId);
+            b.HasOne(e => e.Project)
+                .WithMany(e => e.Tasks)
+                .HasForeignKey(e => e.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+            b.HasOne(e => e.ParentTask)
+                .WithMany(e => e.SubTasks)
+                .HasForeignKey(e => e.ParentTaskId)
+                .OnDelete(DeleteBehavior.Restrict);
+            b.Property(e => e.BudgetHours).HasPrecision(18, 2);
+        });
+
+        modelBuilder.Entity<TaskBudgetTracking>(b =>
+        {
+            b.ToTable("TT_TaskBudgetTrackings");
+            b.HasOne(e => e.Task)
+                .WithOne(e => e.BudgetTracking)
+                .HasForeignKey<TaskBudgetTracking>(e => e.TaskId);
+            b.Property(e => e.TotalBudgetHours).HasPrecision(18, 2);
+            b.Property(e => e.UsedHours).HasPrecision(18, 2);
+            b.Property(e => e.RemainingHours).HasPrecision(18, 2);
+            b.Ignore(e => e.UtilizationPercentage);
+        });
+
+        modelBuilder.Entity<TimeEntry>(b =>
+        {
+            b.ToTable("TT_TimeEntries");
+            b.HasIndex(e => new { e.TenantId, e.ProjectId, e.StartTime });
+            b.HasIndex(e => new { e.TenantId, e.UserId, e.StartTime });
+            b.HasIndex(e => e.TaskId);
+            b.HasOne(e => e.Project)
+                .WithMany()
+                .HasForeignKey(e => e.ProjectId)
+                .OnDelete(DeleteBehavior.Restrict);
+            b.HasOne(e => e.Task)
+                .WithMany()
+                .HasForeignKey(e => e.TaskId)
+                .OnDelete(DeleteBehavior.Restrict);
+            b.Ignore(e => e.DurationHours);
         });
 
         modelBuilder.ConfigureOpenIddict();

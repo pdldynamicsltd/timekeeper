@@ -134,6 +134,27 @@ public class AppAuthorizationProvider : AuthorizationProvider
         rateLimiting.CreateChildPermission(AppPermissions.Pages_Administration_RateLimiting_Create, L("CreatingNewRateLimitPolicy"), multiTenancySides: MultiTenancySides.Host);
         rateLimiting.CreateChildPermission(AppPermissions.Pages_Administration_RateLimiting_Edit, L("EditingRateLimitPolicy"), multiTenancySides: MultiTenancySides.Host);
         rateLimiting.CreateChildPermission(AppPermissions.Pages_Administration_RateLimiting_Delete, L("DeletingRateLimitPolicy"), multiTenancySides: MultiTenancySides.Host);
+
+        //TIME TRACKING PERMISSIONS
+        var timeTracking = pages.CreateChildPermission(AppPermissions.Pages_TimeTracking, L("TimeTracking"), multiTenancySides: MultiTenancySides.Tenant);
+
+        var ttProjects = timeTracking.CreateChildPermission(AppPermissions.Pages_TimeTracking_Projects, L("Projects"), multiTenancySides: MultiTenancySides.Tenant);
+        ttProjects.CreateChildPermission(AppPermissions.Pages_TimeTracking_Projects_Create, L("CreatingNewProject"), multiTenancySides: MultiTenancySides.Tenant);
+        ttProjects.CreateChildPermission(AppPermissions.Pages_TimeTracking_Projects_Edit, L("EditingProject"), multiTenancySides: MultiTenancySides.Tenant);
+        ttProjects.CreateChildPermission(AppPermissions.Pages_TimeTracking_Projects_Delete, L("DeletingProject"), multiTenancySides: MultiTenancySides.Tenant);
+
+        var ttTasks = timeTracking.CreateChildPermission(AppPermissions.Pages_TimeTracking_Tasks, L("Tasks"), multiTenancySides: MultiTenancySides.Tenant);
+        ttTasks.CreateChildPermission(AppPermissions.Pages_TimeTracking_Tasks_Create, L("CreatingNewTask"), multiTenancySides: MultiTenancySides.Tenant);
+        ttTasks.CreateChildPermission(AppPermissions.Pages_TimeTracking_Tasks_Edit, L("EditingTask"), multiTenancySides: MultiTenancySides.Tenant);
+        ttTasks.CreateChildPermission(AppPermissions.Pages_TimeTracking_Tasks_Delete, L("DeletingTask"), multiTenancySides: MultiTenancySides.Tenant);
+
+        var ttTimeEntries = timeTracking.CreateChildPermission(AppPermissions.Pages_TimeTracking_TimeEntries, L("TimeEntries"), multiTenancySides: MultiTenancySides.Tenant);
+        ttTimeEntries.CreateChildPermission(AppPermissions.Pages_TimeTracking_TimeEntries_Create, L("CreatingNewTimeEntry"), multiTenancySides: MultiTenancySides.Tenant);
+        ttTimeEntries.CreateChildPermission(AppPermissions.Pages_TimeTracking_TimeEntries_Edit, L("EditingTimeEntry"), multiTenancySides: MultiTenancySides.Tenant);
+        ttTimeEntries.CreateChildPermission(AppPermissions.Pages_TimeTracking_TimeEntries_Delete, L("DeletingTimeEntry"), multiTenancySides: MultiTenancySides.Tenant);
+
+        var ttReports = timeTracking.CreateChildPermission(AppPermissions.Pages_TimeTracking_Reports, L("TimeTrackingReports"), multiTenancySides: MultiTenancySides.Tenant);
+        ttReports.CreateChildPermission(AppPermissions.Pages_TimeTracking_Reports_Export, L("ExportingTimeTrackingReports"), multiTenancySides: MultiTenancySides.Tenant);
     }
 
     private static ILocalizableString L(string name)

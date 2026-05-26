@@ -1,0 +1,81 @@
+@using CadentManagement.Web.Areas.App.Models.Common.Modals
+@using CadentManagement.TimeTracking.Projects.Dto
+@model GetProjectForEditOutput
+
+@await Html.PartialAsync("~/Areas/App/Views/Common/Modals/_ModalHeader.cshtml",
+    new ModalHeaderViewModel(Model.Project.Id.HasValue ? L("EditingProject") : L("CreatingNewProject")))
+
+<div class="modal-body">
+    <form name="ProjectForm" role="form" novalidate class="form-validation">
+        @if (Model.Project.Id.HasValue)
+        {
+            <input type="hidden" id="ProjectId" name="Id" value="@Model.Project.Id" />
+        }
+
+        <div class="mb-5">
+            <label class="form-label required">@L("ProjectName")</label>
+            <input type="text" id="ProjectName" name="Name" class="form-control" value="@Model.Project.Name" maxlength="256" required />
+        </div>
+
+        <div class="mb-5">
+            <label class="form-label">@L("ProjectDescription")</label>
+            <textarea id="ProjectDescription" name="Description" class="form-control" rows="3" maxlength="2000">@Model.Project.Description</textarea>
+        </div>
+
+        <div class="row mb-5">
+            <div class="col-md-6">
+                <label class="form-label required">@L("ProjectStatus")</label>
+                <select id="ProjectStatus" name="Status" class="form-select">
+                    @foreach (var option in Model.StatusOptions)
+                    {
+                        <option value="@option.Value" selected="@(Model.Project.Status.ToString() == option.Value)">@option.DisplayText</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">@L("ProjectBudgetType")</label>
+                <select id="ProjectBudgetType" name="BudgetType" class="form-select">
+                    @foreach (var option in Model.BudgetTypeOptions)
+                    {
+                        <option value="@option.Value" selected="@(((int)Model.Project.BudgetType).ToString() == option.Value)">@option.DisplayText</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        <div class="mb-5" id="BudgetHoursRow">
+            <label class="form-label">@L("ProjectBudgetHours")</label>
+            <input type="number" id="ProjectBudgetHours" name="BudgetHours" class="form-control" value="@Model.Project.BudgetHours" min="0" step="0.5" />
+        </div>
+
+        <div class="row mb-5">
+            <div class="col-md-6">
+                <label class="form-label">@L("ProjectStartDate")</label>
+                <input type="date" id="ProjectStartDate" name="StartDate" class="form-control"
+                       value="@(Model.Project.StartDate?.ToString("yyyy-MM-dd"))" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">@L("ProjectEndDate")</label>
+                <input type="date" id="ProjectEndDate" name="EndDate" class="form-control"
+                       value="@(Model.Project.EndDate?.ToString("yyyy-MM-dd"))" />
+            </div>
+        </div>
+
+        <div class="row mb-5">
+            <div class="col-md-6">
+                <label class="form-label">@L("ProjectColor")</label>
+                <input type="color" id="ProjectColor" name="Color" class="form-control form-control-color"
+                       value="@(Model.Project.Color ?? "#3498db")" />
+            </div>
+            <div class="col-md-6 d-flex align-items-end">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="ProjectIsPublic" name="IsPublic"
+                           @(Model.Project.IsPublic ? "checked" : "") value="true" />
+                    <label class="form-check-label" for="ProjectIsPublic">@L("ProjectIsPublic")</label>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@await Html.PartialAsync("~/Areas/App/Views/Common/Modals/_ModalFooterWithSaveAndCancel.cshtml")

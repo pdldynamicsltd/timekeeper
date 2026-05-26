@@ -116,5 +116,27 @@ public static class AppPermissions
     public const string Pages_Administration_RateLimiting_Create = "Pages.Administration.RateLimiting.Create";
     public const string Pages_Administration_RateLimiting_Edit = "Pages.Administration.RateLimiting.Edit";
     public const string Pages_Administration_RateLimiting_Delete = "Pages.Administration.RateLimiting.Delete";
+
+    //TIME TRACKING PERMISSIONS
+
+    public const string Pages_TimeTracking = "Pages.TimeTracking";
+
+    public const string Pages_TimeTracking_Projects = "Pages.TimeTracking.Projects";
+    public const string Pages_TimeTracking_Projects_Create = "Pages.TimeTracking.Projects.Create";
+    public const string Pages_TimeTracking_Projects_Edit = "Pages.TimeTracking.Projects.Edit";
+    public const string Pages_TimeTracking_Projects_Delete = "Pages.TimeTracking.Projects.Delete";
+
+    public const string Pages_TimeTracking_Tasks = "Pages.TimeTracking.Tasks";
+    public const string Pages_TimeTracking_Tasks_Create = "Pages.TimeTracking.Tasks.Create";
+    public const string Pages_TimeTracking_Tasks_Edit = "Pages.TimeTracking.Tasks.Edit";
+    public const string Pages_TimeTracking_Tasks_Delete = "Pages.TimeTracking.Tasks.Delete";
+
+    public const string Pages_TimeTracking_TimeEntries = "Pages.TimeTracking.TimeEntries";
+    public const string Pages_TimeTracking_TimeEntries_Create = "Pages.TimeTracking.TimeEntries.Create";
+    public const string Pages_TimeTracking_TimeEntries_Edit = "Pages.TimeTracking.TimeEntries.Edit";
+    public const string Pages_TimeTracking_TimeEntries_Delete = "Pages.TimeTracking.TimeEntries.Delete";
+
+    public const string Pages_TimeTracking_Reports = "Pages.TimeTracking.Reports";
+    public const string Pages_TimeTracking_Reports_Export = "Pages.TimeTracking.Reports.Export";
 }
 
