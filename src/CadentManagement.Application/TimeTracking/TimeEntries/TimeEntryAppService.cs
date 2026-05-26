@@ -1,15 +1,19 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Abp.Application.Services.Dto;
 using Abp.Authorization;
 using Abp.Domain.Repositories;
 using Abp.Linq.Extensions;
+using Abp.UI;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CadentManagement.Authorization;
 using CadentManagement.Mappers;
+using CadentManagement.TimeTracking.Dto;
+using CadentManagement.TimeTracking.Importing;
 using CadentManagement.TimeTracking.TimeEntries;
 using CadentManagement.TimeTracking.TimeEntries.Dto;
 using CadentManagement.TimeTracking.Projects;
@@ -191,6 +195,97 @@ public class TimeEntryAppService : CadentManagementAppServiceBase, ITimeEntryApp
         }).ToList();
     }
 
+    [AbpAuthorize(AppPermissions.Pages_TimeTracking_TimeEntries_Create)]
+    [HttpPost]
+    public async Task<ImportCsvResultDto> ImportTimeEntriesFromCsvAsync(ImportTimeEntriesCsvInput input)
+    {
+        if (!AbpSession.UserId.HasValue)
+        {
+            throw new UserFriendlyException(L("CurrentUserDidNotLoginToTheApplication"));
+        }
+
+        var tenantId = AbpSession.TenantId ?? 0;
+        var currentUserId = AbpSession.UserId.Value;
+        var rows = CsvImportParser.Parse(input.CsvContent);
+        var result = new ImportCsvResultDto();
+        var affectedPairs = new HashSet<(int ProjectId, int? TaskId)>();
+
+        foreach (var row in rows)
+        {
+            var projectName = GetValue(row, "Project");
+            if (string.IsNullOrWhiteSpace(projectName))
+            {
+                result.SkippedRows++;
+                continue;
+            }
+
+            var startDate = GetValue(row, "Start Date");
+            var startTime = GetValue(row, "Start Time");
+            var endDate = GetValue(row, "End Date");
+            var endTime = GetValue(row, "End Time");
+
+            if (!TryParseDateTime(startDate, startTime, out var startDateTime) ||
+                !TryParseDateTime(endDate, endTime, out var endDateTime) ||
+                endDateTime <= startDateTime)
+            {
+                result.SkippedRows++;
+                continue;
+            }
+
+            var project = await EnsureProjectAsync(projectName, tenantId);
+            if (project.Item2)
+            {
+                result.CreatedProjects++;
+            }
+
+            var taskName = GetValue(row, "Task");
+            var task = await EnsureTaskAsync(project.Item1.Id, taskName, tenantId, currentUserId);
+            if (task.Item2)
+            {
+                result.CreatedTasks++;
+            }
+
+            var description = GetValue(row, "Description");
+            var taskId = task.Item1?.Id;
+
+            var exists = await _timeEntryRepository.GetAll()
+                .AnyAsync(e => e.TenantId == tenantId
+                               && e.UserId == currentUserId
+                               && e.ProjectId == project.Item1.Id
+                               && e.TaskId == taskId
+                               && e.StartTime == startDateTime
+                               && e.EndTime == endDateTime
+                               && e.Description == description);
+
+            if (exists)
+            {
+                result.SkippedRows++;
+                continue;
+            }
+
+            await _timeEntryRepository.InsertAsync(new TimeEntry
+            {
+                TenantId = tenantId,
+                UserId = currentUserId,
+                ProjectId = project.Item1.Id,
+                TaskId = taskId,
+                Description = description,
+                StartTime = startDateTime,
+                EndTime = endDateTime
+            });
+
+            affectedPairs.Add((project.Item1.Id, taskId));
+            result.CreatedTimeEntries++;
+        }
+
+        foreach (var pair in affectedPairs)
+        {
+            await RecalculateBudgetAsync(pair.ProjectId, pair.TaskId);
+        }
+
+        return result;
+    }
+
     private async Task RecalculateBudgetAsync(int projectId, int? taskId)
     {
         var projectEntries = await _timeEntryRepository.GetAllListAsync(e => e.ProjectId == projectId);
@@ -215,5 +310,86 @@ public class TimeEntryAppService : CadentManagementAppServiceBase, ITimeEntryApp
                 taskBudget.RemainingHours = taskBudget.TotalBudgetHours - taskUsedHours;
             }
         }
+    }
+
+    private async Task<(Project, bool)> EnsureProjectAsync(string projectName, int tenantId)
+    {
+        var project = await _projectRepository.FirstOrDefaultAsync(p => p.TenantId == tenantId && p.Name == projectName);
+        if (project != null)
+        {
+            return (project, false);
+        }
+
+        project = new Project
+        {
+            TenantId = tenantId,
+            Name = projectName,
+            Status = ProjectStatus.Active,
+            IsPublic = true,
+            BudgetType = BudgetType.NoBudget,
+            BudgetHours = 0,
+            Color = "#3498db"
+        };
+
+        project.Id = await _projectRepository.InsertAndGetIdAsync(project);
+        await _projectBudgetRepository.InsertAsync(new ProjectBudgetTracking
+        {
+            ProjectId = project.Id,
+            TotalBudgetHours = 0,
+            UsedHours = 0,
+            RemainingHours = 0
+        });
+
+        return (project, true);
+    }
+
+    private async Task<(ProjectTask, bool)> EnsureTaskAsync(int projectId, string taskName, int tenantId, long currentUserId)
+    {
+        if (string.IsNullOrWhiteSpace(taskName))
+        {
+            return (null, false);
+        }
+
+        var task = await _taskRepository.FirstOrDefaultAsync(t =>
+            t.TenantId == tenantId && t.ProjectId == projectId && t.Name == taskName);
+        if (task != null)
+        {
+            return (task, false);
+        }
+
+        task = new ProjectTask
+        {
+            TenantId = tenantId,
+            ProjectId = projectId,
+            Name = taskName,
+            Status = TaskStatus.Active,
+            BudgetHours = 0,
+            AssignedToUserId = currentUserId
+        };
+
+        task.Id = await _taskRepository.InsertAndGetIdAsync(task);
+        return (task, true);
+    }
+
+    private static bool TryParseDateTime(string dateValue, string timeValue, out DateTime value)
+    {
+        value = default;
+        if (string.IsNullOrWhiteSpace(dateValue) || string.IsNullOrWhiteSpace(timeValue))
+        {
+            return false;
+        }
+
+        var combined = $"{dateValue.Trim()} {timeValue.Trim()}";
+        return DateTime.TryParseExact(
+            combined,
+            new[] { "dd/MM/yyyy HH:mm:ss", "dd/MM/yyyy H:mm:ss", "dd/MM/yyyy HH:mm", "dd/MM/yyyy H:mm" },
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.None,
+            out value);
+    }
+
+    private static string GetValue(Dictionary<string, string> row, string key)
+    {
+        return row.TryGetValue(key, out var value) ? value?.Trim() : null;
     }
 }

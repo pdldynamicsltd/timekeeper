@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using Abp.Application.Services;
 using Abp.Application.Services.Dto;
+using CadentManagement.TimeTracking.Dto;
 using CadentManagement.TimeTracking.Projects.Dto;
 
 namespace CadentManagement.TimeTracking.Projects;
@@ -18,4 +19,6 @@ public interface IProjectAppService : IApplicationService
     Task<PagedResultDto<ProjectDto>> GetProjectsAsync(GetProjectsInput input);
 
     Task<ProjectBudgetSummaryDto> GetProjectBudgetSummaryAsync(EntityDto<int> input);
+
+    Task<ImportCsvResultDto> ImportProjectsFromCsvAsync(ImportProjectsCsvInput input);
 }

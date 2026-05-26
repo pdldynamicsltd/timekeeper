@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Abp.Application.Services.Dto;
@@ -10,6 +11,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CadentManagement.Authorization;
 using CadentManagement.Mappers;
+using CadentManagement.TimeTracking.Dto;
+using CadentManagement.TimeTracking.Importing;
 using CadentManagement.TimeTracking.Projects;
 using CadentManagement.TimeTracking.Projects.Dto;
 
@@ -148,6 +151,66 @@ public class ProjectAppService : CadentManagementAppServiceBase, IProjectAppServ
         };
     }
 
+    [AbpAuthorize(AppPermissions.Pages_TimeTracking_Projects_Create)]
+    [HttpPost]
+    public async Task<ImportCsvResultDto> ImportProjectsFromCsvAsync(ImportProjectsCsvInput input)
+    {
+        var tenantId = AbpSession.TenantId ?? 0;
+        var rows = CsvImportParser.Parse(input.CsvContent);
+        var result = new ImportCsvResultDto();
+
+        foreach (var row in rows)
+        {
+            var projectName = GetValue(row, "Project");
+            if (string.IsNullOrWhiteSpace(projectName))
+            {
+                result.SkippedRows++;
+                continue;
+            }
+
+            var estimatedHours = ParseDecimal(GetValue(row, "Estimated (h)"));
+            var status = ParseStatus(GetValue(row, "Status"));
+            var visibility = GetValue(row, "Visibility");
+            var note = GetValue(row, "Note");
+            var client = GetValue(row, "Client");
+            var description = string.IsNullOrWhiteSpace(note) ? client : note;
+
+            var project = await _projectRepository.FirstOrDefaultAsync(p =>
+                p.TenantId == tenantId && p.Name == projectName);
+
+            if (project == null)
+            {
+                project = new Project
+                {
+                    TenantId = tenantId,
+                    Name = projectName,
+                    Description = description,
+                    Status = status,
+                    IsPublic = string.Equals(visibility, "Public", StringComparison.OrdinalIgnoreCase),
+                    BudgetHours = estimatedHours,
+                    BudgetType = estimatedHours > 0 ? BudgetType.ProjectBudget : BudgetType.NoBudget,
+                    Color = "#3498db"
+                };
+
+                var projectId = await _projectRepository.InsertAndGetIdAsync(project);
+                await CreateBudgetTrackingAsync(projectId, estimatedHours);
+                result.CreatedProjects++;
+                continue;
+            }
+
+            project.Description = string.IsNullOrWhiteSpace(project.Description) ? description : project.Description;
+            project.Status = status;
+            project.IsPublic = string.Equals(visibility, "Public", StringComparison.OrdinalIgnoreCase);
+            project.BudgetHours = estimatedHours;
+            project.BudgetType = estimatedHours > 0 ? BudgetType.ProjectBudget : BudgetType.NoBudget;
+
+            await UpdateBudgetHoursAsync(project.Id, estimatedHours);
+            result.UpdatedProjects++;
+        }
+
+        return result;
+    }
+
     private async Task CreateBudgetTrackingAsync(int projectId, decimal budgetHours)
     {
         var tracking = new ProjectBudgetTracking
@@ -168,6 +231,50 @@ public class ProjectAppService : CadentManagementAppServiceBase, IProjectAppServ
             tracking.TotalBudgetHours = newBudgetHours;
             tracking.RemainingHours = newBudgetHours - tracking.UsedHours;
         }
+        else
+        {
+            await CreateBudgetTrackingAsync(projectId, newBudgetHours);
+        }
+    }
+
+    private static string GetValue(Dictionary<string, string> row, string key)
+    {
+        return row.TryGetValue(key, out var value) ? value?.Trim() : null;
+    }
+
+    private static decimal ParseDecimal(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return 0;
+        }
+
+        if (decimal.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var parsed))
+        {
+            return parsed;
+        }
+
+        if (decimal.TryParse(value, NumberStyles.Any, CultureInfo.CurrentCulture, out parsed))
+        {
+            return parsed;
+        }
+
+        return 0;
+    }
+
+    private static ProjectStatus ParseStatus(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return ProjectStatus.Active;
+        }
+
+        return value.Trim().ToLowerInvariant() switch
+        {
+            "completed" => ProjectStatus.Completed,
+            "archived" => ProjectStatus.Archived,
+            _ => ProjectStatus.Active
+        };
     }
 
     private List<ComboboxItemDto> GetBudgetTypeOptions()
