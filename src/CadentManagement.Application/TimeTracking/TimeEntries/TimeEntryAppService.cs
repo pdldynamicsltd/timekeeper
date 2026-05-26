@@ -292,6 +292,18 @@ public class TimeEntryAppService : CadentManagementAppServiceBase, ITimeEntryApp
         var usedHours = (decimal)projectEntries.Sum(e => (e.EndTime - e.StartTime).TotalHours);
 
         var projectBudget = await _projectBudgetRepository.FirstOrDefaultAsync(b => b.ProjectId == projectId);
+        if (projectBudget == null)
+        {
+            var project = await _projectRepository.GetAsync(projectId);
+            projectBudget = await _projectBudgetRepository.InsertAsync(new ProjectBudgetTracking
+            {
+                ProjectId = projectId,
+                TotalBudgetHours = project.BudgetHours,
+                UsedHours = 0,
+                RemainingHours = project.BudgetHours
+            });
+        }
+
         if (projectBudget != null)
         {
             projectBudget.UsedHours = usedHours;
@@ -304,6 +316,18 @@ public class TimeEntryAppService : CadentManagementAppServiceBase, ITimeEntryApp
             var taskUsedHours = (decimal)taskEntries.Sum(e => (e.EndTime - e.StartTime).TotalHours);
 
             var taskBudget = await _taskBudgetRepository.FirstOrDefaultAsync(b => b.TaskId == taskId.Value);
+            if (taskBudget == null)
+            {
+                var task = await _taskRepository.GetAsync(taskId.Value);
+                taskBudget = await _taskBudgetRepository.InsertAsync(new TaskBudgetTracking
+                {
+                    TaskId = taskId.Value,
+                    TotalBudgetHours = task.BudgetHours,
+                    UsedHours = 0,
+                    RemainingHours = task.BudgetHours
+                });
+            }
+
             if (taskBudget != null)
             {
                 taskBudget.UsedHours = taskUsedHours;
@@ -314,7 +338,9 @@ public class TimeEntryAppService : CadentManagementAppServiceBase, ITimeEntryApp
 
     private async Task<(Project, bool)> EnsureProjectAsync(string projectName, int tenantId)
     {
-        var project = await _projectRepository.FirstOrDefaultAsync(p => p.TenantId == tenantId && p.Name == projectName);
+        var normalizedProjectName = projectName.Trim().ToLowerInvariant();
+        var project = await _projectRepository.FirstOrDefaultAsync(p =>
+            p.TenantId == tenantId && p.Name.ToLower() == normalizedProjectName);
         if (project != null)
         {
             return (project, false);
@@ -350,8 +376,9 @@ public class TimeEntryAppService : CadentManagementAppServiceBase, ITimeEntryApp
             return (null, false);
         }
 
+        var normalizedTaskName = taskName.Trim().ToLowerInvariant();
         var task = await _taskRepository.FirstOrDefaultAsync(t =>
-            t.TenantId == tenantId && t.ProjectId == projectId && t.Name == taskName);
+            t.TenantId == tenantId && t.ProjectId == projectId && t.Name.ToLower() == normalizedTaskName);
         if (task != null)
         {
             return (task, false);

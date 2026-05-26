@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Abp.Application.Services.Dto;
 using Microsoft.EntityFrameworkCore;
 using CadentManagement.TimeTracking.Dto;
 using CadentManagement.TimeTracking.Projects;
@@ -81,5 +82,10 @@ public class TimeTrackingImportAppService_Tests : AppTestBase
             timeEntry.StartTime.ShouldBe(new DateTime(2026, 5, 20, 8, 0, 0));
             timeEntry.EndTime.ShouldBe(new DateTime(2026, 5, 20, 10, 30, 0));
         });
+
+        var importedProjectId = await UsingDbContextAsync(async context =>
+            await context.Projects.Where(p => p.Name == "Import Time Project").Select(p => p.Id).FirstAsync());
+        var summary = await _projectAppService.GetProjectBudgetSummaryAsync(new EntityDto<int>(importedProjectId));
+        summary.UsedHours.ShouldBe(2.5m);
     }
 }

@@ -15,6 +15,7 @@ using CadentManagement.TimeTracking.Dto;
 using CadentManagement.TimeTracking.Importing;
 using CadentManagement.TimeTracking.Projects;
 using CadentManagement.TimeTracking.Projects.Dto;
+using CadentManagement.TimeTracking.TimeEntries;
 
 namespace CadentManagement.TimeTracking.Projects;
 
@@ -23,17 +24,20 @@ public class ProjectAppService : CadentManagementAppServiceBase, IProjectAppServ
 {
     private readonly IRepository<Project, int> _projectRepository;
     private readonly IRepository<ProjectBudgetTracking, int> _budgetTrackingRepository;
+    private readonly IRepository<TimeEntry, int> _timeEntryRepository;
     private readonly ProjectToProjectDtoMapper _toProjectDtoMapper;
     private readonly CreateOrEditProjectDtoToProjectMapper _toProjectMapper;
 
     public ProjectAppService(
         IRepository<Project, int> projectRepository,
         IRepository<ProjectBudgetTracking, int> budgetTrackingRepository,
+        IRepository<TimeEntry, int> timeEntryRepository,
         ProjectToProjectDtoMapper toProjectDtoMapper,
         CreateOrEditProjectDtoToProjectMapper toProjectMapper)
     {
         _projectRepository = projectRepository;
         _budgetTrackingRepository = budgetTrackingRepository;
+        _timeEntryRepository = timeEntryRepository;
         _toProjectDtoMapper = toProjectDtoMapper;
         _toProjectMapper = toProjectMapper;
     }
@@ -118,16 +122,26 @@ public class ProjectAppService : CadentManagementAppServiceBase, IProjectAppServ
             .OrderBy(p => p.Name)
             .PageBy(input)
             .ToListAsync();
+        var projectIds = projects.Select(p => p.Id).ToList();
+        var projectEntries = await _timeEntryRepository.GetAll()
+            .Where(e => e.TenantId == AbpSession.TenantId)
+            .Where(e => projectIds.Contains(e.ProjectId))
+            .Select(e => new { e.ProjectId, e.StartTime, e.EndTime })
+            .ToListAsync();
+        var usedHoursByProject = projectEntries
+            .GroupBy(e => e.ProjectId)
+            .ToDictionary(
+                g => g.Key,
+                g => (decimal)g.Sum(x => (x.EndTime - x.StartTime).TotalHours));
 
         var projectDtos = projects.Select(p =>
         {
             var dto = _toProjectDtoMapper.Map(p);
-            if (p.BudgetTracking != null)
-            {
-                dto.UsedHours = p.BudgetTracking.UsedHours;
-                dto.RemainingHours = p.BudgetTracking.RemainingHours;
-                dto.UtilizationPercentage = p.BudgetTracking.UtilizationPercentage;
-            }
+            var usedHours = usedHoursByProject.TryGetValue(p.Id, out var used) ? used : 0m;
+            var totalBudgetHours = p.BudgetTracking?.TotalBudgetHours ?? p.BudgetHours;
+            dto.UsedHours = usedHours;
+            dto.RemainingHours = totalBudgetHours - usedHours;
+            dto.UtilizationPercentage = totalBudgetHours > 0 ? Math.Min(usedHours / totalBudgetHours * 100, 100) : 0;
             return dto;
         }).ToList();
 
@@ -138,16 +152,25 @@ public class ProjectAppService : CadentManagementAppServiceBase, IProjectAppServ
     {
         var project = await _projectRepository.GetAsync(input.Id);
         var budgetTracking = await _budgetTrackingRepository.FirstOrDefaultAsync(b => b.ProjectId == input.Id);
+        var projectEntries = await _timeEntryRepository.GetAll()
+            .Where(e => e.TenantId == AbpSession.TenantId)
+            .Where(e => e.ProjectId == input.Id)
+            .Select(e => new { e.StartTime, e.EndTime })
+            .ToListAsync();
+        var usedHours = (decimal)projectEntries.Sum(e => (e.EndTime - e.StartTime).TotalHours);
+        var totalBudgetHours = budgetTracking?.TotalBudgetHours ?? project.BudgetHours;
+        var remainingHours = totalBudgetHours - usedHours;
+        var utilization = totalBudgetHours > 0 ? Math.Min(usedHours / totalBudgetHours * 100, 100) : 0;
 
         return new ProjectBudgetSummaryDto
         {
             ProjectId = project.Id,
             ProjectName = project.Name,
             BudgetType = project.BudgetType,
-            TotalBudgetHours = budgetTracking?.TotalBudgetHours ?? 0,
-            UsedHours = budgetTracking?.UsedHours ?? 0,
-            RemainingHours = budgetTracking?.RemainingHours ?? 0,
-            UtilizationPercentage = budgetTracking?.UtilizationPercentage ?? 0
+            TotalBudgetHours = totalBudgetHours,
+            UsedHours = usedHours,
+            RemainingHours = remainingHours,
+            UtilizationPercentage = utilization
         };
     }
 
