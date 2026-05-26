@@ -26,7 +26,7 @@
                 <select id="PrioritySelect" name="priority" class="form-control">
                     @foreach (var option in Model.PriorityOptions)
                     {
-                        <option value="@option.Value" selected="@(Model.Task.Priority.ToString() == option.Value)">@option.DisplayText</option>
+                        <option value="@option.Value" selected="@(((int)Model.Task.Priority).ToString() == option.Value)">@option.DisplayText</option>
                     }
                 </select>
             </div>
@@ -36,7 +36,7 @@
                 <select id="StatusSelect" name="status" class="form-control">
                     @foreach (var option in Model.StatusOptions)
                     {
-                        <option value="@option.Value" selected="@(Model.Task.Status.ToString() == option.Value)">@option.DisplayText</option>
+                        <option value="@option.Value" selected="@(((int)Model.Task.Status).ToString() == option.Value)">@option.DisplayText</option>
                     }
                 </select>
             </div>
@@ -49,7 +49,7 @@
                     <option value="">-- @L("SelectAProject") --</option>
                     @foreach (var option in Model.ProjectOptions)
                     {
-                        <option value="@option.Value" selected="@(Model.Task.ProjectId.ToString() == option.Value)">@option.DisplayText</option>
+                        <option value="@option.Value" selected="@(Model.Task.ProjectId.HasValue && Model.Task.ProjectId.ToString() == option.Value)">@option.DisplayText</option>
                     }
                 </select>
             </div>
