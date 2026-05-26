@@ -120,7 +120,7 @@ public class UserTaskAppService : CadentManagementAppServiceBase, IUserTaskAppSe
         var tasks = await query
             .Include(t => t.Project)
             .Include(t => t.ProjectTask)
-            .OrderBy(t => new { t.Status, t.SortOrder, t.CreationTime })
+            .OrderBy(t => t.Status).ThenBy(t => t.SortOrder).ThenBy(t => t.CreationTime)
             .PageBy(input)
             .ToListAsync();
 
