@@ -22,18 +22,13 @@
 
     var _sortableInstances = {};
 
-    function getStatusLabel(statusKey) {
-        var status = _statuses.find(s => s.key === statusKey);
-        return status ? status.label : statusKey;
+    function getPriorityLabel(priorityValue) {
+        var priority = _priorities.find(p => p.value === priorityValue);
+        return priority ? priority.label : priorityValue;
     }
 
-    function getPriorityLabel(priorityKey) {
-        var priority = _priorities.find(p => p.key === priorityKey);
-        return priority ? priority.label : priorityKey;
-    }
-
-    function getPriorityClass(priorityKey) {
-        var priority = _priorities.find(p => p.key === priorityKey);
+    function getPriorityClass(priorityValue) {
+        var priority = _priorities.find(p => p.value === priorityValue);
         return priority ? priority.className : '';
     }
 
@@ -42,7 +37,7 @@
         board.empty();
 
         _statuses.forEach(function (status) {
-            var statusTasks = tasks.filter(t => t.status === status.label || t.status === status.key);
+            var statusTasks = tasks.filter(t => t.status === status.value);
             var columnHtml = '<div class="kanban-column">' +
                 '<div class="kanban-column-header">' +
                 '<span>' + status.label + '</span>' +
