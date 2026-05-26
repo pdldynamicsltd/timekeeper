@@ -25,7 +25,7 @@
         scheduler.config.first_hour = 6;
         scheduler.config.last_hour = 22;
         scheduler.config.multi_day = true;
-        scheduler.config.details_on_create = true;
+        scheduler.config.details_on_create = false;
         scheduler.config.details_on_dblclick = true;
         scheduler.config.header = ['day', 'week', 'month', 'date', 'prev', 'today', 'next'];
 
@@ -42,12 +42,6 @@
         scheduler.templates.event_bar_date = function (start, end, event) {
             return scheduler.templates.event_date(start) + ' - ';
         };
-
-        scheduler.attachEvent('onEventAdded', function (id, event) {
-            if (!event.is_new) return;
-            _createOrEditTimeEntryModal.open({ projectId: projectId });
-            scheduler.deleteEvent(id);
-        });
 
         scheduler.attachEvent('onEventChanged', function (id, event) {
             if (!event.dbId) return;
@@ -90,6 +84,16 @@
             return false;
         });
 
+        scheduler.attachEvent('onEmptyClick', function (date, e) {
+            var endDate = new Date(date.getTime() + 60 * 60 * 1000);
+            _createOrEditTimeEntryModal.open({
+                projectId: projectId,
+                startTime: date.toISOString(),
+                endTime: endDate.toISOString()
+            });
+            return false;
+        });
+
         scheduler.init('scheduler_here', _currentDate, _currentMode);
         loadSchedulerEntries();
     }
@@ -121,40 +125,56 @@
         });
     }
 
-    // Task tree
-    function loadTaskTree() {
+    // Task table
+    function loadTaskTable() {
         _projectTaskService.getProjectTaskTree({ id: projectId }).done(function (tasks) {
-            var container = $('#TaskTreeContainer');
+            var container = $('#TaskTableBody');
             container.empty();
 
             if (!tasks || tasks.length === 0) {
-                container.html('<div class="text-muted text-center py-5">' + app.localize('NoTasks') + '</div>');
+                container.html('<tr><td colspan="6" class="text-muted text-center py-5">' + app.localize('NoTasks') + '</td></tr>');
                 return;
             }
 
-            var ul = buildTreeHtml(tasks, 0);
-            container.append(ul);
+            $.each(flattenTasks(tasks, 0), function (i, row) {
+                container.append(
+                    '<tr>' +
+                    '<td>' + row.indentedName + '</td>' +
+                    '<td><span class="badge badge-light-' + row.statusClass + '">' + row.statusText + '</span></td>' +
+                    '<td>' + row.budgetHours + '</td>' +
+                    '<td>' + row.usedHours + '</td>' +
+                    '<td class="' + row.remainingClass + '">' + row.remainingHours + '</td>' +
+                    '<td class="text-end">' +
+                    (abp.auth.isGranted('Pages.TimeTracking.Tasks.Edit')
+                        ? '<button class="btn btn-xs btn-icon btn-light-primary edit-task-btn" data-id="' + row.id + '"><i class="ki-outline ki-pencil fs-5"></i></button>'
+                        : '') +
+                    '</td>' +
+                    '</tr>'
+                );
+            });
         });
     }
 
-    function buildTreeHtml(tasks, depth) {
-        var ul = $('<ul class="list-unstyled' + (depth > 0 ? ' ms-5' : '') + ' mb-0">');
+    function flattenTasks(tasks, depth) {
+        var rows = [];
         $.each(tasks, function (i, task) {
             var statusClass = task.status === 1 ? 'success' : task.status === 2 ? 'secondary' : 'primary';
-            var li = $('<li class="d-flex align-items-center py-2 border-bottom">' +
-                '<i class="ki-outline ki-check-circle fs-4 text-' + statusClass + ' me-2"></i>' +
-                '<span class="flex-grow-1 fw-semibold">' + task.name + '</span>' +
-                (task.budgetHours ? '<span class="badge badge-light-info ms-2">' + task.budgetHours.toFixed(1) + 'h</span>' : '') +
-                (abp.auth.isGranted('Pages.TimeTracking.Tasks.Edit')
-                    ? '<button class="btn btn-xs btn-icon btn-light-primary ms-1 edit-task-btn" data-id="' + task.id + '"><i class="ki-outline ki-pencil fs-5"></i></button>'
-                    : '') +
-                '</li>');
-            ul.append(li);
+            var statusText = task.status === 1 ? app.localize('ActiveStatus') : task.status === 2 ? app.localize('ArchivedStatus') : app.localize('CompletedStatus');
+            rows.push({
+                id: task.id,
+                indentedName: '<span style="padding-left:' + (depth * 1.5) + 'rem" class="fw-semibold">' + task.name + '</span>',
+                statusClass: statusClass,
+                statusText: statusText,
+                budgetHours: task.budgetHours ? task.budgetHours.toFixed(1) + 'h' : '-',
+                usedHours: (task.usedHours || 0).toFixed(1) + 'h',
+                remainingHours: (task.remainingHours || 0).toFixed(1) + 'h',
+                remainingClass: (task.remainingHours || 0) < 0 ? 'text-danger' : ''
+            });
             if (task.subTasks && task.subTasks.length) {
-                ul.append(buildTreeHtml(task.subTasks, depth + 1));
+                rows = rows.concat(flattenTasks(task.subTasks, depth + 1));
             }
         });
-        return ul;
+        return rows;
     }
 
     function refreshBudget() {
@@ -185,7 +205,7 @@
     });
 
     abp.event.on('app.createOrEditTaskModalSaved', function () {
-        loadTaskTree();
+        loadTaskTable();
     });
 
     scheduler.attachEvent('onViewChange', function (new_mode, new_date) {
@@ -195,5 +215,5 @@
     });
 
     initScheduler();
-    loadTaskTree();
+    loadTaskTable();
 })();

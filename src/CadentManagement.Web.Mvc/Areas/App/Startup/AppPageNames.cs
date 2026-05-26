@@ -41,6 +41,7 @@ public class AppPageNames
         public const string TimeTracking = "TimeTracking";
         public const string TimeTrackingMyWeek = "TimeTracking.MyWeek";
         public const string TimeTrackingReports = "TimeTracking.Reports";
+        public const string Tasks = "Tasks";
     }
 }
 

@@ -256,7 +256,6 @@
             _currentDate.setDate(_currentDate.getDate() - 7);
         }
         scheduler.setCurrentView(_currentDate, _currentMode);
-        loadPeriodEntries();
     });
 
     $('#NextWeekButton').click(function () {
@@ -267,13 +266,11 @@
             _currentDate.setDate(_currentDate.getDate() + 7);
         }
         scheduler.setCurrentView(_currentDate, _currentMode);
-        loadPeriodEntries();
     });
 
     $('#TodayButton').click(function () {
         _currentDate = new Date();
         scheduler.setCurrentView(_currentDate, _currentMode);
-        loadPeriodEntries();
     });
 
     // ─── Log time button ───────────────────────────────────────────────

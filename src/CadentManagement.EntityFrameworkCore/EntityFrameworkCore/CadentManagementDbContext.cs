@@ -23,6 +23,7 @@ using CadentManagement.Storage;
 using CadentManagement.TimeTracking.Projects;
 using CadentManagement.TimeTracking.Tasks;
 using CadentManagement.TimeTracking.TimeEntries;
+using CadentManagement.UserTasks;
 
 namespace CadentManagement.EntityFrameworkCore;
 
@@ -70,6 +71,9 @@ public class CadentManagementDbContext : AbpZeroDbContext<Tenant, Role, User, Ca
     public virtual DbSet<ProjectTask> ProjectTasks { get; set; }
     public virtual DbSet<TaskBudgetTracking> TaskBudgetTrackings { get; set; }
     public virtual DbSet<TimeEntry> TimeEntries { get; set; }
+
+    // Personal Tasks
+    public virtual DbSet<UserTask> UserTasks { get; set; }
 
     public CadentManagementDbContext(DbContextOptions<CadentManagementDbContext> options)
         : base(options)

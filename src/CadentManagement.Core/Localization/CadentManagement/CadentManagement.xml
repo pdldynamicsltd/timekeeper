@@ -1594,5 +1594,30 @@
     <text name="NextPeriod">Next</text>
     <text name="CurrentPeriod">Current</text>
     <text name="TotalThisPeriod">Total this period</text>
+    <text name="Tasks">Tasks</text>
+    <text name="TasksDescription">Manage your personal tasks with Kanban board</text>
+    <text name="AddNewTask">Add New Task</text>
+    <text name="EditTask">Edit Task</text>
+    <text name="TaskTitle">Task Title</text>
+    <text name="TaskStatus">Status</text>
+    <text name="Status">Status</text>
+    <text name="Priority">Priority</text>
+    <text name="DueDate">Due Date</text>
+    <text name="EstimatedMinutes">Estimated Minutes</text>
+    <text name="Tags">Tags</text>
+    <text name="SelectAProject">Select a Project</text>
+    <text name="TagsSeparatedByComma">Tags (separated by comma)</text>
+    <text name="BacklogStatus">Backlog</text>
+    <text name="TodoStatus">To Do</text>
+    <text name="InProgressStatus">In Progress</text>
+    <text name="DoneStatus">Done</text>
+    <text name="LowPriority">Low</text>
+    <text name="MediumPriority">Medium</text>
+    <text name="HighPriority">High</text>
+    <text name="UrgentPriority">Urgent</text>
+    <text name="ConvertToTimeEntry">Convert to Time Entry</text>
+    <text name="TaskDeleteWarningMessage">This task will be deleted.</text>
+    <text name="TaskAlreadyConvertedToTimeEntry">This task has already been converted to a time entry.</text>
+    <text name="AddTask">Add Task</text>
   </texts>
 </localizationDictionary>

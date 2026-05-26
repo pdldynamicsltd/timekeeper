@@ -75,6 +75,13 @@ public class AppNavigationProvider : NavigationProvider
                     )
                 )
             ).AddItem(new MenuItemDefinition(
+                    AppPageNames.Tenant.Tasks,
+                    L("Tasks"),
+                    url: "App/Tasks",
+                    icon: "flaticon-layers",
+                    permissionDependency: new SimplePermissionDependency(AppPermissions.Pages_Tasks)
+                )
+            ).AddItem(new MenuItemDefinition(
                     AppPageNames.Common.Administration,
                     L("Administration"),
                     icon: "flaticon-interface-8"

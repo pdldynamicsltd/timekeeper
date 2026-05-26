@@ -1,0 +1,190 @@
+@using CadentManagement.Authorization
+@using CadentManagement.Web.Areas.App.Startup
+
+@{
+    ViewBag.CurrentPageName = AppPageNames.Tenant.Tasks;
+}
+
+@section Styles
+{
+    <style>
+        .kanban-board {
+            display: flex;
+            gap: 16px;
+            padding: 16px;
+            overflow-x: auto;
+        }
+
+        .kanban-column {
+            flex: 0 0 320px;
+            display: flex;
+            flex-direction: column;
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .kanban-column-header {
+            font-weight: 600;
+            margin-bottom: 12px;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .kanban-column-count {
+            background: #007bff;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .kanban-list {
+            flex: 1;
+            min-height: 400px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .kanban-card {
+            background: white;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            cursor: move;
+            transition: all 0.2s;
+        }
+
+        .kanban-card:hover {
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        .kanban-card.sortable-ghost {
+            opacity: 0.5;
+            background: #e9ecef;
+        }
+
+        .kanban-card-title {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 8px;
+            word-break: break-word;
+        }
+
+        .kanban-card-meta {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+            font-size: 11px;
+        }
+
+        .kanban-card-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+
+        .badge-priority-low {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .badge-priority-medium {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .badge-priority-high {
+            background: #fcebee;
+            color: #c2185b;
+        }
+
+        .badge-priority-urgent {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+
+        .kanban-card-actions {
+            display: flex;
+            gap: 4px;
+            justify-content: flex-end;
+        }
+
+        .kanban-card-btn {
+            padding: 2px 6px;
+            font-size: 11px;
+            border: none;
+            background: #f0f0f0;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .kanban-card-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .kanban-add-button {
+            width: 100%;
+            padding: 12px;
+            border: 2px dashed #ccc;
+            border-radius: 6px;
+            background: transparent;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .kanban-add-button:hover {
+            border-color: #007bff;
+            background: #f0f8ff;
+        }
+
+        .kanban-convert-btn {
+            background: #28a745;
+            color: white;
+            padding: 4px 8px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .kanban-convert-btn:hover {
+            background: #218838;
+        }
+    </style>
+}
+
+@section Scripts
+{
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="/view-resources/Areas/App/Views/Tasks/Index.js" asp-append-version="true"></script>
+}
+
+<abp-page-subheader title="@L("Tasks")" description="@L("TasksDescription")">
+    <button id="AddTaskButton" class="btn btn-primary" abp-authorize="@AppPermissions.Pages_Tasks_Create">
+        <i class="fa fa-plus btn-md-icon"></i>
+        <span class="d-none d-md-inline-block">@L("AddNewTask")</span>
+    </button>
+</abp-page-subheader>
+
+<div class="@(await GetContainerClass())">
+    <div class="card">
+        <div class="card-body p-0">
+            <div id="KanbanBoard" class="kanban-board">
+                <!-- Kanban columns will be rendered here by JS -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create/Edit Modal -->
+<div id="createOrEditTaskModalContainer"></div>
