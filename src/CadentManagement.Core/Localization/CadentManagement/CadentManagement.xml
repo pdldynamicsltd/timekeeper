@@ -1590,5 +1590,9 @@
     <text name="Importing">Importing...</text>
     <text name="CsvImportFailed">CSV import failed. Please check the file and try again.</text>
     <text name="CsvImportCompletedMessage">Import complete. Projects created: {0}, projects updated: {1}, tasks created: {2}, time entries created: {3}, skipped rows: {4}.</text>
+    <text name="PreviousPeriod">Previous</text>
+    <text name="NextPeriod">Next</text>
+    <text name="CurrentPeriod">Current</text>
+    <text name="TotalThisPeriod">Total this period</text>
   </texts>
 </localizationDictionary>

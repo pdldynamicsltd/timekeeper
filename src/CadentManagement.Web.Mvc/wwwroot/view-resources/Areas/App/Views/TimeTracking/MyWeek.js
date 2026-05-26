@@ -6,7 +6,8 @@
         modalClass: 'CreateOrEditTimeEntryModal'
     });
 
-    var _currentWeekStart = getWeekStart(new Date());
+    var _currentDate = getWeekStart(new Date());
+    var _currentMode = 'week';
 
     // ─── Date helpers ──────────────────────────────────────────────────
     function getWeekStart(date) {
@@ -25,6 +26,20 @@
         return d;
     }
 
+    function getMonthStart(date) {
+        var d = new Date(date);
+        d.setDate(1);
+        d.setHours(0, 0, 0, 0);
+        return d;
+    }
+
+    function getMonthEnd(date) {
+        var d = new Date(date);
+        d.setMonth(d.getMonth() + 1, 0);
+        d.setHours(23, 59, 59, 999);
+        return d;
+    }
+
     function formatDateLabel(date) {
         return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
     }
@@ -39,6 +54,7 @@
         scheduler.config.header = [
             'day',
             'week',
+            'month',
             'date',
             'prev',
             'today',
@@ -89,10 +105,10 @@
                 description: ev.description
             }).done(function () {
                 abp.notify.success(app.localize('SuccessfullySaved'));
-                loadWeekEntries();
+                loadPeriodEntries();
             }).fail(function () {
                 abp.notify.error(app.localize('LoadError'));
-                loadWeekEntries();
+                loadPeriodEntries();
             });
         });
 
@@ -105,10 +121,10 @@
                     if (confirmed) {
                         _timeEntryService.delete({ id: id }).done(function () {
                             abp.notify.success(app.localize('SuccessfullyDeleted'));
-                            loadWeekEntries();
+                            loadPeriodEntries();
                         });
                     } else {
-                        loadWeekEntries();
+                        loadPeriodEntries();
                     }
                 }
             );
@@ -133,17 +149,31 @@
             return false;
         });
 
-        scheduler.init('myWeekScheduler', _currentWeekStart, 'week');
+        scheduler.init('myWeekScheduler', _currentDate, _currentMode);
     }
 
     // ─── Data loading ──────────────────────────────────────────────────
-    function loadWeekEntries() {
-        var weekEnd = getWeekEnd(_currentWeekStart);
+    function getCurrentRange() {
+        var state = scheduler.getState();
+        if (_currentMode === 'month') {
+            return {
+                startDate: getMonthStart(state.date || _currentDate),
+                endDate: getMonthEnd(state.date || _currentDate)
+            };
+        }
+        return {
+            startDate: state.min_date ? new Date(state.min_date) : getWeekStart(_currentDate),
+            endDate: state.max_date ? new Date(state.max_date) : getWeekEnd(getWeekStart(_currentDate))
+        };
+    }
+
+    function loadPeriodEntries() {
+        var range = getCurrentRange();
 
         _timeEntryService.getSchedulerEntries({
             forCurrentUserOnly: true,
-            startDate: _currentWeekStart,
-            endDate: weekEnd
+            startDate: range.startDate,
+            endDate: range.endDate
         }).done(function (entries) {
             scheduler.clearAll();
 
@@ -168,7 +198,7 @@
             abp.notify.error(app.localize('LoadError'));
         });
 
-        updateWeekLabel();
+        updatePeriodLabel(range);
     }
 
     // ─── Week summary ──────────────────────────────────────────────────
@@ -208,32 +238,42 @@
         }
     }
 
-    function updateWeekLabel() {
-        var weekEnd = getWeekEnd(_currentWeekStart);
-        $('#WeekLabel').text(
-            formatDateLabel(_currentWeekStart) + ' – ' + formatDateLabel(weekEnd)
-        );
+    function updatePeriodLabel(range) {
+        if (_currentMode === 'month') {
+            $('#WeekLabel').text(range.startDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' }));
+            return;
+        }
+
+        $('#WeekLabel').text(formatDateLabel(range.startDate) + ' – ' + formatDateLabel(range.endDate));
     }
 
     // ─── Navigation ────────────────────────────────────────────────────
     $('#PrevWeekButton').click(function () {
-        _currentWeekStart = new Date(_currentWeekStart);
-        _currentWeekStart.setDate(_currentWeekStart.getDate() - 7);
-        scheduler.setCurrentView(_currentWeekStart, 'week');
-        loadWeekEntries();
+        _currentDate = new Date(_currentDate);
+        if (_currentMode === 'month') {
+            _currentDate.setMonth(_currentDate.getMonth() - 1);
+        } else {
+            _currentDate.setDate(_currentDate.getDate() - 7);
+        }
+        scheduler.setCurrentView(_currentDate, _currentMode);
+        loadPeriodEntries();
     });
 
     $('#NextWeekButton').click(function () {
-        _currentWeekStart = new Date(_currentWeekStart);
-        _currentWeekStart.setDate(_currentWeekStart.getDate() + 7);
-        scheduler.setCurrentView(_currentWeekStart, 'week');
-        loadWeekEntries();
+        _currentDate = new Date(_currentDate);
+        if (_currentMode === 'month') {
+            _currentDate.setMonth(_currentDate.getMonth() + 1);
+        } else {
+            _currentDate.setDate(_currentDate.getDate() + 7);
+        }
+        scheduler.setCurrentView(_currentDate, _currentMode);
+        loadPeriodEntries();
     });
 
     $('#TodayButton').click(function () {
-        _currentWeekStart = getWeekStart(new Date());
-        scheduler.setCurrentView(_currentWeekStart, 'week');
-        loadWeekEntries();
+        _currentDate = new Date();
+        scheduler.setCurrentView(_currentDate, _currentMode);
+        loadPeriodEntries();
     });
 
     // ─── Log time button ───────────────────────────────────────────────
@@ -248,16 +288,17 @@
 
     // Reload after time entry saved
     abp.event.on('app.createOrEditTimeEntryModalSaved', function () {
-        loadWeekEntries();
+        loadPeriodEntries();
     });
 
     // ─── Init ──────────────────────────────────────────────────────────
     initScheduler();
-    loadWeekEntries();
+    loadPeriodEntries();
 
     // Override scheduler navigation to sync our week state
     scheduler.attachEvent('onViewChange', function (new_mode, new_date) {
-        _currentWeekStart = getWeekStart(new_date);
-        loadWeekEntries();
+        _currentMode = new_mode || _currentMode;
+        _currentDate = new_date ? new Date(new_date) : new Date();
+        loadPeriodEntries();
     });
 })();

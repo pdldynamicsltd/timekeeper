@@ -17,17 +17,14 @@
             skipCount: 0
         };
 
-        $('#ProjectsContainer').html('<div class="col-12 text-center py-10"><i class="ki-outline ki-loading fs-3x spin"></i></div>');
+        $('#ProjectsTableBody').html('<tr><td colspan="8" class="text-center py-10"><i class="ki-outline ki-loading fs-3x spin"></i></td></tr>');
 
         _projectService.getProjects(input).done(function (result) {
-            var container = $('#ProjectsContainer');
+            var container = $('#ProjectsTableBody');
             container.empty();
 
             if (!result.items || result.items.length === 0) {
-                container.html('<div class="col-12 text-center text-muted py-10">' +
-                    '<i class="ki-outline ki-folder fs-3x mb-3"></i>' +
-                    '<div>' + app.localize('NoProjects') + '</div>' +
-                    '</div>');
+                container.html('<tr><td colspan="8" class="text-center text-muted py-10">' + app.localize('NoProjects') + '</td></tr>');
                 return;
             }
 
@@ -39,51 +36,47 @@
                 var statusBadge = getStatusBadge(project.status);
                 var color = project.color || '#3498db';
 
-                var card = $('<div class="col-md-4">' +
-                    '<div class="card card-flush h-100" style="border-top: 4px solid ' + color + '">' +
-                    '<div class="card-header">' +
-                    '<div class="card-title d-flex align-items-center gap-3">' +
-                    '<a href="/App/TimeTracking/ProjectDetail/' + project.id + '" class="fw-bold fs-4 text-dark text-hover-primary">' + project.name + '</a>' +
-                    statusBadge +
+                var budgetTypeText = project.budgetHours > 0 ? app.localize('ProjectBudget') : app.localize('NoBudget');
+                var budgetText = project.budgetHours > 0 ? project.budgetHours.toFixed(1) + 'h' : '-';
+                var usedText = (project.usedHours || 0).toFixed(1) + 'h';
+                var remainingText = ((project.remainingHours || 0)).toFixed(1) + 'h';
+
+                var row = $('<tr>' +
+                    '<td>' +
+                    '<div class="d-flex flex-column">' +
+                    '<a href="/App/TimeTracking/ProjectDetail/' + project.id + '" class="text-dark text-hover-primary project-name-link">' + project.name + '</a>' +
+                    (project.description ? '<span class="text-muted fs-8">' + project.description + '</span>' : '') +
                     '</div>' +
-                    '<div class="card-toolbar">' +
+                    '</td>' +
+                    '<td>' + statusBadge + '</td>' +
+                    '<td><span class="badge badge-light-info">' + budgetTypeText + '</span></td>' +
+                    '<td>' + budgetText + '</td>' +
+                    '<td>' + usedText + '</td>' +
+                    '<td class="' + ((project.remainingHours || 0) < 0 ? 'text-danger' : '') + '">' + remainingText + '</td>' +
+                    '<td class="project-budget-cell">' +
+                    '<div class="d-flex align-items-center gap-2">' +
+                    '<div class="progress flex-grow-1 h-6px">' +
+                    '<div class="progress-bar bg-' + budgetClass + '" style="width:' + budgetPercent + '%; background-color:' + color + ' !important;"></div>' +
+                    '</div>' +
+                    '<span class="fw-semibold text-' + budgetClass + '">' + budgetPercent + '%</span>' +
+                    '</div>' +
+                    '</td>' +
+                    '<td class="text-end project-actions">' +
+                    '<a href="/App/TimeTracking/ProjectDetail/' + project.id + '" class="btn btn-sm btn-light-primary me-1">' + app.localize('ViewDetails') + '</a>' +
                     (abp.auth.isGranted('Pages.TimeTracking.Projects.Edit')
-                        ? '<button class="btn btn-sm btn-icon btn-light-primary edit-project-btn me-1" data-id="' + project.id + '" title="' + app.localize('Edit') + '"><i class="ki-outline ki-pencil fs-3"></i></button>'
+                        ? '<button class="btn btn-sm btn-icon btn-light-primary edit-project-btn me-1" data-id="' + project.id + '" title="' + app.localize('Edit') + '"><i class="ki-outline ki-pencil fs-4"></i></button>'
                         : '') +
                     (abp.auth.isGranted('Pages.TimeTracking.Projects.Delete')
-                        ? '<button class="btn btn-sm btn-icon btn-light-danger delete-project-btn" data-id="' + project.id + '" data-name="' + project.name + '" title="' + app.localize('Delete') + '"><i class="ki-outline ki-trash fs-3"></i></button>'
+                        ? '<button class="btn btn-sm btn-icon btn-light-danger delete-project-btn" data-id="' + project.id + '" data-name="' + project.name + '" title="' + app.localize('Delete') + '"><i class="ki-outline ki-trash fs-4"></i></button>'
                         : '') +
-                    '</div>' +
-                    '</div>' +
-                    '<div class="card-body py-3">' +
-                    (project.description ? '<p class="text-muted fs-6 mb-3">' + project.description + '</p>' : '') +
-                    (project.budgetHours > 0
-                        ? '<div class="d-flex justify-content-between mb-2">' +
-                          '<span class="text-muted fs-7">' + app.localize('BudgetHours') + '</span>' +
-                          '<span class="fw-bold fs-7 text-' + budgetClass + '">' + (project.usedHours || 0).toFixed(1) + ' / ' + project.budgetHours.toFixed(1) + ' hrs</span>' +
-                          '</div>' +
-                          '<div class="progress h-6px mb-3">' +
-                          '<div class="progress-bar bg-' + budgetClass + '" style="width:' + budgetPercent + '%"></div>' +
-                          '</div>'
-                        : '<div class="text-muted fs-7 mb-3">' + app.localize('NoBudget') + '</div>') +
-                    '<div class="d-flex gap-2">' +
-                    '<a href="/App/TimeTracking/ProjectDetail/' + project.id + '" class="btn btn-sm btn-light-primary flex-grow-1">' +
-                    '<i class="ki-outline ki-arrow-right fs-3 me-1"></i>' + app.localize('ViewDetails') +
-                    '</a>' +
-                    (abp.auth.isGranted('Pages.TimeTracking.TimeEntries.Create')
-                        ? '<a href="/App/TimeTracking/MyWeek?projectId=' + project.id + '" class="btn btn-sm btn-light-success" title="' + app.localize('LogTime') + '">' +
-                          '<i class="ki-outline ki-time fs-3"></i></a>'
-                        : '') +
-                    '</div>' +
-                    '</div>' +
-                    '</div>' +
-                    '</div>');
+                    '</td>' +
+                    '</tr>');
 
-                container.append(card);
+                container.append(row);
             });
         }).fail(function () {
             abp.notify.error(app.localize('LoadError'));
-            $('#ProjectsContainer').empty();
+            $('#ProjectsTableBody').html('<tr><td colspan="8" class="text-center text-danger py-10">' + app.localize('LoadError') + '</td></tr>');
         });
     }
 
@@ -215,11 +208,11 @@
         }, 300);
     });
 
-    $('#ProjectsContainer').on('click', '.edit-project-btn', function () {
+    $('#ProjectsTableBody').on('click', '.edit-project-btn', function () {
         _createOrEditModal.open({ id: $(this).data('id') });
     });
 
-    $('#ProjectsContainer').on('click', '.delete-project-btn', function () {
+    $('#ProjectsTableBody').on('click', '.delete-project-btn', function () {
         deleteProject($(this).data('id'), $(this).data('name'));
     });
 

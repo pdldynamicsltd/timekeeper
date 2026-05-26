@@ -77,8 +77,26 @@
             </div>
         </div>
         <div class="card-body">
-            <div id="ProjectsContainer" class="row g-6 mb-6">
-                <!-- Project cards rendered by JS -->
+            <div class="table-responsive">
+                <table class="table table-row-dashed align-middle gy-4" id="ProjectsTable">
+                    <thead>
+                        <tr class="fw-semibold text-muted">
+                            <th>@L("ProjectName")</th>
+                            <th>@L("ProjectStatus")</th>
+                            <th>@L("ProjectBudgetType")</th>
+                            <th>@L("BudgetHours")</th>
+                            <th>@L("UsedHours")</th>
+                            <th>@L("RemainingHours")</th>
+                            <th>@L("UtilizationPercentage")</th>
+                            <th class="text-end">@L("Actions")</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ProjectsTableBody">
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-10">@L("Loading")...</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>

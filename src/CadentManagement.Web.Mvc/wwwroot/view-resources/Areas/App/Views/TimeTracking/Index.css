@@ -1,0 +1,11 @@
+.project-name-link {
+    font-weight: 600;
+}
+
+.project-budget-cell {
+    min-width: 220px;
+}
+
+.project-actions {
+    white-space: nowrap;
+}
