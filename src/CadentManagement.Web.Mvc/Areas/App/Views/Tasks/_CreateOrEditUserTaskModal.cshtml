@@ -1,21 +1,14 @@
 @using CadentManagement.Authorization
 @using CadentManagement.UserTasks.Dto
+@using CadentManagement.Web.Areas.App.Models.Common.Modals
 @model GetUserTaskForEditOutput
 
-@{
-    var isEdit = Model.Task.Id.HasValue;
-}
+@await Html.PartialAsync("~/Areas/App/Views/Common/Modals/_ModalHeader.cshtml",
+    new ModalHeaderViewModel(Model.Task.Id.HasValue ? L("EditTask") : L("AddNewTask")))
 
-<div class="modal-header">
-    <h5 class="modal-title">@(isEdit ? L("EditTask") : L("AddNewTask"))</h5>
-    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-        <span aria-hidden="true">&times;</span>
-    </button>
-</div>
-
-<form id="CreateOrEditTaskForm" class="form-horizontal">
+<form name="CreateOrEditUserTaskForm" role="form" novalidate class="form-validation">
     <div class="modal-body">
-        <input type="hidden" id="TaskIdInput" name="id" value="@(Model.Task.Id ?? 0)" />
+        <input type="hidden" id="TaskIdInput" name="id" value="@(Model.Task.Id.HasValue ? Model.Task.Id.ToString() : "")" />
 
         <div class="form-group">
             <label for="TitleInput">@L("TaskTitle")</label>
@@ -78,8 +71,6 @@
         </div>
     </div>
 
-    <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">@L("Cancel")</button>
-        <button type="submit" class="btn btn-primary" id="SaveButton">@L("Save")</button>
-    </div>
+    @await Html.PartialAsync("~/Areas/App/Views/Common/Modals/_ModalFooterWithSaveAndCancel.cshtml")
+
 </form>
