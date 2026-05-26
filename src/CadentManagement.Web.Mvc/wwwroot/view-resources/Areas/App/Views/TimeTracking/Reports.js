@@ -124,7 +124,16 @@
                 { targets: 1, data: 'date', render: function (d) { return d ? moment(d).format('DD/MM/YYYY') : ''; } },
                 { targets: 2, data: 'startTime', render: function (d) { return d ? moment(d).format('HH:mm') : ''; } },
                 { targets: 3, data: 'endTime', render: function (d) { return d ? moment(d).format('HH:mm') : ''; } },
-                { targets: 4, data: 'durationFormatted' },
+                {
+                    targets: 4,
+                    data: 'durationHours',
+                    render: function (d) {
+                        var hours = Number(d || 0);
+                        var wholeHours = Math.floor(hours);
+                        var minutes = Math.round((hours - wholeHours) * 60);
+                        return wholeHours + 'h ' + (minutes < 10 ? '0' : '') + minutes + 'm';
+                    }
+                },
                 { targets: 5, data: 'projectName' },
                 { targets: 6, data: 'taskName', defaultContent: '-' },
                 { targets: 7, data: 'userName' },

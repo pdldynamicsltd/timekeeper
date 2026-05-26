@@ -106,10 +106,10 @@
                 events.push({
                     id: 'tt_' + entry.id,
                     dbId: entry.id,
-                    start_date: entry.startTime,
-                    end_date: entry.endTime,
+                    start_date: new Date(entry.startDate),
+                    end_date: new Date(entry.endDate),
                     text: (entry.taskName || entry.projectName) + (entry.description ? ': ' + entry.description : ''),
-                    color: entry.projectColor || '#3498db',
+                    color: entry.color || '#3498db',
                     projectId: entry.projectId,
                     taskId: entry.taskId
                 });
