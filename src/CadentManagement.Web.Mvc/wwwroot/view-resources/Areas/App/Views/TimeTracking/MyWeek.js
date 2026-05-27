@@ -67,6 +67,7 @@
         if (scheduler.createUnitsView) {
             header.splice(1, 0, 'ttUnits');
         }
+        scheduler.plugins({ units: true })
 
         scheduler.config.header = header;
         scheduler.config.multi_day = true;
@@ -96,8 +97,9 @@
 
         scheduler.templates.event_bar_text = function (start, end, event) {
             if (event.isCompletedTask) {
-                return '<b>' + (event.projectName || app.localize('Project')) + '</b>' +
-                    '<br/><small>' + (event.taskName || event.text || '') + '</small>';
+                return '<b>' + (event.taskName || event.text || app.localize('TaskTitle')) + '</b>' +
+                    (event.projectName ? '<br/><small>' + event.projectName + '</small>' : '') +
+                    '<br/><small>' + app.localize('ConvertToTimeEntry') + '</small>';
             }
 
             return '<b>' + (event.projectName || '') + '</b>' +
@@ -107,8 +109,9 @@
 
         scheduler.templates.event_text = function (start, end, event) {
             if (event.isCompletedTask) {
-                return '<b>' + (event.projectName || app.localize('Project')) + '</b>' +
-                    '<br/><small>' + (event.taskName || event.text || '') + '</small>';
+                return '<b>' + (event.taskName || event.text || app.localize('TaskTitle')) + '</b>' +
+                    (event.projectName ? '<br/><small>' + event.projectName + '</small>' : '') +
+                    '<br/><small>' + app.localize('ConvertToTimeEntry') + '</small>';
             }
 
             return '<b>' + (event.projectName || '') + '</b>' +
@@ -121,6 +124,15 @@
         };
 
         scheduler.templates.event_bar_date = function () { return ''; };
+        scheduler.templates.tooltip_text = function (start, end, event) {
+            if (event.isCompletedTask) {
+                return '<b>' + (event.taskName || event.text || app.localize('TaskTitle')) + '</b>' +
+                    (event.projectName ? '<br/>' + event.projectName : '') +
+                    '<br/><i>' + app.localize('ConvertToTimeEntry') + '</i>';
+            }
+
+            return event.description || event.text || '';
+        };
 
         scheduler.attachEvent('onBeforeEventChanged', function (ev) {
             return !ev.isCompletedTask && abp.auth.isGranted('Pages.TimeTracking.TimeEntries.Edit');
@@ -288,7 +300,7 @@
 
             results.push({
                 id: 'task-' + task.id,
-                text: task.title,
+                text: task.title || app.localize('TaskTitle'),
                 start_date: startDate,
                 end_date: endDate,
                 color: '#95a5a6',
