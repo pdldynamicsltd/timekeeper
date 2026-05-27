@@ -48,6 +48,53 @@
         return dt instanceof Date ? dt : new Date(dt);
     }
 
+    function escapeHtml(text) {
+        if (!text) {
+            return '';
+        }
+
+        return String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/\"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function convertCompletedTaskToTimeEntry(task) {
+        if (!task.projectId) {
+            abp.notify.warn(app.localize('SelectAProject'));
+            return;
+        }
+
+        abp.message.confirm(
+            app.localize('AddTaskToCalendarConfirmationMessage'),
+            app.localize('ConvertToTimeEntry'),
+            function (confirmed) {
+                if (!confirmed) {
+                    return;
+                }
+
+                _userTaskService.convertToTimeEntry({
+                    taskId: task.taskId,
+                    projectId: task.projectId,
+                    projectTaskId: task.projectTaskId || null,
+                    startTime: task.startTime,
+                    endTime: task.endTime,
+                    description: task.description || task.title
+                }).done(function () {
+                    abp.notify.success(app.localize('SuccessfullySaved'));
+                    loadPeriodEntries();
+                }).fail(function (error) {
+                    var message = (error && error.responseJSON && error.responseJSON.error && error.responseJSON.error.message)
+                        ? error.responseJSON.error.message
+                        : app.localize('LoadError');
+                    abp.notify.error(message);
+                });
+            }
+        );
+    }
+
     function isInRange(date, range) {
         var d = toSchedulerDate(date);
         return d >= range.startDate && d <= range.endDate;
@@ -190,37 +237,15 @@
                 return true;
             }
 
-            if (!ev.projectId) {
-                abp.notify.warn(app.localize('SelectAProject'));
-                return false;
-            }
-
-            abp.message.confirm(
-                app.localize('AddTaskToCalendarConfirmationMessage'),
-                app.localize('ConvertToTimeEntry'),
-                function (confirmed) {
-                    if (!confirmed) {
-                        return;
-                    }
-
-                    _userTaskService.convertToTimeEntry({
-                        taskId: ev.taskSourceId,
-                        projectId: ev.projectId,
-                        projectTaskId: ev.projectTaskId || null,
-                        startTime: ev.start_date,
-                        endTime: ev.end_date,
-                        description: ev.description || ev.text
-                    }).done(function () {
-                        abp.notify.success(app.localize('SuccessfullySaved'));
-                        loadPeriodEntries();
-                    }).fail(function (error) {
-                        var message = (error && error.responseJSON && error.responseJSON.error && error.responseJSON.error.message)
-                            ? error.responseJSON.error.message
-                            : app.localize('LoadError');
-                        abp.notify.error(message);
-                    });
-                }
-            );
+            convertCompletedTaskToTimeEntry({
+                taskId: ev.taskSourceId,
+                projectId: ev.projectId,
+                projectTaskId: ev.projectTaskId,
+                startTime: ev.start_date,
+                endTime: ev.end_date,
+                description: ev.description,
+                title: ev.taskName || ev.text
+            });
 
             return false;
         });
@@ -319,6 +344,50 @@
         return results;
     }
 
+    function renderCompletedTasksList(tasks, range) {
+        var container = $("#CompletedTasksList");
+        if (!container.length) {
+            return;
+        }
+
+        container.empty();
+
+        var completedTasks = $.grep(tasks || [], function (task) {
+            return task.completedAt && isInRange(task.completedAt, range);
+        });
+
+        if (!completedTasks.length) {
+            container.html('<div class="text-muted fs-7">' + app.localize('NoCompletedTasksInPeriod') + '</div>');
+            return;
+        }
+
+        $.each(completedTasks, function (_, task) {
+            var completedAt = toSchedulerDate(task.completedAt);
+            var endDate = new Date(completedAt);
+            endDate.setMinutes(endDate.getMinutes() + 30);
+            var meta = (task.projectName ? escapeHtml(task.projectName) + ' - ' : '') + completedAt.toLocaleString();
+
+            var itemHtml = '<div class="completed-task-list-item">' +
+                '<div>' +
+                '<div class="completed-task-list-title">' + escapeHtml(task.title || app.localize('TaskTitle')) + '</div>' +
+                '<div class="completed-task-list-meta">' + meta + '</div>' +
+                '</div>' +
+                '<button type="button" class="btn btn-sm btn-primary js-convert-completed-task"' +
+                ' data-task-id="' + task.id + '"' +
+                ' data-project-id="' + (task.projectId || '') + '"' +
+                ' data-project-task-id="' + (task.projectTaskId || '') + '"' +
+                ' data-start-time="' + completedAt.toISOString() + '"' +
+                ' data-end-time="' + endDate.toISOString() + '"' +
+                ' data-title="' + escapeHtml(task.title || '') + '"' +
+                ' data-description="' + escapeHtml(task.description || '') + '">' +
+                app.localize('ConvertToTimeEntry') +
+                '</button>' +
+                '</div>';
+
+            container.append(itemHtml);
+        });
+    }
+
     function loadPeriodEntries() {
         var range = getCurrentRange();
 
@@ -334,12 +403,14 @@
             }).done(function (taskResult) {
                 scheduler.clearAll();
 
+                var completedTasks = taskResult && taskResult.items ? taskResult.items : [];
                 var timeEntryEvents = toTimeEntryEvents(entries || []);
-                var completedTaskEvents = toCompletedTaskEvents(taskResult && taskResult.items ? taskResult.items : [], range);
+                var completedTaskEvents = toCompletedTaskEvents(completedTasks, range);
                 var events = timeEntryEvents.concat(completedTaskEvents);
 
                 scheduler.parse(events, 'json');
                 renderWeekSummary(timeEntryEvents);
+                renderCompletedTasksList(completedTasks, range);
             }).fail(function () {
                 abp.notify.error(app.localize('LoadError'));
             });
@@ -426,6 +497,23 @@
         _createOrEditModal.open({
             startTime: now.toISOString(),
             endTime: end.toISOString()
+        });
+    });
+
+    $('#CompletedTasksList').on('click', '.js-convert-completed-task', function () {
+        var button = $(this);
+        var taskId = parseInt(button.attr('data-task-id'), 10);
+        var projectIdRaw = button.attr('data-project-id');
+        var projectTaskIdRaw = button.attr('data-project-task-id');
+
+        convertCompletedTaskToTimeEntry({
+            taskId: taskId,
+            projectId: projectIdRaw ? parseInt(projectIdRaw, 10) : null,
+            projectTaskId: projectTaskIdRaw ? parseInt(projectTaskIdRaw, 10) : null,
+            startTime: button.attr('data-start-time'),
+            endTime: button.attr('data-end-time'),
+            description: button.attr('data-description'),
+            title: button.attr('data-title')
         });
     });
 
