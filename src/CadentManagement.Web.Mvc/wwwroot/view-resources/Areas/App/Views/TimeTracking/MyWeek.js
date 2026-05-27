@@ -1,5 +1,6 @@
 (function () {
     var _timeEntryService = abp.services.app.timeEntry;
+    var _userTaskService = abp.services.app.userTask;
     var _createOrEditModal = new app.ModalManager({
         viewUrl: abp.appPath + 'App/TimeTracking/CreateOrEditTimeEntryModal',
         scriptUrl: abp.appPath + 'view-resources/Areas/App/Views/TimeTracking/_CreateOrEditTimeEntryModal.js',
@@ -7,13 +8,12 @@
     });
 
     var _currentDate = getWeekStart(new Date());
-    var _currentMode = 'week';
+    var _currentMode = scheduler.createUnitsView ? 'ttUnits' : 'week';
 
-    // ─── Date helpers ──────────────────────────────────────────────────
     function getWeekStart(date) {
         var d = new Date(date);
-        var day = d.getDay(); // 0=Sun
-        var diff = d.getDate() - day + (day === 0 ? -6 : 1); // Mon
+        var day = d.getDay();
+        var diff = d.getDate() - day + (day === 0 ? -6 : 1);
         d.setDate(diff);
         d.setHours(0, 0, 0, 0);
         return d;
@@ -45,13 +45,16 @@
     }
 
     function toSchedulerDate(dt) {
-        // DHTMLX expects Date objects
         return dt instanceof Date ? dt : new Date(dt);
     }
 
-    // ─── Scheduler setup ───────────────────────────────────────────────
+    function isInRange(date, range) {
+        var d = toSchedulerDate(date);
+        return d >= range.startDate && d <= range.endDate;
+    }
+
     function initScheduler() {
-        scheduler.config.header = [
+        var header = [
             'day',
             'week',
             'month',
@@ -60,6 +63,12 @@
             'today',
             'next'
         ];
+
+        if (scheduler.createUnitsView) {
+            header.splice(1, 0, 'ttUnits');
+        }
+
+        scheduler.config.header = header;
         scheduler.config.multi_day = true;
         scheduler.config.first_hour = 7;
         scheduler.config.last_hour = 20;
@@ -69,33 +78,59 @@
         scheduler.config.details_on_dblclick = true;
         scheduler.config.readonly = !abp.auth.isGranted('Pages.TimeTracking.TimeEntries.Edit');
 
-        // Custom event template — show project name in addition to description
+        scheduler.locale.labels.ttUnits_tab = app.localize('MyWeek');
+
+        if (scheduler.createUnitsView) {
+            scheduler.createUnitsView({
+                name: 'ttUnits',
+                property: 'lane',
+                list: [
+                    { key: 'calendar', label: app.localize('TimeEntriesColumn') },
+                    { key: 'completedTasks', label: app.localize('CompletedTasksColumn') }
+                ],
+                size: 2,
+                step: 1,
+                days: 7
+            });
+        }
+
         scheduler.templates.event_bar_text = function (start, end, event) {
+            if (event.isCompletedTask) {
+                return '<b>' + (event.projectName || app.localize('Project')) + '</b>' +
+                    '<br/><small>' + (event.taskName || event.text || '') + '</small>';
+            }
+
             return '<b>' + (event.projectName || '') + '</b>' +
                 (event.taskName ? ' / ' + event.taskName : '') +
                 (event.description ? '<br/><small>' + event.description + '</small>' : '');
         };
 
         scheduler.templates.event_text = function (start, end, event) {
+            if (event.isCompletedTask) {
+                return '<b>' + (event.projectName || app.localize('Project')) + '</b>' +
+                    '<br/><small>' + (event.taskName || event.text || '') + '</small>';
+            }
+
             return '<b>' + (event.projectName || '') + '</b>' +
                 (event.taskName ? ' / ' + event.taskName : '') +
                 (event.description ? '<br/><small>' + event.description + '</small>' : '');
         };
 
         scheduler.templates.event_class = function (start, end, event) {
-            return 'tt-project-event';
+            return event.isCompletedTask ? 'tt-completed-task' : 'tt-project-event';
         };
 
-        // Colour events by project colour
-        scheduler.templates.event_bar_date = function (start, end, event) { return ''; };
+        scheduler.templates.event_bar_date = function () { return ''; };
 
-        scheduler.attachEvent('onBeforeEventChanged', function (ev, e, is_new, original) {
-            // Allow drag-drop only if edit permission granted
-            return abp.auth.isGranted('Pages.TimeTracking.TimeEntries.Edit');
+        scheduler.attachEvent('onBeforeEventChanged', function (ev) {
+            return !ev.isCompletedTask && abp.auth.isGranted('Pages.TimeTracking.TimeEntries.Edit');
         });
 
         scheduler.attachEvent('onEventChanged', function (id, ev) {
-            if (id < 0) return true; // newly added via drag
+            if (ev.isCompletedTask || id < 0) {
+                return true;
+            }
+
             _timeEntryService.update({
                 id: id,
                 projectId: ev.projectId,
@@ -113,7 +148,14 @@
         });
 
         scheduler.attachEvent('onEventDeleted', function (id, ev) {
-            if (id < 0) return;
+            if (ev && ev.isCompletedTask) {
+                return false;
+            }
+
+            if (id < 0) {
+                return;
+            }
+
             abp.message.confirm(
                 app.localize('TimeEntryDeleteWarningMessage'),
                 app.localize('AreYouSure'),
@@ -130,18 +172,59 @@
             );
         });
 
-        scheduler.attachEvent('onDblClick', function (id, e) {
+        scheduler.attachEvent('onClick', function (id) {
+            var ev = scheduler.getEvent(id);
+            if (!ev || !ev.isCompletedTask) {
+                return true;
+            }
+
+            if (!ev.projectId) {
+                abp.notify.warn(app.localize('SelectAProject'));
+                return false;
+            }
+
+            abp.message.confirm(
+                app.localize('AddTaskToCalendarConfirmationMessage'),
+                app.localize('ConvertToTimeEntry'),
+                function (confirmed) {
+                    if (!confirmed) {
+                        return;
+                    }
+
+                    _userTaskService.convertToTimeEntry({
+                        taskId: ev.taskSourceId,
+                        projectId: ev.projectId,
+                        projectTaskId: ev.projectTaskId || null,
+                        startTime: ev.start_date,
+                        endTime: ev.end_date,
+                        description: ev.description || ev.text
+                    }).done(function () {
+                        abp.notify.success(app.localize('SuccessfullySaved'));
+                        loadPeriodEntries();
+                    }).fail(function (error) {
+                        var message = (error && error.responseJSON && error.responseJSON.error && error.responseJSON.error.message)
+                            ? error.responseJSON.error.message
+                            : app.localize('LoadError');
+                        abp.notify.error(message);
+                    });
+                }
+            );
+
+            return false;
+        });
+
+        scheduler.attachEvent('onDblClick', function (id) {
+            var ev = scheduler.getEvent(id);
+            if (ev && ev.isCompletedTask) {
+                return false;
+            }
+
             _createOrEditModal.open({ id: id });
             return false;
         });
 
-        // Click on empty slot — open create modal with pre-filled dates
-        scheduler.attachEvent('onClick', function (id, e) {
-            return true;
-        });
-
-        scheduler.attachEvent('onEmptyClick', function (date, e) {
-            var endDate = new Date(date.getTime() + 60 * 60 * 1000); // +1 hour
+        scheduler.attachEvent('onEmptyClick', function (date) {
+            var endDate = new Date(date.getTime() + 60 * 60 * 1000);
             _createOrEditModal.open({
                 startTime: date.toISOString(),
                 endTime: endDate.toISOString()
@@ -152,7 +235,6 @@
         scheduler.init('myWeekScheduler', _currentDate, _currentMode);
     }
 
-    // ─── Data loading ──────────────────────────────────────────────────
     function getCurrentRange() {
         var state = scheduler.getState();
         if (_currentMode === 'month') {
@@ -161,10 +243,68 @@
                 endDate: getMonthEnd(state.date || _currentDate)
             };
         }
+
         return {
             startDate: state.min_date ? new Date(state.min_date) : getWeekStart(_currentDate),
             endDate: state.max_date ? new Date(state.max_date) : getWeekEnd(getWeekStart(_currentDate))
         };
+    }
+
+    function toTimeEntryEvents(entries) {
+        return $.map(entries, function (e) {
+            return {
+                id: e.id,
+                text: e.text,
+                start_date: toSchedulerDate(e.startDate),
+                end_date: toSchedulerDate(e.endDate),
+                color: e.color || '#3498db',
+                projectId: e.projectId,
+                projectName: e.projectName,
+                taskId: e.taskId,
+                taskName: e.taskName,
+                description: e.description,
+                lane: 'calendar',
+                isCompletedTask: false
+            };
+        });
+    }
+
+    function toCompletedTaskEvents(tasks, range) {
+        var results = [];
+
+        $.each(tasks || [], function (_, task) {
+            if (!task.completedAt) {
+                return;
+            }
+
+            var completedAt = toSchedulerDate(task.completedAt);
+            if (!isInRange(completedAt, range)) {
+                return;
+            }
+
+            var startDate = new Date(completedAt);
+            var endDate = new Date(completedAt);
+            endDate.setMinutes(endDate.getMinutes() + 30);
+
+            results.push({
+                id: 'task-' + task.id,
+                text: task.title,
+                start_date: startDate,
+                end_date: endDate,
+                color: '#95a5a6',
+                projectId: task.projectId,
+                projectName: task.projectName,
+                projectTaskId: task.projectTaskId,
+                taskName: task.title,
+                description: task.description,
+                lane: 'completedTasks',
+                isCompletedTask: true,
+                taskSourceId: task.id,
+                readonly: true
+            });
+        });
+
+        return results;
     }
 
     function loadPeriodEntries() {
@@ -175,25 +315,22 @@
             startDate: range.startDate,
             endDate: range.endDate
         }).done(function (entries) {
-            scheduler.clearAll();
+            _userTaskService.getTasks({
+                maxResultCount: 1000,
+                skipCount: 0,
+                statusFilter: 3
+            }).done(function (taskResult) {
+                scheduler.clearAll();
 
-            var events = $.map(entries, function (e) {
-                return {
-                    id: e.id,
-                    text: e.text,
-                    start_date: toSchedulerDate(e.startDate),
-                    end_date: toSchedulerDate(e.endDate),
-                    color: e.color || '#3498db',
-                    projectId: e.projectId,
-                    projectName: e.projectName,
-                    taskId: e.taskId,
-                    taskName: e.taskName,
-                    description: e.description
-                };
+                var timeEntryEvents = toTimeEntryEvents(entries || []);
+                var completedTaskEvents = toCompletedTaskEvents(taskResult && taskResult.items ? taskResult.items : [], range);
+                var events = timeEntryEvents.concat(completedTaskEvents);
+
+                scheduler.parse(events, 'json');
+                renderWeekSummary(timeEntryEvents);
+            }).fail(function () {
+                abp.notify.error(app.localize('LoadError'));
             });
-
-            scheduler.parse(events, 'json');
-            renderWeekSummary(events);
         }).fail(function () {
             abp.notify.error(app.localize('LoadError'));
         });
@@ -201,7 +338,6 @@
         updatePeriodLabel(range);
     }
 
-    // ─── Week summary ──────────────────────────────────────────────────
     function renderWeekSummary(events) {
         var projectMap = {};
         var totalHours = 0;
@@ -247,7 +383,6 @@
         $('#WeekLabel').text(formatDateLabel(range.startDate) + ' – ' + formatDateLabel(range.endDate));
     }
 
-    // ─── Navigation ────────────────────────────────────────────────────
     $('#PrevWeekButton').click(function () {
         _currentDate = new Date(_currentDate);
         if (_currentMode === 'month') {
@@ -273,7 +408,6 @@
         scheduler.setCurrentView(_currentDate, _currentMode);
     });
 
-    // ─── Log time button ───────────────────────────────────────────────
     $('#LogTimeButton').click(function () {
         var now = new Date();
         var end = new Date(now.getTime() + 60 * 60 * 1000);
@@ -283,16 +417,13 @@
         });
     });
 
-    // Reload after time entry saved
     abp.event.on('app.createOrEditTimeEntryModalSaved', function () {
         loadPeriodEntries();
     });
 
-    // ─── Init ──────────────────────────────────────────────────────────
     initScheduler();
     loadPeriodEntries();
 
-    // Override scheduler navigation to sync our week state
     scheduler.attachEvent('onViewChange', function (new_mode, new_date) {
         _currentMode = new_mode || _currentMode;
         _currentDate = new_date ? new Date(new_date) : new Date();

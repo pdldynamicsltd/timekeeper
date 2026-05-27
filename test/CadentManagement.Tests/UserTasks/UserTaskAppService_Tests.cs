@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 using Abp.Application.Services.Dto;
 using Shouldly;
 using Xunit;
-using CadentManagement.Core.Shared.Tasks;
 using CadentManagement.UserTasks;
 using CadentManagement.UserTasks.Dto;
+using Microsoft.EntityFrameworkCore;
 
 namespace CadentManagement.Tests.UserTasks;
 
@@ -123,8 +123,9 @@ public class UserTaskAppService_Tests : AppTestBase
         // Assert
         await UsingDbContextAsync(async context =>
         {
-            var task = await context.UserTasks.FirstOrDefaultAsync(t => t.Id == taskId);
-            task.ShouldBeNull();
+            var task = await context.UserTasks.IgnoreQueryFilters().FirstOrDefaultAsync(t => t.Id == taskId);
+            task.ShouldNotBeNull();
+            task.IsDeleted.ShouldBeTrue();
         });
     }
 
@@ -148,7 +149,7 @@ public class UserTaskAppService_Tests : AppTestBase
 
         // Assert
         result.Items.Count.ShouldBeGreaterThanOrEqualTo(3);
-        result.Items.Should().Contain(t => t.Title.StartsWith("Task"));
+        result.Items.Any(t => t.Title.StartsWith("Task")).ShouldBeTrue();
     }
 
     [MultiTenantFact]
@@ -175,7 +176,7 @@ public class UserTaskAppService_Tests : AppTestBase
         await _userTaskAppService.UpdateStatusAsync(new UpdateTaskStatusInput
         {
             TaskId = taskId,
-            NewStatus = (int)KanbanTaskStatus.Done,
+            NewStatus = KanbanTaskStatus.Done,
             NewSortOrder = 0
         });
 
@@ -185,6 +186,67 @@ public class UserTaskAppService_Tests : AppTestBase
             var task = await context.UserTasks.FirstOrDefaultAsync(t => t.Id == taskId);
             task.Status.ShouldBe(KanbanTaskStatus.Done);
             task.CompletedAt.ShouldNotBeNull();
+        });
+    }
+
+    [MultiTenantFact]
+    public async Task Should_Set_CompletedAt_When_Creating_Done_Task()
+    {
+        // Arrange
+        var input = new CreateOrEditUserTaskDto
+        {
+            Title = "Done On Create",
+            Priority = TaskPriority.Medium,
+            Status = KanbanTaskStatus.Done
+        };
+
+        // Act
+        await _userTaskAppService.CreateAsync(input);
+
+        // Assert
+        await UsingDbContextAsync(async context =>
+        {
+            var task = await context.UserTasks.FirstOrDefaultAsync(t => t.Title == "Done On Create");
+            task.ShouldNotBeNull();
+            task.Status.ShouldBe(KanbanTaskStatus.Done);
+            task.CompletedAt.ShouldNotBeNull();
+        });
+    }
+
+    [MultiTenantFact]
+    public async Task Should_Clear_CompletedAt_When_Updating_Task_To_NonDone_Status()
+    {
+        // Arrange
+        await _userTaskAppService.CreateAsync(new CreateOrEditUserTaskDto
+        {
+            Title = "Done Then Reopened",
+            Priority = TaskPriority.High,
+            Status = KanbanTaskStatus.Done
+        });
+
+        int taskId = 0;
+        await UsingDbContextAsync(async context =>
+        {
+            var task = await context.UserTasks.FirstOrDefaultAsync(t => t.Title == "Done Then Reopened");
+            taskId = task.Id;
+            task.CompletedAt.ShouldNotBeNull();
+        });
+
+        // Act
+        await _userTaskAppService.UpdateAsync(new CreateOrEditUserTaskDto
+        {
+            Id = taskId,
+            Title = "Done Then Reopened",
+            Priority = TaskPriority.High,
+            Status = KanbanTaskStatus.InProgress
+        });
+
+        // Assert
+        await UsingDbContextAsync(async context =>
+        {
+            var task = await context.UserTasks.FirstOrDefaultAsync(t => t.Id == taskId);
+            task.Status.ShouldBe(KanbanTaskStatus.InProgress);
+            task.CompletedAt.ShouldBeNull();
         });
     }
 
@@ -227,7 +289,7 @@ public class UserTaskAppService_Tests : AppTestBase
 
         // Assert
         result.Task.ShouldNotBeNull();
-        result.Task.Id.ShouldBe(0);
+        result.Task.Id.ShouldBeNull();
         result.Task.Title.ShouldBeNull();
     }
 }

@@ -59,7 +59,19 @@ public class UserTaskAppService : CadentManagementAppServiceBase, IUserTaskAppSe
         if (input.Id.HasValue)
         {
             var task = await _taskRepository.GetAsync(input.Id.Value);
-            output.Task = ObjectMapper.Map<CreateOrEditUserTaskDto>(task);
+            output.Task = new CreateOrEditUserTaskDto
+            {
+                Id = task.Id,
+                Title = task.Title,
+                Description = task.Description,
+                Status = task.Status,
+                Priority = task.Priority,
+                EstimatedMinutes = task.EstimatedMinutes,
+                DueDate = task.DueDate,
+                Tags = task.Tags,
+                ProjectId = task.ProjectId,
+                ProjectTaskId = task.ProjectTaskId
+            };
             
             // Load related project tasks if project is selected
             if (task.ProjectId.HasValue)
@@ -89,6 +101,7 @@ public class UserTaskAppService : CadentManagementAppServiceBase, IUserTaskAppSe
         task.TenantId = AbpSession.TenantId ?? 0;
         task.UserId = AbpSession.UserId ?? 0;
         task.SortOrder = 0;
+        task.CompletedAt = input.Status == KanbanTaskStatus.Done ? DateTime.Now : null;
 
         var taskId = await _taskRepository.InsertAndGetIdAsync(task);
         return taskId;
@@ -99,6 +112,7 @@ public class UserTaskAppService : CadentManagementAppServiceBase, IUserTaskAppSe
     {
         var task = await _taskRepository.GetAsync(input.Id.Value);
         _toUserTaskMapper.Map(input, task);
+        task.CompletedAt = task.Status == KanbanTaskStatus.Done ? (task.CompletedAt ?? DateTime.Now) : null;
     }
 
     [AbpAuthorize(AppPermissions.Pages_Tasks_Delete)]
@@ -143,9 +157,13 @@ public class UserTaskAppService : CadentManagementAppServiceBase, IUserTaskAppSe
         task.SortOrder = input.NewSortOrder;
 
         // Auto-set CompletedAt when status changes to Done
-        if (input.NewStatus == KanbanTaskStatus.Done && task.CompletedAt == null)
+        if (input.NewStatus == KanbanTaskStatus.Done)
         {
-            task.CompletedAt = DateTime.Now;
+            task.CompletedAt = task.CompletedAt ?? DateTime.Now;
+        }
+        else
+        {
+            task.CompletedAt = null;
         }
     }
 
