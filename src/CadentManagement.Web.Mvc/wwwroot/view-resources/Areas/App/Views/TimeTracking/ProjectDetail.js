@@ -7,6 +7,7 @@
     var projectId = parseInt($('#CurrentProjectId').val());
     var _currentDate = new Date();
     var _currentMode = 'month';
+    var _canCreateTimeEntries = abp.auth.isGranted('Pages.TimeTracking.TimeEntries.Create');
 
     var _createOrEditTaskModal = new app.ModalManager({
         viewUrl: abp.appPath + 'App/TimeTracking/CreateOrEditTaskModal',
@@ -26,6 +27,33 @@
         modalClass: 'CreateOrEditUserTaskModal'
     });
 
+    function toLocalDateTimeString(date) {
+        return scheduler.date.date_to_str('%Y-%m-%dT%H:%i')(date instanceof Date ? date : new Date(date));
+    }
+
+    function duplicateTimeEntryForNextDay(event) {
+        if (!event || !event.dbId || !event.projectId) {
+            return;
+        }
+
+        var duplicatedStart = new Date(event.start_date);
+        var duplicatedEnd = new Date(event.end_date);
+        duplicatedStart.setDate(duplicatedStart.getDate() + 1);
+        duplicatedEnd.setDate(duplicatedEnd.getDate() + 1);
+
+        _timeEntryService.create({
+            projectId: event.projectId,
+            taskId: event.taskId || null,
+            startTime: toLocalDateTimeString(duplicatedStart),
+            endTime: toLocalDateTimeString(duplicatedEnd),
+            description: event.description || ''
+        }).done(function () {
+            abp.notify.success(app.localize('SavedSuccessfully'));
+            loadSchedulerEntries();
+            refreshBudget();
+        });
+    }
+
     function initScheduler() {
         scheduler.config.xml_date = '%Y-%m-%d %H:%i';
         scheduler.config.first_hour = 6;
@@ -38,7 +66,19 @@
         scheduler.locale.labels.dhx_cal_today_button = app.localize('Today');
 
         scheduler.templates.event_bar_text = function (start, end, event) {
-            return '<b>' + event.text + '</b>';
+            var duplicateButton = _canCreateTimeEntries && event.dbId
+                ? '<span class="tt-event-duplicate js-duplicate-time-entry" data-event-id="' + event.id + '" title="' + app.localize('Copy') + '"><i class="fa fa-copy"></i></span>'
+                : '';
+
+            return '<span class="tt-event-title"><b>' + event.text + '</b></span>' + duplicateButton;
+        };
+
+        scheduler.templates.event_text = function (start, end, event) {
+            var duplicateButton = _canCreateTimeEntries && event.dbId
+                ? '<span class="tt-event-duplicate js-duplicate-time-entry" data-event-id="' + event.id + '" title="' + app.localize('Copy') + '"><i class="fa fa-copy"></i></span>'
+                : '';
+
+            return '<span class="tt-event-title"><b>' + event.text + '</b></span>' + duplicateButton;
         };
 
         scheduler.templates.event_bar_date = function (start, end, event) {
@@ -59,10 +99,22 @@
                 taskId: event.taskId,
                 startTime: startTime,
                 endTime: endTime,
-                description: event.text
+                description: event.description || event.text
             }).done(function () {
                 refreshBudget();
             });
+        });
+
+        scheduler.attachEvent('onClick', function (id, e) {
+            var duplicateButton = e ? $(e.target).closest('.js-duplicate-time-entry') : $();
+            if (!duplicateButton.length) {
+                return true;
+            }
+
+            var eventId = duplicateButton.attr('data-event-id') || id;
+            var entryToDuplicate = scheduler.getEvent(eventId);
+            duplicateTimeEntryForNextDay(entryToDuplicate);
+            return false;
         });
 
         scheduler.attachEvent('onBeforeEventDelete', function (id, event) {
@@ -97,8 +149,8 @@
             var endDate = new Date(date.getTime() + 60 * 60 * 1000);
             _createOrEditTimeEntryModal.open({
                 projectId: projectId,
-                startTime: date.toISOString(),
-                endTime: endDate.toISOString()
+                startTime: toLocalDateTimeString(date),
+                endTime: toLocalDateTimeString(endDate)
             });
 
             return false;
@@ -118,8 +170,8 @@
         var view = scheduler.getState();
         var input = {
             projectId: projectId,
-            startDate: view.min_date ? view.min_date.toISOString() : null,
-            endDate: view.max_date ? view.max_date.toISOString() : null
+            startDate: view.min_date ? toLocalDateTimeString(view.min_date) : null,
+            endDate: view.max_date ? toLocalDateTimeString(view.max_date) : null
         };
 
         _timeEntryService.getSchedulerEntries(input).done(function (result) {
@@ -135,7 +187,8 @@
                     text: (entry.taskName || entry.projectName) + (entry.description ? ': ' + entry.description : ''),
                     color: entry.color || '#3498db',
                     projectId: entry.projectId,
-                    taskId: entry.taskId
+                    taskId: entry.taskId,
+                    description: entry.description
                 });
             });
 
