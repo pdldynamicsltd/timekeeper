@@ -4,14 +4,14 @@
 @model GetUserTaskForEditOutput
 
 @await Html.PartialAsync("~/Areas/App/Views/Common/Modals/_ModalHeader.cshtml",
-    new ModalHeaderViewModel(Model.Task.Id.HasValue ? L("EditTask") : L("AddNewTask")))
+    new ModalHeaderViewModel(Model.Task.Id.HasValue ? L("EditToDo") : L("AddNewToDo")))
 
 <form name="CreateOrEditUserTaskForm" role="form" novalidate class="form-validation">
     <div class="modal-body">
         <input type="hidden" id="TaskIdInput" name="id" value="@(Model.Task.Id.HasValue ? Model.Task.Id.ToString() : "")" />
 
         <div class="form-group">
-            <label for="TitleInput">@L("TaskTitle")</label>
+            <label for="TitleInput">@L("ToDoTitle")</label>
             <input type="text" id="TitleInput" name="title" class="form-control" required maxlength="256" value="@Model.Task.Title" />
         </div>
 

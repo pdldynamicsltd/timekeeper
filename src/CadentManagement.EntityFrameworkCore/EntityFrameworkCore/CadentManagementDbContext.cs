@@ -74,6 +74,7 @@ public class CadentManagementDbContext : AbpZeroDbContext<Tenant, Role, User, Ca
 
     // Personal Tasks
     public virtual DbSet<UserTask> UserTasks { get; set; }
+    public virtual DbSet<TodoStatus> TodoStatuses { get; set; }
 
     public CadentManagementDbContext(DbContextOptions<CadentManagementDbContext> options)
         : base(options)
@@ -248,7 +249,14 @@ public class CadentManagementDbContext : AbpZeroDbContext<Tenant, Role, User, Ca
                 .OnDelete(DeleteBehavior.Restrict);
             b.Ignore(e => e.DurationHours);
         });
-
+        modelBuilder.Entity<TodoStatus>(b =>
+        {
+            b.ToTable("TT_TodoStatuses");
+            b.HasIndex(e => new { e.TenantId, e.Value }).IsUnique();
+            b.HasIndex(e => new { e.TenantId, e.SortOrder });
+            b.Property(e => e.Name).HasMaxLength(TodoStatus.MaxNameLength).IsRequired();
+            b.Property(e => e.Color).HasMaxLength(TodoStatus.MaxColorLength);
+        });
         modelBuilder.ConfigureOpenIddict();
     }
 }

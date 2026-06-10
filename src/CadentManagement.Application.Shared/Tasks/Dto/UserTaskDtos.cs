@@ -10,6 +10,7 @@ public class UserTaskDto : EntityDto<int>
     public string Title { get; set; }
     public string Description { get; set; }
     public KanbanTaskStatus Status { get; set; }
+    public string StatusName { get; set; }
     public TaskPriority Priority { get; set; }
     public int? EstimatedMinutes { get; set; }
     public DateTime? DueDate { get; set; }
@@ -39,7 +40,7 @@ public class CreateOrEditUserTaskDto
 public class GetUserTasksInput : PagedResultRequestDto
 {
     public string Filter { get; set; }
-    public KanbanTaskStatus? StatusFilter { get; set; }
+    public int? StatusFilter { get; set; }
     public int? ProjectId { get; set; }
 }
 
@@ -55,8 +56,14 @@ public class GetUserTaskForEditOutput
 public class UpdateTaskStatusInput
 {
     public int TaskId { get; set; }
-    public KanbanTaskStatus NewStatus { get; set; }
+    public int NewStatus { get; set; }
     public int NewSortOrder { get; set; }
+}
+
+public class UpdateTaskDueDateInput
+{
+    public int TaskId { get; set; }
+    public DateTime? DueDate { get; set; }
 }
 
 public class ConvertTaskToTimeEntryInput
@@ -67,4 +74,22 @@ public class ConvertTaskToTimeEntryInput
     public DateTime StartTime { get; set; }
     public DateTime EndTime { get; set; }
     public string Description { get; set; }
+}
+
+public class TodoStatusDto : EntityDto<int>
+{
+    public int Value { get; set; }
+    public string Name { get; set; }
+    public string Color { get; set; }
+    public int SortOrder { get; set; }
+    public bool IsCompleted { get; set; }
+}
+
+public class CreateOrEditTodoStatusDto
+{
+    public int? Id { get; set; }
+    public string Name { get; set; }
+    public string Color { get; set; }
+    public int SortOrder { get; set; }
+    public bool IsCompleted { get; set; }
 }

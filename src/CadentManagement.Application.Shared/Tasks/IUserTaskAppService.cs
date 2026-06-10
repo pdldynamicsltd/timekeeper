@@ -20,5 +20,17 @@ public interface IUserTaskAppService : IApplicationService
 
     Task UpdateStatusAsync(UpdateTaskStatusInput input);
 
+    Task UpdateDueDateAsync(UpdateTaskDueDateInput input);
+
+    Task CompleteAsync(EntityDto<int> input);
+
     Task ConvertToTimeEntryAsync(ConvertTaskToTimeEntryInput input);
+
+    Task<List<TodoStatusDto>> GetTodoStatusesAsync();
+
+    Task<int> CreateTodoStatusAsync(CreateOrEditTodoStatusDto input);
+
+    Task UpdateTodoStatusAsync(CreateOrEditTodoStatusDto input);
+
+    Task DeleteTodoStatusAsync(EntityDto<int> input);
 }

@@ -48,9 +48,17 @@
         return dt instanceof Date ? dt : new Date(dt);
     }
 
-    function isInRange(date, range) {
-        var d = toSchedulerDate(date);
-        return d >= range.startDate && d <= range.endDate;
+    function escapeHtml(text) {
+        if (!text) {
+            return '';
+        }
+
+        return String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/\"/g, '&quot;')
+            .replace(/'/g, '&#039;');
     }
 
     function openPrefilledTimeEntryModal(task) {
@@ -71,6 +79,39 @@
         _createOrEditModal.open(payload);
     }
 
+        //abp.message.confirm(
+        //    app.localize('AddTaskToCalendarConfirmationMessage'),
+        //    app.localize('ConvertToTimeEntry'),
+        //    function (confirmed) {
+        //        if (!confirmed) {
+        //            return;
+        //        }
+
+        //        _userTaskService.convertToTimeEntry({
+        //            taskId: task.taskId,
+        //            projectId: task.projectId,
+        //            projectTaskId: task.projectTaskId || null,
+        //            startTime: task.startTime,
+        //            endTime: task.endTime,
+        //            description: task.description || task.title
+        //        }).done(function () {
+        //            abp.notify.success(app.localize('SuccessfullySaved'));
+        //            loadPeriodEntries();
+        //        }).fail(function (error) {
+        //            var message = (error && error.responseJSON && error.responseJSON.error && error.responseJSON.error.message)
+        //                ? error.responseJSON.error.message
+        //                : app.localize('LoadError');
+        //            abp.notify.error(message);
+        //        });
+        //    }
+        //);
+  
+
+    function isInRange(date, range) {
+        var d = toSchedulerDate(date);
+        return d >= range.startDate && d <= range.endDate;
+    }
+
     function initScheduler() {
         var header = [
             'day',
@@ -85,8 +126,8 @@
         if (scheduler.createUnitsView) {
             header.splice(1, 0, 'ttUnits');
         }
+        scheduler.plugins({ units: true })
 
-        scheduler.plugins({ units: true });
         scheduler.config.header = header;
         scheduler.config.multi_day = true;
         scheduler.config.first_hour = 7;
@@ -142,7 +183,6 @@
         };
 
         scheduler.templates.event_bar_date = function () { return ''; };
-
         scheduler.templates.tooltip_text = function (start, end, event) {
             if (event.isCompletedTask) {
                 return '<b>' + (event.taskName || event.text || app.localize('TaskTitle')) + '</b>' +
@@ -210,6 +250,7 @@
             }
 
             openPrefilledTimeEntryModal({
+
                 projectId: ev.projectId,
                 projectTaskId: ev.projectTaskId,
                 startTime: ev.start_date,
@@ -315,6 +356,50 @@
         return results;
     }
 
+    function renderCompletedTasksList(tasks, range) {
+        var container = $("#CompletedTasksList");
+        if (!container.length) {
+            return;
+        }
+
+        container.empty();
+
+        var completedTasks = $.grep(tasks || [], function (task) {
+            return task.completedAt && isInRange(task.completedAt, range);
+        });
+
+        if (!completedTasks.length) {
+            container.html('<div class="text-muted fs-7">' + app.localize('NoCompletedTasksInPeriod') + '</div>');
+            return;
+        }
+
+        $.each(completedTasks, function (_, task) {
+            var completedAt = toSchedulerDate(task.completedAt);
+            var endDate = new Date(completedAt);
+            endDate.setMinutes(endDate.getMinutes() + 30);
+            var meta = (task.projectName ? escapeHtml(task.projectName) + ' - ' : '') + completedAt.toLocaleString();
+
+            var itemHtml = '<div class="completed-task-list-item">' +
+                '<div>' +
+                '<div class="completed-task-list-title">' + escapeHtml(task.title || app.localize('TaskTitle')) + '</div>' +
+                '<div class="completed-task-list-meta">' + meta + '</div>' +
+                '</div>' +
+                '<button type="button" class="btn btn-sm btn-primary js-convert-completed-task"' +
+                ' data-task-id="' + task.id + '"' +
+                ' data-project-id="' + (task.projectId || '') + '"' +
+                ' data-project-task-id="' + (task.projectTaskId || '') + '"' +
+                ' data-start-time="' + completedAt.toISOString() + '"' +
+                ' data-end-time="' + endDate.toISOString() + '"' +
+                ' data-title="' + escapeHtml(task.title || '') + '"' +
+                ' data-description="' + escapeHtml(task.description || '') + '">' +
+                app.localize('ConvertToTimeEntry') +
+                '</button>' +
+                '</div>';
+
+            container.append(itemHtml);
+        });
+    }
+
     function loadPeriodEntries() {
         var range = getCurrentRange();
 
@@ -337,6 +422,7 @@
 
                 scheduler.parse(events, 'json');
                 renderWeekSummary(timeEntryEvents);
+
             }).fail(function () {
                 abp.notify.error(app.localize('LoadError'));
             });
@@ -423,6 +509,23 @@
         _createOrEditModal.open({
             startTime: now.toISOString(),
             endTime: end.toISOString()
+        });
+    });
+
+    $('#CompletedTasksList').on('click', '.js-convert-completed-task', function () {
+        var button = $(this);
+        var taskId = parseInt(button.attr('data-task-id'), 10);
+        var projectIdRaw = button.attr('data-project-id');
+        var projectTaskIdRaw = button.attr('data-project-task-id');
+
+        convertCompletedTaskToTimeEntry({
+            taskId: taskId,
+            projectId: projectIdRaw ? parseInt(projectIdRaw, 10) : null,
+            projectTaskId: projectTaskIdRaw ? parseInt(projectTaskIdRaw, 10) : null,
+            startTime: button.attr('data-start-time'),
+            endTime: button.attr('data-end-time'),
+            description: button.attr('data-description'),
+            title: button.attr('data-title')
         });
     });
 

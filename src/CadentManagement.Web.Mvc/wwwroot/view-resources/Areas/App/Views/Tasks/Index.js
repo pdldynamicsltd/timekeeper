@@ -1,35 +1,38 @@
 (function () {
     var _userTaskService = abp.services.app.userTask;
+    var _projectService = abp.services.app.project;
     var _createOrEditModal = new app.ModalManager({
         viewUrl: abp.appPath + 'App/Tasks/CreateOrEditUserTaskModal',
         scriptUrl: abp.appPath + 'view-resources/Areas/App/Views/Tasks/_CreateOrEditUserTaskModal.js',
         modalClass: 'CreateOrEditUserTaskModal'
     });
 
-    var _statuses = [
-        { key: 'Backlog', value: 0, label: app.localize('BacklogStatus') },
-        { key: 'Todo', value: 1, label: app.localize('TodoStatus') },
-        { key: 'InProgress', value: 2, label: app.localize('InProgressStatus') },
-        { key: 'Done', value: 3, label: app.localize('DoneStatus') }
-    ];
-
+    var _statuses = [];
     var _priorities = [
-        { key: 'Low', value: 0, label: app.localize('LowPriority'), className: 'badge-priority-low' },
-        { key: 'Medium', value: 1, label: app.localize('MediumPriority'), className: 'badge-priority-medium' },
-        { key: 'High', value: 2, label: app.localize('HighPriority'), className: 'badge-priority-high' },
-        { key: 'Urgent', value: 3, label: app.localize('UrgentPriority'), className: 'badge-priority-urgent' }
+        { value: 0, label: app.localize('LowPriority'), className: 'badge-priority-low' },
+        { value: 1, label: app.localize('MediumPriority'), className: 'badge-priority-medium' },
+        { value: 2, label: app.localize('HighPriority'), className: 'badge-priority-high' },
+        { value: 3, label: app.localize('UrgentPriority'), className: 'badge-priority-urgent' }
     ];
-
     var _sortableInstances = {};
 
     function getPriorityLabel(priorityValue) {
-        var priority = _priorities.find(p => p.value === priorityValue);
+        var priority = _priorities.find(function (p) { return p.value === priorityValue; });
         return priority ? priority.label : priorityValue;
     }
 
     function getPriorityClass(priorityValue) {
-        var priority = _priorities.find(p => p.value === priorityValue);
+        var priority = _priorities.find(function (p) { return p.value === priorityValue; });
         return priority ? priority.className : '';
+    }
+
+    function loadStatuses(callback) {
+        _userTaskService.getTodoStatuses().done(function (statuses) {
+            _statuses = (statuses || []).sort(function (a, b) { return a.sortOrder - b.sortOrder; });
+            if (callback) {
+                callback();
+            }
+        });
     }
 
     function renderKanban(tasks) {
@@ -37,80 +40,69 @@
         board.empty();
 
         _statuses.forEach(function (status) {
-            var statusTasks = tasks.filter(t => t.status === status.value);
+            var statusTasks = tasks.filter(function (t) { return t.status === status.value; });
             var columnHtml = '<div class="kanban-column">' +
                 '<div class="kanban-column-header">' +
-                '<span>' + status.label + '</span>' +
+                '<span><span class="status-color-dot" style="background:' + escapeHtml(status.color || '#e5e7eb') + ';"></span>' + escapeHtml(status.name) + '</span>' +
                 '<span class="kanban-column-count">' + statusTasks.length + '</span>' +
                 '</div>' +
-                '<ul class="kanban-list" data-status="' + status.key + '">';
+                '<ul class="kanban-list" data-status-value="' + status.value + '">';
 
             statusTasks.forEach(function (task) {
-                var priorityClass = getPriorityClass(task.priority);
+                var description = task.description ? escapeHtml(task.description.substring(0, 100)) : '';
                 columnHtml += '<li class="kanban-card" data-id="' + task.id + '">' +
                     '<div class="kanban-card-title">' + escapeHtml(task.title) + '</div>' +
                     '<div class="kanban-card-meta">' +
                     (task.projectName ? '<span class="badge badge-secondary">' + escapeHtml(task.projectName) + '</span>' : '') +
-                    '<span class="badge ' + priorityClass + '">' + getPriorityLabel(task.priority) + '</span>' +
-                    '</div>';
-
-                if (task.description) {
-                    columnHtml += '<div class="kanban-card-description" style="font-size: 12px; color: #666; margin-bottom: 8px;">' + escapeHtml(task.description.substring(0, 100)) + '...</div>';
-                }
-
-                columnHtml += '<div class="kanban-card-actions">' +
+                    '<span class="badge ' + getPriorityClass(task.priority) + '">' + getPriorityLabel(task.priority) + '</span>' +
+                    '</div>' +
+                    (description ? '<div class="kanban-card-description" style="font-size:12px;color:#666;margin-bottom:8px;">' + description + '</div>' : '') +
+                    '<div class="kanban-card-actions">' +
                     '<button class="kanban-card-btn edit-btn" title="' + app.localize('Edit') + '"><i class="fa fa-edit"></i></button>' +
                     '<button class="kanban-card-btn delete-btn" title="' + app.localize('Delete') + '"><i class="fa fa-trash"></i></button>' +
-                    (status.key === 'Done' ? '<button class="kanban-card-btn convert-btn" title="' + app.localize('ConvertToTimeEntry') + '"><i class="fa fa-clock"></i></button>' : '') +
                     '</div>' +
                     '</li>';
             });
 
             columnHtml += '</ul>' +
-                '<button class="kanban-add-button" data-status="' + status.key + '">' +
-                '<i class="fa fa-plus"></i> ' + app.localize('AddTask') +
+                '<button class="kanban-add-button" data-status-value="' + status.value + '">' +
+                '<i class="fa fa-plus"></i> ' + app.localize('AddToDo') +
                 '</button>' +
                 '</div>';
 
             board.append(columnHtml);
         });
 
-        // Setup Sortable for each list
         _statuses.forEach(function (status) {
-            var list = board.find('[data-status="' + status.key + '"]');
-            if (_sortableInstances[status.key]) {
-                _sortableInstances[status.key].destroy();
+            var list = board.find('[data-status-value="' + status.value + '"]');
+            var key = status.value.toString();
+
+            if (_sortableInstances[key]) {
+                _sortableInstances[key].destroy();
             }
 
-            _sortableInstances[status.key] = Sortable.create(list[0], {
+            _sortableInstances[key] = Sortable.create(list[0], {
                 group: 'kanban',
                 animation: 150,
                 ghostClass: 'sortable-ghost',
                 onEnd: function (evt) {
                     var taskId = parseInt($(evt.item).attr('data-id'));
-                    var newStatus = $(evt.to).attr('data-status');
+                    var newStatusValue = parseInt($(evt.to).attr('data-status-value'));
                     var newSortOrder = $(evt.to).find('.kanban-card').index(evt.item);
 
-                    var statusValue = _statuses.find(s => s.key === newStatus).value;
                     _userTaskService.updateStatus({
                         taskId: taskId,
-                        newStatus: statusValue,
+                        newStatus: newStatusValue,
                         newSortOrder: newSortOrder
-                    }).done(function () {
-                        loadTasks();
-                    }).fail(function () {
-                        abp.notify.error(app.localize('Error'));
-                        loadTasks();
-                    });
+                    }).done(loadTasks);
                 }
             });
         });
 
-        // Attach event handlers
-        attachEventHandlers();
+        attachHandlers();
     }
 
-    function attachEventHandlers() {
+    function attachHandlers() {
         var board = $('#KanbanBoard');
 
         board.off('click', '.edit-btn').on('click', '.edit-btn', function (e) {
@@ -122,45 +114,65 @@
         board.off('click', '.delete-btn').on('click', '.delete-btn', function (e) {
             e.preventDefault();
             var taskId = parseInt($(this).closest('.kanban-card').attr('data-id'));
-            abp.message.confirm(
-                app.localize('TaskDeleteWarningMessage'),
-                app.localize('AreYouSure'),
-                function (confirmed) {
-                    if (confirmed) {
-                        _userTaskService.delete({ id: taskId }).done(function () {
-                            abp.notify.success(app.localize('SuccessfullyDeleted'));
-                            loadTasks();
-                        });
-                    }
-                }
-            );
-        });
 
-        board.off('click', '.convert-btn').on('click', '.convert-btn', function (e) {
-            e.preventDefault();
-            var taskId = parseInt($(this).closest('.kanban-card').attr('data-id'));
-            alert('Convert to time entry: ' + taskId); // TODO: Implement modal
+            abp.message.confirm(app.localize('TaskDeleteWarningMessage'), app.localize('AreYouSure'), function (confirmed) {
+                if (!confirmed) {
+                    return;
+                }
+
+                _userTaskService.delete({ id: taskId }).done(function () {
+                    abp.notify.success(app.localize('SuccessfullyDeleted'));
+                    loadTasks();
+                });
+            });
         });
 
         board.off('click', '.kanban-add-button').on('click', '.kanban-add-button', function (e) {
             e.preventDefault();
-            _createOrEditModal.open({});
+            var statusValue = parseInt($(this).data('status-value'));
+            _createOrEditModal.open({ status: statusValue });
         });
     }
 
     function loadTasks() {
+        var selectedProjectId = $('#KanbanProjectFilter').val();
         _userTaskService.getTasks({
-            maxResultCount: 500
+            maxResultCount: 500,
+            projectId: selectedProjectId ? parseInt(selectedProjectId) : null
         }).done(function (response) {
-            renderKanban(response.items);
-        }).fail(function () {
-            abp.notify.error(app.localize('Error loading tasks'));
+            renderKanban(response.items || []);
+        });
+    }
+
+    function loadProjectFilterOptions(callback) {
+        _projectService.getProjects({
+            maxResultCount: 500,
+            skipCount: 0
+        }).done(function (result) {
+            var select = $('#KanbanProjectFilter');
+            var currentValue = select.val();
+            select.find('option:not([value=""])').remove();
+
+            (result.items || []).forEach(function (project) {
+                select.append('<option value="' + project.id + '">' + escapeHtml(project.name) + '</option>');
+            });
+
+            if (currentValue) {
+                select.val(currentValue);
+            }
+
+            if (callback) {
+                callback();
+            }
         });
     }
 
     function escapeHtml(text) {
-        if (!text) return '';
-        return text
+        if (text === undefined || text === null) {
+            return '';
+        }
+
+        return text.toString()
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
@@ -168,12 +180,17 @@
             .replace(/'/g, '&#039;');
     }
 
-    // Init
     $('#AddTaskButton').click(function () {
         _createOrEditModal.open({});
     });
 
-    loadTasks();
+    $('#KanbanProjectFilter').on('change', function () {
+        loadTasks();
+    });
+
+    loadProjectFilterOptions(function () {
+        loadStatuses(loadTasks);
+    });
 
     abp.event.on('app.createOrEditUserTaskModalSaved', function () {
         loadTasks();

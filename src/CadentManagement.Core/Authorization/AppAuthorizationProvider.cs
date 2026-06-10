@@ -156,10 +156,10 @@ public class AppAuthorizationProvider : AuthorizationProvider
         var ttReports = timeTracking.CreateChildPermission(AppPermissions.Pages_TimeTracking_Reports, L("TimeTrackingReports"), multiTenancySides: MultiTenancySides.Tenant);
         ttReports.CreateChildPermission(AppPermissions.Pages_TimeTracking_Reports_Export, L("ExportingTimeTrackingReports"), multiTenancySides: MultiTenancySides.Tenant);
 
-        var tasks = pages.CreateChildPermission(AppPermissions.Pages_Tasks, L("Tasks"), multiTenancySides: MultiTenancySides.Tenant);
-        tasks.CreateChildPermission(AppPermissions.Pages_Tasks_Create, L("CreatingNewTask"), multiTenancySides: MultiTenancySides.Tenant);
-        tasks.CreateChildPermission(AppPermissions.Pages_Tasks_Edit, L("EditingTask"), multiTenancySides: MultiTenancySides.Tenant);
-        tasks.CreateChildPermission(AppPermissions.Pages_Tasks_Delete, L("DeletingTask"), multiTenancySides: MultiTenancySides.Tenant);
+        var tasks = pages.CreateChildPermission(AppPermissions.Pages_Tasks, L("ToDos"), multiTenancySides: MultiTenancySides.Tenant);
+        tasks.CreateChildPermission(AppPermissions.Pages_Tasks_Create, L("CreatingNewToDo"), multiTenancySides: MultiTenancySides.Tenant);
+        tasks.CreateChildPermission(AppPermissions.Pages_Tasks_Edit, L("EditingToDo"), multiTenancySides: MultiTenancySides.Tenant);
+        tasks.CreateChildPermission(AppPermissions.Pages_Tasks_Delete, L("DeletingToDo"), multiTenancySides: MultiTenancySides.Tenant);
     }
 
     private static ILocalizableString L(string name)
@@ -167,4 +167,3 @@ public class AppAuthorizationProvider : AuthorizationProvider
         return new LocalizableString(name, CadentManagementConsts.LocalizationSourceName);
     }
 }
-

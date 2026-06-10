@@ -11,7 +11,7 @@ public class CadentManagementConsts
 
     public const string ConnectionStringName = "Default";
 
-    public const bool MultiTenancyEnabled = true;
+    public const bool MultiTenancyEnabled = false;
 
     /// <summary>
     /// Redirects users to host URL when using subdomain as tenancy name for not existing tenants

@@ -1,13 +1,12 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Abp.Application.Services.Dto;
+using Microsoft.EntityFrameworkCore;
 using Shouldly;
 using Xunit;
 using CadentManagement.UserTasks;
 using CadentManagement.UserTasks.Dto;
-using Microsoft.EntityFrameworkCore;
 
 namespace CadentManagement.Tests.UserTasks;
 
@@ -23,7 +22,6 @@ public class UserTaskAppService_Tests : AppTestBase
     [MultiTenantFact]
     public async Task Should_Create_UserTask()
     {
-        // Arrange
         var input = new CreateOrEditUserTaskDto
         {
             Title = "Test Task",
@@ -34,10 +32,8 @@ public class UserTaskAppService_Tests : AppTestBase
             DueDate = DateTime.Now.AddDays(7)
         };
 
-        // Act
         await _userTaskAppService.CreateAsync(input);
 
-        // Assert
         await UsingDbContextAsync(async context =>
         {
             var task = await context.UserTasks.FirstOrDefaultAsync(t => t.Title == "Test Task");
@@ -52,26 +48,23 @@ public class UserTaskAppService_Tests : AppTestBase
     [MultiTenantFact]
     public async Task Should_Update_UserTask()
     {
-        // Arrange
-        var createInput = new CreateOrEditUserTaskDto
+        await _userTaskAppService.CreateAsync(new CreateOrEditUserTaskDto
         {
             Title = "Original Title",
             Description = "Original Description",
             Priority = TaskPriority.Low,
             Status = KanbanTaskStatus.Backlog,
             EstimatedMinutes = 30
-        };
+        });
 
-        await _userTaskAppService.CreateAsync(createInput);
-
-        int taskId = 0;
+        var taskId = 0;
         await UsingDbContextAsync(async context =>
         {
             var task = await context.UserTasks.FirstOrDefaultAsync(t => t.Title == "Original Title");
             taskId = task.Id;
         });
 
-        var updateInput = new CreateOrEditUserTaskDto
+        await _userTaskAppService.UpdateAsync(new CreateOrEditUserTaskDto
         {
             Id = taskId,
             Title = "Updated Title",
@@ -79,12 +72,8 @@ public class UserTaskAppService_Tests : AppTestBase
             Priority = TaskPriority.High,
             Status = KanbanTaskStatus.InProgress,
             EstimatedMinutes = 60
-        };
+        });
 
-        // Act
-        await _userTaskAppService.UpdateAsync(updateInput);
-
-        // Assert
         await UsingDbContextAsync(async context =>
         {
             var task = await context.UserTasks.FirstOrDefaultAsync(t => t.Id == taskId);
@@ -99,28 +88,23 @@ public class UserTaskAppService_Tests : AppTestBase
     [MultiTenantFact]
     public async Task Should_Delete_UserTask()
     {
-        // Arrange
-        var createInput = new CreateOrEditUserTaskDto
+        await _userTaskAppService.CreateAsync(new CreateOrEditUserTaskDto
         {
             Title = "Task to Delete",
             Description = "This will be deleted",
             Priority = TaskPriority.Low,
             Status = KanbanTaskStatus.Backlog
-        };
+        });
 
-        await _userTaskAppService.CreateAsync(createInput);
-
-        int taskId = 0;
+        var taskId = 0;
         await UsingDbContextAsync(async context =>
         {
             var task = await context.UserTasks.FirstOrDefaultAsync(t => t.Title == "Task to Delete");
             taskId = task.Id;
         });
 
-        // Act
         await _userTaskAppService.DeleteAsync(new EntityDto(taskId));
 
-        // Assert
         await UsingDbContextAsync(async context =>
         {
             var task = await context.UserTasks.IgnoreQueryFilters().FirstOrDefaultAsync(t => t.Id == taskId);
@@ -132,22 +116,18 @@ public class UserTaskAppService_Tests : AppTestBase
     [MultiTenantFact]
     public async Task Should_Get_UserTasks()
     {
-        // Arrange
-        for (int i = 0; i < 3; i++)
+        for (var i = 0; i < 3; i++)
         {
-            var input = new CreateOrEditUserTaskDto
+            await _userTaskAppService.CreateAsync(new CreateOrEditUserTaskDto
             {
                 Title = $"Task {i}",
                 Priority = TaskPriority.Medium,
                 Status = KanbanTaskStatus.Todo
-            };
-            await _userTaskAppService.CreateAsync(input);
+            });
         }
 
-        // Act
         var result = await _userTaskAppService.GetTasksAsync(new GetUserTasksInput());
 
-        // Assert
         result.Items.Count.ShouldBeGreaterThanOrEqualTo(3);
         result.Items.Any(t => t.Title.StartsWith("Task")).ShouldBeTrue();
     }
@@ -155,32 +135,27 @@ public class UserTaskAppService_Tests : AppTestBase
     [MultiTenantFact]
     public async Task Should_Update_Task_Status()
     {
-        // Arrange
-        var createInput = new CreateOrEditUserTaskDto
+        await _userTaskAppService.CreateAsync(new CreateOrEditUserTaskDto
         {
             Title = "Task for Status Update",
             Priority = TaskPriority.Low,
             Status = KanbanTaskStatus.Backlog
-        };
+        });
 
-        await _userTaskAppService.CreateAsync(createInput);
-
-        int taskId = 0;
+        var taskId = 0;
         await UsingDbContextAsync(async context =>
         {
             var task = await context.UserTasks.FirstOrDefaultAsync(t => t.Title == "Task for Status Update");
             taskId = task.Id;
         });
 
-        // Act
         await _userTaskAppService.UpdateStatusAsync(new UpdateTaskStatusInput
         {
             TaskId = taskId,
-            NewStatus = KanbanTaskStatus.Done,
+            NewStatus = (int)KanbanTaskStatus.Done,
             NewSortOrder = 0
         });
 
-        // Assert
         await UsingDbContextAsync(async context =>
         {
             var task = await context.UserTasks.FirstOrDefaultAsync(t => t.Id == taskId);
@@ -192,18 +167,13 @@ public class UserTaskAppService_Tests : AppTestBase
     [MultiTenantFact]
     public async Task Should_Set_CompletedAt_When_Creating_Done_Task()
     {
-        // Arrange
-        var input = new CreateOrEditUserTaskDto
+        await _userTaskAppService.CreateAsync(new CreateOrEditUserTaskDto
         {
             Title = "Done On Create",
             Priority = TaskPriority.Medium,
             Status = KanbanTaskStatus.Done
-        };
+        });
 
-        // Act
-        await _userTaskAppService.CreateAsync(input);
-
-        // Assert
         await UsingDbContextAsync(async context =>
         {
             var task = await context.UserTasks.FirstOrDefaultAsync(t => t.Title == "Done On Create");
@@ -216,7 +186,6 @@ public class UserTaskAppService_Tests : AppTestBase
     [MultiTenantFact]
     public async Task Should_Clear_CompletedAt_When_Updating_Task_To_NonDone_Status()
     {
-        // Arrange
         await _userTaskAppService.CreateAsync(new CreateOrEditUserTaskDto
         {
             Title = "Done Then Reopened",
@@ -224,7 +193,7 @@ public class UserTaskAppService_Tests : AppTestBase
             Status = KanbanTaskStatus.Done
         });
 
-        int taskId = 0;
+        var taskId = 0;
         await UsingDbContextAsync(async context =>
         {
             var task = await context.UserTasks.FirstOrDefaultAsync(t => t.Title == "Done Then Reopened");
@@ -232,7 +201,6 @@ public class UserTaskAppService_Tests : AppTestBase
             task.CompletedAt.ShouldNotBeNull();
         });
 
-        // Act
         await _userTaskAppService.UpdateAsync(new CreateOrEditUserTaskDto
         {
             Id = taskId,
@@ -241,7 +209,6 @@ public class UserTaskAppService_Tests : AppTestBase
             Status = KanbanTaskStatus.InProgress
         });
 
-        // Assert
         await UsingDbContextAsync(async context =>
         {
             var task = await context.UserTasks.FirstOrDefaultAsync(t => t.Id == taskId);
@@ -253,28 +220,23 @@ public class UserTaskAppService_Tests : AppTestBase
     [MultiTenantFact]
     public async Task Should_Get_UserTask_For_Edit()
     {
-        // Arrange
-        var createInput = new CreateOrEditUserTaskDto
+        await _userTaskAppService.CreateAsync(new CreateOrEditUserTaskDto
         {
             Title = "Task for Edit",
             Description = "Edit me",
             Priority = TaskPriority.High,
             Status = KanbanTaskStatus.Todo
-        };
+        });
 
-        await _userTaskAppService.CreateAsync(createInput);
-
-        int taskId = 0;
+        var taskId = 0;
         await UsingDbContextAsync(async context =>
         {
             var task = await context.UserTasks.FirstOrDefaultAsync(t => t.Title == "Task for Edit");
             taskId = task.Id;
         });
 
-        // Act
         var result = await _userTaskAppService.GetForEditAsync(new NullableIdDto<int>(taskId));
 
-        // Assert
         result.Task.ShouldNotBeNull();
         result.Task.Title.ShouldBe("Task for Edit");
         result.Task.Description.ShouldBe("Edit me");
@@ -284,12 +246,97 @@ public class UserTaskAppService_Tests : AppTestBase
     [MultiTenantFact]
     public async Task Should_Get_Empty_UserTask_For_Create()
     {
-        // Act
         var result = await _userTaskAppService.GetForEditAsync(new NullableIdDto<int>(null));
 
-        // Assert
         result.Task.ShouldNotBeNull();
         result.Task.Id.ShouldBeNull();
         result.Task.Title.ShouldBeNull();
+    }
+
+    [MultiTenantFact]
+    public async Task Should_Create_And_Update_Todo_Status()
+    {
+        var createdId = await _userTaskAppService.CreateTodoStatusAsync(new CreateOrEditTodoStatusDto
+        {
+            Name = "Blocked",
+            Color = "#ff0000",
+            SortOrder = 95,
+            IsCompleted = false
+        });
+
+        await _userTaskAppService.UpdateTodoStatusAsync(new CreateOrEditTodoStatusDto
+        {
+            Id = createdId,
+            Name = "Blocked By Dependency",
+            Color = "#cc0000",
+            SortOrder = 96,
+            IsCompleted = false
+        });
+
+        var statuses = await _userTaskAppService.GetTodoStatusesAsync();
+        var blocked = statuses.FirstOrDefault(s => s.Id == createdId);
+        blocked.ShouldNotBeNull();
+        blocked.Name.ShouldBe("Blocked By Dependency");
+        blocked.Color.ShouldBe("#cc0000");
+        blocked.SortOrder.ShouldBe(96);
+    }
+
+    [MultiTenantFact]
+    public async Task Should_Complete_Task_From_Quick_Action()
+    {
+        await _userTaskAppService.CreateAsync(new CreateOrEditUserTaskDto
+        {
+            Title = "Quick Complete",
+            Priority = TaskPriority.Medium,
+            Status = KanbanTaskStatus.Todo
+        });
+
+        var taskId = 0;
+        await UsingDbContextAsync(async context =>
+        {
+            var task = await context.UserTasks.FirstOrDefaultAsync(t => t.Title == "Quick Complete");
+            taskId = task.Id;
+        });
+
+        await _userTaskAppService.CompleteAsync(new EntityDto<int>(taskId));
+
+        await UsingDbContextAsync(async context =>
+        {
+            var task = await context.UserTasks.FirstOrDefaultAsync(t => t.Id == taskId);
+            task.Status.ShouldBe(KanbanTaskStatus.Done);
+            task.CompletedAt.ShouldNotBeNull();
+        });
+    }
+
+    [MultiTenantFact]
+    public async Task Should_Update_Task_DueDate()
+    {
+        await _userTaskAppService.CreateAsync(new CreateOrEditUserTaskDto
+        {
+            Title = "Planner Due Date",
+            Priority = TaskPriority.Low,
+            Status = KanbanTaskStatus.Todo
+        });
+
+        var taskId = 0;
+        await UsingDbContextAsync(async context =>
+        {
+            var task = await context.UserTasks.FirstOrDefaultAsync(t => t.Title == "Planner Due Date");
+            taskId = task.Id;
+        });
+
+        var dueDate = DateTime.Today.AddDays(3);
+        await _userTaskAppService.UpdateDueDateAsync(new UpdateTaskDueDateInput
+        {
+            TaskId = taskId,
+            DueDate = dueDate
+        });
+
+        await UsingDbContextAsync(async context =>
+        {
+            var task = await context.UserTasks.FirstOrDefaultAsync(t => t.Id == taskId);
+            task.DueDate.ShouldNotBeNull();
+            task.DueDate.Value.Date.ShouldBe(dueDate);
+        });
     }
 }

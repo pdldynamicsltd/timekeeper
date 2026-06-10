@@ -9,6 +9,7 @@
 
 @section Styles
 {
+    <link rel="stylesheet" abp-href="/view-resources/Areas/App/Views/Shared/AppWorkspace.css" asp-append-version="true" />
     <link rel="stylesheet" abp-href="/Common/Styles/dhtmlxscheduler.min.css" asp-append-version="true" />
     <link rel="stylesheet" abp-href="/view-resources/Areas/App/Views/TimeTracking/ProjectDetail.css" asp-append-version="true" />
 }
@@ -35,14 +36,20 @@
     {
         <button id="AddTaskButton" class="btn btn-light-success ms-2" data-project-id="@Model.ProjectId">
             <i class="fa fa-plus btn-md-icon"></i>
-            <span class="d-none d-md-inline-block">@L("AddNewTask")</span>
+            <span class="d-none d-md-inline-block">@L("AddNewProjectTask")</span>
+        </button>
+    }
+    @if (IsGranted(AppPermissions.Pages_Tasks_Create))
+    {
+        <button id="AddTodoButton" class="btn btn-light-info ms-2" data-project-id="@Model.ProjectId">
+            <i class="fa fa-plus btn-md-icon"></i>
+            <span class="d-none d-md-inline-block">@L("AddNewToDo")</span>
         </button>
     }
 </abp-page-subheader>
 
-<div class="@(await GetContainerClass())">
+<div class="@(await GetContainerClass()) project-detail-page">
     <div class="row g-5 mb-5">
-        <!-- Budget Summary Card -->
         <div class="col-12">
             <div class="card">
                 <div class="card-body py-4">
@@ -81,7 +88,6 @@
             </div>
         </div>
 
-        <!-- Task Table -->
         <div class="col-md-4">
             <div class="card h-100">
                 <div class="card-header">
@@ -113,7 +119,6 @@
             </div>
         </div>
 
-        <!-- Scheduler -->
         <div class="col-md-8">
             <div class="card h-100">
                 <div class="card-header">
@@ -121,6 +126,47 @@
                 </div>
                 <div class="card-body p-0">
                     <div id="scheduler_here" style="width:100%;height:500px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title fw-bold">@L("ProjectToDos")</div>
+                </div>
+                <div class="card-body">
+                    <div class="row g-5">
+                        <div class="col-md-6">
+                            <h6 class="fw-bold mb-3">@L("AllToDos")</h6>
+                            <div class="table-responsive">
+                                <table class="table table-row-dashed align-middle gy-3 mb-0">
+                                    <thead>
+                                        <tr class="fw-semibold text-muted">
+                                            <th>@L("ToDo")</th>
+                                            <th>@L("Status")</th>
+                                            <th>@L("DueDate")</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="ProjectTodosTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="fw-bold mb-3">@L("CompletedToDos")</h6>
+                            <div class="table-responsive">
+                                <table class="table table-row-dashed align-middle gy-3 mb-0">
+                                    <thead>
+                                        <tr class="fw-semibold text-muted">
+                                            <th>@L("ToDo")</th>
+                                            <th>@L("CompletedAt")</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="ProjectCompletedTodosTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

@@ -1622,5 +1622,35 @@
     <text name="TaskDeleteWarningMessage">This task will be deleted.</text>
     <text name="TaskAlreadyConvertedToTimeEntry">This task has already been converted to a time entry.</text>
     <text name="AddTask">Add Task</text>
+    <text name="ToDos">ToDos</text>
+    <text name="ToDosDescription">Track and organize personal and project ToDos.</text>
+    <text name="AddNewToDo">Add New ToDo</text>
+    <text name="AddToDo">Add ToDo</text>
+    <text name="ToDoBoard">ToDo Board</text>
+    <text name="ToDoStatuses">ToDo Statuses</text>
+    <text name="AddStatus">Add Status</text>
+    <text name="ProjectToDos">Project ToDos</text>
+    <text name="AllToDos">All ToDos</text>
+    <text name="CompletedToDos">Completed ToDos</text>
+    <text name="ToDo">ToDo</text>
+    <text name="NoToDosFound">No ToDos found for this project.</text>
+    <text name="NoCompletedToDosFound">No completed ToDos found for this project.</text>
+    <text name="AddNewProjectTask">Add New Project Task</text>
+    <text name="EditToDo">Edit ToDo</text>
+    <text name="ToDoTitle">ToDo Title</text>
+    <text name="NewStatus">New Status</text>
+    <text name="TodoStatusInUse">This status cannot be deleted because it is used by one or more ToDos.</text>
+    <text name="ToDoStatusBoard">ToDo Board (By Status)</text>
+    <text name="ToDoDateBoard">ToDo Board (By Date)</text>
+    <text name="ToDoDateBoardDescription">Plan ToDos by due date and mark them complete quickly.</text>
+    <text name="ToDoStatusesDescription">Manage custom ToDo statuses used by the board.</text>
+    <text name="CreatingNewToDo">Creating new ToDo</text>
+    <text name="EditingToDo">Editing ToDo</text>
+    <text name="DeletingToDo">Deleting ToDo</text>
+    <text name="NoProject">No project</text>
+    <text name="Overdue">Overdue</text>
+    <text name="Complete">Complete</text>
+    <text name="Color">Color</text>
+    <text name="SortOrder">Sort Order</text>
   </texts>
 </localizationDictionary>

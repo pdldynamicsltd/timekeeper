@@ -1,0 +1,18 @@
+.project-detail-page {
+    min-height: calc(100vh - 170px);
+}
+
+.project-detail-page .card {
+    border: 1px solid #eef0f4;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.project-detail-page #scheduler_here {
+    min-height: calc(100vh - 420px);
+}
+
+.project-detail-page .table-responsive {
+    max-height: 460px;
+    overflow: auto;
+}
