@@ -182,6 +182,13 @@
             return event.isCompletedTask ? 'tt-completed-task' : 'tt-project-event';
         };
 
+        scheduler.templates.event_bar_style = function (start, end, event) {
+            if (event.isCompletedTask) {
+                return 'background-color: #95a5a6;';
+            }
+            return event.color ? 'background-color: ' + event.color + ';' : 'background-color: #3498db;';
+        };
+
         scheduler.templates.event_bar_date = function () { return ''; };
         scheduler.templates.tooltip_text = function (start, end, event) {
             if (event.isCompletedTask) {
@@ -272,10 +279,37 @@
             return false;
         });
 
-        scheduler.attachEvent('onEmptyClick', function (date) {
-            var endDate = new Date(date.getTime() + 60 * 60 * 1000);
+        scheduler.attachEvent('onEmptyClick', function (date, evt) {
+            var startDate = date;
+            
+            // In units view, we need to extract the actual time from the event position
+            if (_currentMode === 'ttUnits' && evt) {
+                var target = evt.target || evt.srcElement;
+                var container = scheduler.config.container || 'myWeekScheduler';
+                var rect = target.getBoundingClientRect();
+                var containerRect = document.getElementById(container).getBoundingClientRect();
+                
+                // Get the position within the container
+                var relativeY = rect.top - containerRect.top;
+                
+                // Calculate the time based on hour_size_px and first_hour
+                var hourSize = scheduler.config.hour_size_px || 44;
+                var firstHour = scheduler.config.first_hour || 0;
+                var timeStep = scheduler.config.time_step || 15;
+                
+                // Calculate hours and minutes from the click position
+                var totalMinutes = Math.round((relativeY / hourSize) * 60);
+                var steps = Math.floor(totalMinutes / timeStep);
+                totalMinutes = steps * timeStep;
+                
+                var clickDate = new Date(startDate);
+                clickDate.setHours(firstHour + Math.floor(totalMinutes / 60), totalMinutes % 60, 0, 0);
+                startDate = clickDate;
+            }
+            
+            var endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
             _createOrEditModal.open({
-                startTime: date.toISOString(),
+                startTime: startDate.toISOString(),
                 endTime: endDate.toISOString()
             });
             return false;
