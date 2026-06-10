@@ -1,0 +1,85 @@
+@using CadentManagement.Authorization
+@using CadentManagement.Web.Areas.App.Startup
+@{
+    ViewBag.CurrentPageName = AppPageNames.Tenant.TimeTrackingReports;
+}
+
+@section Styles
+{
+    <link rel="stylesheet" abp-href="/view-resources/Areas/App/Views/TimeTracking/Reports.css" asp-append-version="true" />
+}
+
+@section Scripts
+{
+    <script src="/view-resources/Areas/App/Views/TimeTracking/Reports.js" asp-append-version="true"></script>
+}
+
+<abp-page-subheader title="@L("TimeTrackingReports")" description="@L("ReportDetail")">
+    @if (IsGranted(AppPermissions.Pages_TimeTracking_Reports_Export))
+    {
+        <button id="ExportToExcelButton" class="btn btn-success">
+            <i class="fa fa-file-excel btn-md-icon"></i>
+            <span class="d-none d-md-inline-block">@L("ExportToExcel")</span>
+        </button>
+    }
+</abp-page-subheader>
+
+<div class="@(await GetContainerClass())">
+    <!-- Filters -->
+    <div class="card mb-5">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">@L("FilterByProject")</label>
+                    <select id="ReportProjectFilter" class="form-select select2">
+                        <option value="">@L("All")</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">@L("FilterByTask")</label>
+                    <select id="ReportTaskFilter" class="form-select select2">
+                        <option value="">@L("All")</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">@L("StartDate")</label>
+                    <input type="date" id="ReportStartDate" class="form-control" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">@L("EndDate")</label>
+                    <input type="date" id="ReportEndDate" class="form-control" />
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button id="GetReportButton" class="btn btn-primary w-100">
+                        <i class="ki-outline ki-magnifier fs-2"></i>
+                        @L("Search")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Budget Summary Cards -->
+    <div id="BudgetSummaryContainer" class="row g-5 mb-5"></div>
+
+    <!-- Time Entries Table -->
+    <div class="card">
+        <div class="card-body">
+            <table id="TimeEntriesReportTable" class="table align-middle table-row-dashed fs-6 gy-5 dataTable dtr-inline no-footer" width="100%">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>@L("TimeEntryDate")</th>
+                        <th>@L("TimeEntryStartTime")</th>
+                        <th>@L("TimeEntryEndTime")</th>
+                        <th>@L("TimeEntryDuration")</th>
+                        <th>@L("TimeEntryProject")</th>
+                        <th>@L("TimeEntryTask")</th>
+                        <th>@L("TimeEntryUser")</th>
+                        <th>@L("TimeEntryDescription")</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,114 @@
+@using CadentManagement.Authorization
+@using CadentManagement.TimeTracking.Projects.Dto
+@model ProjectBudgetSummaryDto
+@{
+    ViewBag.CurrentPageName = "TimeTracking.ProjectDetail";
+    var budgetPercent = (int)Math.Min(Model.UtilizationPercentage, 100);
+    var budgetClass = budgetPercent >= 90 ? "danger" : budgetPercent >= 75 ? "warning" : "success";
+}
+
+@section Styles
+{
+    <link rel="stylesheet" abp-href="/Common/Styles/dhtmlxscheduler.min.css" asp-append-version="true" />
+    <link rel="stylesheet" abp-href="/view-resources/Areas/App/Views/TimeTracking/ProjectDetail.css" asp-append-version="true" />
+}
+
+@section Scripts
+{
+    <script src="/Common/Scripts/dhtmlxscheduler.js" asp-append-version="true"></script>
+    <script src="/view-resources/Areas/App/Views/TimeTracking/ProjectDetail.js" asp-append-version="true"></script>
+}
+
+<abp-page-subheader title="@Model.ProjectName" description="@L("ProjectDetail")">
+    <a href="/App/TimeTracking" class="btn btn-light-primary me-2">
+        <i class="ki-outline ki-arrow-left fs-3"></i>
+        @L("Back")
+    </a>
+    @if (IsGranted(AppPermissions.Pages_TimeTracking_TimeEntries_Create))
+    {
+        <button id="AddTimeEntryButton" class="btn btn-primary" data-project-id="@Model.ProjectId">
+            <i class="fa fa-plus btn-md-icon"></i>
+            <span class="d-none d-md-inline-block">@L("AddNewTimeEntry")</span>
+        </button>
+    }
+    @if (IsGranted(AppPermissions.Pages_TimeTracking_Tasks_Create))
+    {
+        <button id="AddTaskButton" class="btn btn-light-success ms-2" data-project-id="@Model.ProjectId">
+            <i class="fa fa-plus btn-md-icon"></i>
+            <span class="d-none d-md-inline-block">@L("AddNewTask")</span>
+        </button>
+    }
+</abp-page-subheader>
+
+<div class="@(await GetContainerClass())">
+    <div class="row g-5 mb-5">
+        <!-- Budget Summary Card -->
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body py-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <div class="fw-bold fs-6 text-gray-800">@L("BudgetSummary")</div>
+                            <div class="text-muted fs-7">@Model.BudgetType</div>
+                        </div>
+                        <div class="col-md-2 text-center">
+                            <span class="fs-2 fw-bold text-gray-800">@Model.TotalBudgetHours.ToString("F1")</span>
+                            <div class="text-muted fs-7">@L("BudgetHours")</div>
+                        </div>
+                        <div class="col-md-2 text-center">
+                            <span class="fs-2 fw-bold text-danger">@Model.UsedHours.ToString("F1")</span>
+                            <div class="text-muted fs-7">@L("UsedHours")</div>
+                        </div>
+                        <div class="col-md-2 text-center">
+                            <span class="fs-2 fw-bold text-@(Model.RemainingHours < 0 ? "danger" : "success")">@Model.RemainingHours.ToString("F1")</span>
+                            <div class="text-muted fs-7">@L("RemainingHours")</div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="fw-semibold fs-6 text-gray-800">@L("UtilizationPercentage")</span>
+                                <span class="fw-bold fs-6 text-@budgetClass" id="BudgetPercentLabel">@budgetPercent%</span>
+                            </div>
+                            <div class="progress h-8px">
+                                <div class="progress-bar bg-@budgetClass" role="progressbar"
+                                     style="width: @budgetPercent%"
+                                     id="BudgetProgressBar"
+                                     aria-valuenow="@budgetPercent" aria-valuemin="0" aria-valuemax="100">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Task Tree -->
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <div class="card-title fw-bold">@L("ProjectTaskTree")</div>
+                </div>
+                <div class="card-body">
+                    <div id="TaskTreeContainer">
+                        <div class="text-center text-muted py-5">
+                            <i class="ki-outline ki-loading fs-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scheduler -->
+        <div class="col-md-8">
+            <div class="card h-100">
+                <div class="card-header">
+                    <div class="card-title fw-bold">@L("TimeEntryCalendar")</div>
+                </div>
+                <div class="card-body p-0">
+                    <div id="scheduler_here" style="width:100%;height:500px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<input type="hidden" id="CurrentProjectId" value="@Model.ProjectId" />

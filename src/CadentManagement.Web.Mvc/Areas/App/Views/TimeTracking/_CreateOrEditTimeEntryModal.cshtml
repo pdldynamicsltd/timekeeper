@@ -1,0 +1,63 @@
+@using CadentManagement.Web.Areas.App.Models.Common.Modals
+@using CadentManagement.TimeTracking.TimeEntries.Dto
+@model GetTimeEntryForEditOutput
+
+@await Html.PartialAsync("~/Areas/App/Views/Common/Modals/_ModalHeader.cshtml",
+    new ModalHeaderViewModel(Model.TimeEntry.Id.HasValue ? L("EditingTimeEntry") : L("CreatingNewTimeEntry")))
+
+<div class="modal-body">
+    <form name="TimeEntryForm" role="form" novalidate class="form-validation">
+        @if (Model.TimeEntry.Id.HasValue)
+        {
+            <input type="hidden" id="TimeEntryId" name="Id" value="@Model.TimeEntry.Id" />
+        }
+
+        <div class="mb-5">
+            <label class="form-label required">@L("TimeEntryProject")</label>
+            <select id="TimeEntryProjectId" name="ProjectId" class="form-select" required>
+                @foreach (var option in Model.ProjectOptions)
+                {
+                    <option value="@option.Value" selected="@(Model.TimeEntry.ProjectId.ToString() == option.Value)">@option.DisplayText</option>
+                }
+            </select>
+        </div>
+
+        <div class="mb-5">
+            <label class="form-label">@L("TimeEntryTask")</label>
+            <select id="TimeEntryTaskId" name="TaskId" class="form-select">
+                <option value="">@L("NoTask")</option>
+                @foreach (var option in Model.TaskOptions)
+                {
+                    <option value="@option.Value" selected="@(Model.TimeEntry.TaskId?.ToString() == option.Value)">@option.DisplayText</option>
+                }
+            </select>
+        </div>
+
+        <div class="row mb-5">
+            <div class="col-md-6">
+                <label class="form-label required">@L("TimeEntryStartTime")</label>
+                <input type="datetime-local" id="TimeEntryStartTime" name="StartTime" class="form-control"
+                       value="@(Model.TimeEntry.StartTime == default ? "" : Model.TimeEntry.StartTime.ToString("yyyy-MM-ddTHH:mm"))" required />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label required">@L("TimeEntryEndTime")</label>
+                <input type="datetime-local" id="TimeEntryEndTime" name="EndTime" class="form-control"
+                       value="@(Model.TimeEntry.EndTime == default ? "" : Model.TimeEntry.EndTime.ToString("yyyy-MM-ddTHH:mm"))" required />
+            </div>
+        </div>
+
+        <div class="mb-5" id="DurationPreview">
+            <div class="alert alert-light-info d-none" id="DurationDisplay">
+                <i class="ki-outline ki-time fs-3 me-2"></i>
+                <span id="DurationText"></span>
+            </div>
+        </div>
+
+        <div class="mb-5">
+            <label class="form-label">@L("TimeEntryDescription")</label>
+            <textarea id="TimeEntryDescription" name="Description" class="form-control" rows="3" maxlength="2000">@Model.TimeEntry.Description</textarea>
+        </div>
+    </form>
+</div>
+
+@await Html.PartialAsync("~/Areas/App/Views/Common/Modals/_ModalFooterWithSaveAndCancel.cshtml")
