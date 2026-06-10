@@ -1,0 +1,151 @@
+@using CadentManagement.Authorization
+@using CadentManagement.Web.Areas.App.Startup
+
+@{
+    ViewBag.CurrentPageName = AppPageNames.Tenant.TasksPlanner;
+}
+
+@section Styles
+{
+    <link rel="stylesheet" abp-href="/view-resources/Areas/App/Views/Shared/AppWorkspace.css" asp-append-version="true" />
+    <style>
+        .todo-planner-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .todo-planner-board {
+            display: flex;
+            gap: 16px;
+            padding: 16px;
+            overflow-x: auto;
+        }
+
+        .todo-planner-column {
+            flex: 0 0 320px;
+            display: flex;
+            flex-direction: column;
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .todo-planner-column-header {
+            font-weight: 600;
+            margin-bottom: 12px;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .todo-planner-column-count {
+            background: #007bff;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .todo-planner-list {
+            flex: 1;
+            min-height: 320px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .todo-planner-card {
+            background: white;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            cursor: move;
+        }
+
+        .todo-planner-card-title {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 8px;
+            word-break: break-word;
+        }
+
+        .todo-planner-card-meta {
+            font-size: 11px;
+            color: #6c757d;
+            margin-bottom: 8px;
+        }
+
+        .todo-planner-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 4px;
+        }
+
+        .todo-planner-btn {
+            padding: 2px 6px;
+            font-size: 11px;
+            border: none;
+            background: #f0f0f0;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .todo-planner-btn-complete {
+            background: #28a745;
+            color: #fff;
+        }
+
+        .todo-planner-add {
+            width: 100%;
+            padding: 12px;
+            border: 2px dashed #ccc;
+            border-radius: 6px;
+            background: transparent;
+            cursor: pointer;
+            font-size: 14px;
+        }
+    </style>
+}
+
+@section Scripts
+{
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="/view-resources/Areas/App/Views/Tasks/Planner.js" asp-append-version="true"></script>
+}
+
+<abp-page-subheader title="@L("ToDoDateBoard")" description="@L("ToDoDateBoardDescription")" />
+
+<div class="@(await GetContainerClass())">
+    <div class="card app-workspace-card app-workspace-page">
+        <div class="card-body app-board-body h-100">
+            <div class="todo-planner-toolbar">
+                <div class="btn-group" role="group">
+                    <button id="PlannerPrevWeekButton" class="btn btn-sm btn-light-primary">
+                        <i class="fa fa-chevron-left"></i> @L("Previous")
+                    </button>
+                    <button id="PlannerTodayButton" class="btn btn-sm btn-light">@L("Today")</button>
+                    <button id="PlannerNextWeekButton" class="btn btn-sm btn-light-primary">
+                        @L("Next") <i class="fa fa-chevron-right"></i>
+                    </button>
+                </div>
+                <div id="PlannerRangeLabel" class="text-muted fw-semibold"></div>
+                <div class="d-flex align-items-end gap-2">
+                    <label for="PlannerProjectFilter" class="form-label mb-0">@L("FilterByProject")</label>
+                    <select id="PlannerProjectFilter" class="form-select form-select-sm" style="min-width: 240px;">
+                        <option value="">@L("All")</option>
+                    </select>
+                </div>
+            </div>
+            <div id="TodoPlannerBoard" class="todo-planner-board"></div>
+        </div>
+    </div>
+</div>
+
+<div id="createOrEditTaskModalContainer"></div>

@@ -15,13 +15,6 @@ public class AppNavigationProvider : NavigationProvider
 
         menu
             .AddItem(new MenuItemDefinition(
-                    AppPageNames.Host.Dashboard,
-                    L("Dashboard"),
-                    url: "App/HostDashboard",
-                    icon: "flaticon-line-graph",
-                    permissionDependency: new SimplePermissionDependency(AppPermissions.Pages_Administration_Host_Dashboard)
-                )
-            ).AddItem(new MenuItemDefinition(
                     AppPageNames.Common.Saas,
                     L("Saas"),
                     icon: "flaticon-users"
@@ -39,13 +32,6 @@ public class AppNavigationProvider : NavigationProvider
                         icon: "flaticon-app",
                         permissionDependency: new SimplePermissionDependency(AppPermissions.Pages_Editions)
                     )
-                )
-            ).AddItem(new MenuItemDefinition(
-                    AppPageNames.Tenant.Dashboard,
-                    L("Dashboard"),
-                    url: "App/TenantDashboard",
-                    icon: "flaticon-line-graph",
-                    permissionDependency: new SimplePermissionDependency(AppPermissions.Pages_Tenant_Dashboard)
                 )
             ).AddItem(new MenuItemDefinition(
                     AppPageNames.Tenant.TimeTracking,
@@ -72,6 +58,33 @@ public class AppNavigationProvider : NavigationProvider
                         url: "App/TimeTracking/Reports",
                         icon: "flaticon-analytics",
                         permissionDependency: new SimplePermissionDependency(AppPermissions.Pages_TimeTracking_Reports)
+                    )
+                )
+            ).AddItem(new MenuItemDefinition(
+                    AppPageNames.Tenant.Tasks,
+                    L("ToDos"),
+                    icon: "flaticon-layers",
+                    permissionDependency: new SimplePermissionDependency(AppPermissions.Pages_Tasks)
+                ).AddItem(new MenuItemDefinition(
+                        AppPageNames.Tenant.TasksStatusBoard,
+                        L("ToDoStatusBoard"),
+                        url: "App/Tasks",
+                        icon: "flaticon-list-1",
+                        permissionDependency: new SimplePermissionDependency(AppPermissions.Pages_Tasks)
+                    )
+                ).AddItem(new MenuItemDefinition(
+                        AppPageNames.Tenant.TasksPlanner,
+                        L("ToDoDateBoard"),
+                        url: "App/Tasks/Planner",
+                        icon: "flaticon-calendar-1",
+                        permissionDependency: new SimplePermissionDependency(AppPermissions.Pages_Tasks)
+                    )
+                ).AddItem(new MenuItemDefinition(
+                        AppPageNames.Tenant.TodoStatuses,
+                        L("ToDoStatuses"),
+                        url: "App/TodoStatuses",
+                        icon: "flaticon2-gear",
+                        permissionDependency: new SimplePermissionDependency(AppPermissions.Pages_Tasks)
                     )
                 )
             ).AddItem(new MenuItemDefinition(
@@ -223,13 +236,6 @@ public class AppNavigationProvider : NavigationProvider
                         permissionDependency: new SimplePermissionDependency(AppPermissions.Pages_Administration_ActiveSessions)
                     )
                 )
-            ).AddItem(new MenuItemDefinition(
-                    AppPageNames.Common.DemoUiComponents,
-                    L("DemoUiComponents"),
-                    url: "App/DemoUiComponents",
-                    icon: "flaticon-shapes",
-                    permissionDependency: new SimplePermissionDependency(AppPermissions.Pages_DemoUiComponents)
-                )
             );
     }
 
@@ -238,4 +244,3 @@ public class AppNavigationProvider : NavigationProvider
         return new LocalizableString(name, CadentManagementConsts.LocalizationSourceName);
     }
 }
-

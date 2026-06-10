@@ -1,5 +1,7 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
+using Abp.Application.Services.Dto;
 using Abp.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using CadentManagement.Authorization;
@@ -35,7 +37,7 @@ public class TimeTrackingController : CadentManagementControllerBase
 
     public async Task<IActionResult> ProjectDetail(int id)
     {
-        var summary = await _projectAppService.GetProjectBudgetSummaryAsync(new Abp.Application.Services.Dto.EntityDto<int>(id));
+        var summary = await _projectAppService.GetProjectBudgetSummaryAsync(new EntityDto<int>(id));
         return View(summary);
     }
 
@@ -52,14 +54,14 @@ public class TimeTrackingController : CadentManagementControllerBase
     [AbpMvcAuthorize(AppPermissions.Pages_TimeTracking_Projects_Create, AppPermissions.Pages_TimeTracking_Projects_Edit)]
     public async Task<IActionResult> CreateOrEditProjectModal(int? id)
     {
-        var output = await _projectAppService.GetForEditAsync(new Abp.Application.Services.Dto.NullableIdDto<int>(id));
+        var output = await _projectAppService.GetForEditAsync(new NullableIdDto<int>(id));
         return PartialView("_CreateOrEditProjectModal", output);
     }
 
     [AbpMvcAuthorize(AppPermissions.Pages_TimeTracking_Tasks_Create, AppPermissions.Pages_TimeTracking_Tasks_Edit)]
     public async Task<IActionResult> CreateOrEditTaskModal(int? id, int? projectId)
     {
-        var output = await _taskAppService.GetForEditAsync(new Abp.Application.Services.Dto.NullableIdDto<int>(id));
+        var output = await _taskAppService.GetForEditAsync(new NullableIdDto<int>(id));
         if (!id.HasValue && projectId.HasValue)
         {
             output.Task.ProjectId = projectId.Value;
@@ -68,20 +70,43 @@ public class TimeTrackingController : CadentManagementControllerBase
     }
 
     [AbpMvcAuthorize(AppPermissions.Pages_TimeTracking_TimeEntries_Create, AppPermissions.Pages_TimeTracking_TimeEntries_Edit)]
-    public async Task<IActionResult> CreateOrEditTimeEntryModal(int? id, int? projectId, string startTime = null, string endTime = null)
+    public async Task<IActionResult> CreateOrEditTimeEntryModal(int? id, int? projectId, int? taskId, string startTime = null, string endTime = null, string description = null)
     {
-        var output = await _timeEntryAppService.GetForEditAsync(new Abp.Application.Services.Dto.NullableIdDto<int>(id));
+        var output = await _timeEntryAppService.GetForEditAsync(new NullableIdDto<int>(id));
+
         if (!id.HasValue)
         {
             if (projectId.HasValue)
+            {
                 output.TimeEntry.ProjectId = projectId.Value;
 
+                var projectTasks = await _taskAppService.GetTasksForProjectAsync(projectId.Value);
+                output.TaskOptions = projectTasks
+                    .Select(t => new ComboboxItemDto(t.Id.ToString(), t.Name))
+                    .ToList();
+            }
+
+            if (taskId.HasValue)
+            {
+                output.TimeEntry.TaskId = taskId.Value;
+            }
+
             if (DateTime.TryParse(startTime, out var parsedStart))
+            {
                 output.TimeEntry.StartTime = parsedStart;
+            }
 
             if (DateTime.TryParse(endTime, out var parsedEnd))
+            {
                 output.TimeEntry.EndTime = parsedEnd;
+            }
+
+            if (!string.IsNullOrWhiteSpace(description))
+            {
+                output.TimeEntry.Description = description;
+            }
         }
+
         return PartialView("_CreateOrEditTimeEntryModal", output);
     }
 }

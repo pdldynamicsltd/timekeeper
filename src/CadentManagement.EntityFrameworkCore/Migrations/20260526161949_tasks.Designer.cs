@@ -4,6 +4,7 @@ using CadentManagement.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CadentManagement.Migrations
 {
     [DbContext(typeof(CadentManagementDbContext))]
-    partial class CadentManagementDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260526161949_tasks")]
+    partial class tasks
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2891,45 +2894,6 @@ namespace CadentManagement.Migrations
                     b.HasIndex("TenantId", "UserId", "StartTime");
 
                     b.ToTable("TT_TimeEntries", (string)null);
-                });
-
-            modelBuilder.Entity("CadentManagement.UserTasks.TodoStatus", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Color")
-                        .HasMaxLength(16)
-                        .HasColumnType("nvarchar(16)");
-
-                    b.Property<bool>("IsCompleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TenantId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Value")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TenantId", "SortOrder");
-
-                    b.HasIndex("TenantId", "Value")
-                        .IsUnique();
-
-                    b.ToTable("TT_TodoStatuses", (string)null);
                 });
 
             modelBuilder.Entity("CadentManagement.UserTasks.UserTask", b =>

@@ -1,0 +1,50 @@
+@using CadentManagement.Authorization
+@using CadentManagement.Web.Areas.App.Startup
+
+@{
+    ViewBag.CurrentPageName = AppPageNames.Tenant.TodoStatuses;
+}
+
+@section Styles
+{
+    <link rel="stylesheet" abp-href="/view-resources/Areas/App/Views/Shared/AppWorkspace.css" asp-append-version="true" />
+    <style>
+        .todo-statuses-page .table-responsive {
+            max-height: calc(100vh - 320px);
+            overflow: auto;
+        }
+    </style>
+}
+
+@section Scripts
+{
+    <script src="/view-resources/Areas/App/Views/TodoStatuses/Index.js" asp-append-version="true"></script>
+}
+
+<abp-page-subheader title="@L("ToDoStatuses")" description="@L("ToDoStatusesDescription")">
+    <button id="AddStatusButton" class="btn btn-primary" abp-authorize="@AppPermissions.Pages_Tasks_Create">
+        <i class="fa fa-plus btn-md-icon"></i>
+        <span class="d-none d-md-inline-block">@L("AddStatus")</span>
+    </button>
+</abp-page-subheader>
+
+<div class="@(await GetContainerClass())">
+    <div class="card app-workspace-card app-workspace-page todo-statuses-page">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-row-dashed align-middle gy-3 mb-0">
+                    <thead>
+                        <tr class="fw-semibold text-muted">
+                            <th>@L("Name")</th>
+                            <th>@L("Color")</th>
+                            <th>@L("SortOrder")</th>
+                            <th>@L("CompletedStatus")</th>
+                            <th class="text-end">@L("Actions")</th>
+                        </tr>
+                    </thead>
+                    <tbody id="TodoStatusesTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

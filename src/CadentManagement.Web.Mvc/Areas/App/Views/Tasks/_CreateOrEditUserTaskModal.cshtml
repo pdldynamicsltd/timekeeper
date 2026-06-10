@@ -1,0 +1,76 @@
+@using CadentManagement.Authorization
+@using CadentManagement.UserTasks.Dto
+@using CadentManagement.Web.Areas.App.Models.Common.Modals
+@model GetUserTaskForEditOutput
+
+@await Html.PartialAsync("~/Areas/App/Views/Common/Modals/_ModalHeader.cshtml",
+    new ModalHeaderViewModel(Model.Task.Id.HasValue ? L("EditToDo") : L("AddNewToDo")))
+
+<form name="CreateOrEditUserTaskForm" role="form" novalidate class="form-validation">
+    <div class="modal-body">
+        <input type="hidden" id="TaskIdInput" name="id" value="@(Model.Task.Id.HasValue ? Model.Task.Id.ToString() : "")" />
+
+        <div class="form-group">
+            <label for="TitleInput">@L("ToDoTitle")</label>
+            <input type="text" id="TitleInput" name="title" class="form-control" required maxlength="256" value="@Model.Task.Title" />
+        </div>
+
+        <div class="form-group">
+            <label for="DescriptionInput">@L("Description")</label>
+            <textarea id="DescriptionInput" name="description" class="form-control" maxlength="2000" rows="3">@Model.Task.Description</textarea>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label for="PrioritySelect">@L("Priority")</label>
+                <select id="PrioritySelect" name="priority" class="form-control">
+                    @foreach (var option in Model.PriorityOptions)
+                    {
+                        <option value="@option.Value" selected="@(((int)Model.Task.Priority).ToString() == option.Value)">@option.DisplayText</option>
+                    }
+                </select>
+            </div>
+
+            <div class="form-group col-md-6">
+                <label for="StatusSelect">@L("Status")</label>
+                <select id="StatusSelect" name="status" class="form-control">
+                    @foreach (var option in Model.StatusOptions)
+                    {
+                        <option value="@option.Value" selected="@(((int)Model.Task.Status).ToString() == option.Value)">@option.DisplayText</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label for="ProjectSelect">@L("Project")</label>
+                <select id="ProjectSelect" name="projectId" class="form-control">
+                    <option value="">-- @L("SelectAProject") --</option>
+                    @foreach (var option in Model.ProjectOptions)
+                    {
+                        <option value="@option.Value" selected="@(Model.Task.ProjectId.HasValue && Model.Task.ProjectId.ToString() == option.Value)">@option.DisplayText</option>
+                    }
+                </select>
+            </div>
+
+            <div class="form-group col-md-6">
+                <label for="DueDateInput">@L("DueDate")</label>
+                <input type="date" id="DueDateInput" name="dueDate" class="form-control" value="@(Model.Task.DueDate?.ToString("yyyy-MM-dd") ?? "")" />
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="EstimatedMinutesInput">@L("EstimatedMinutes")</label>
+            <input type="number" id="EstimatedMinutesInput" name="estimatedMinutes" class="form-control" min="0" value="@(Model.Task.EstimatedMinutes ?? 0)" />
+        </div>
+
+        <div class="form-group">
+            <label for="TagsInput">@L("Tags")</label>
+            <input type="text" id="TagsInput" name="tags" class="form-control" maxlength="500" placeholder="@L("TagsSeparatedByComma")" value="@Model.Task.Tags" />
+        </div>
+    </div>
+
+    @await Html.PartialAsync("~/Areas/App/Views/Common/Modals/_ModalFooterWithSaveAndCancel.cshtml")
+
+</form>

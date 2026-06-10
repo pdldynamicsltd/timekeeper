@@ -138,5 +138,10 @@ public static class AppPermissions
 
     public const string Pages_TimeTracking_Reports = "Pages.TimeTracking.Reports";
     public const string Pages_TimeTracking_Reports_Export = "Pages.TimeTracking.Reports.Export";
+
+    public const string Pages_Tasks = "Pages.Tasks";
+    public const string Pages_Tasks_Create = "Pages.Tasks.Create";
+    public const string Pages_Tasks_Edit = "Pages.Tasks.Edit";
+    public const string Pages_Tasks_Delete = "Pages.Tasks.Delete";
 }
 

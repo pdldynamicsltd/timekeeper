@@ -23,6 +23,7 @@ using CadentManagement.Storage;
 using CadentManagement.TimeTracking.Projects;
 using CadentManagement.TimeTracking.Tasks;
 using CadentManagement.TimeTracking.TimeEntries;
+using CadentManagement.UserTasks;
 
 namespace CadentManagement.EntityFrameworkCore;
 
@@ -70,6 +71,10 @@ public class CadentManagementDbContext : AbpZeroDbContext<Tenant, Role, User, Ca
     public virtual DbSet<ProjectTask> ProjectTasks { get; set; }
     public virtual DbSet<TaskBudgetTracking> TaskBudgetTrackings { get; set; }
     public virtual DbSet<TimeEntry> TimeEntries { get; set; }
+
+    // Personal Tasks
+    public virtual DbSet<UserTask> UserTasks { get; set; }
+    public virtual DbSet<TodoStatus> TodoStatuses { get; set; }
 
     public CadentManagementDbContext(DbContextOptions<CadentManagementDbContext> options)
         : base(options)
@@ -244,7 +249,14 @@ public class CadentManagementDbContext : AbpZeroDbContext<Tenant, Role, User, Ca
                 .OnDelete(DeleteBehavior.Restrict);
             b.Ignore(e => e.DurationHours);
         });
-
+        modelBuilder.Entity<TodoStatus>(b =>
+        {
+            b.ToTable("TT_TodoStatuses");
+            b.HasIndex(e => new { e.TenantId, e.Value }).IsUnique();
+            b.HasIndex(e => new { e.TenantId, e.SortOrder });
+            b.Property(e => e.Name).HasMaxLength(TodoStatus.MaxNameLength).IsRequired();
+            b.Property(e => e.Color).HasMaxLength(TodoStatus.MaxColorLength);
+        });
         modelBuilder.ConfigureOpenIddict();
     }
 }

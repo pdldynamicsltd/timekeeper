@@ -41,6 +41,9 @@ public class AppPageNames
         public const string TimeTracking = "TimeTracking";
         public const string TimeTrackingMyWeek = "TimeTracking.MyWeek";
         public const string TimeTrackingReports = "TimeTracking.Reports";
+        public const string Tasks = "Tasks";
+        public const string TasksStatusBoard = "Tasks.StatusBoard";
+        public const string TasksPlanner = "Tasks.Planner";
+        public const string TodoStatuses = "Tasks.Statuses";
     }
 }
-

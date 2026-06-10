@@ -1,0 +1,150 @@
+@using CadentManagement.Authorization
+@using CadentManagement.Web.Areas.App.Startup
+
+@{
+    ViewBag.CurrentPageName = AppPageNames.Tenant.TasksStatusBoard;
+}
+
+@section Styles
+{
+    <link rel="stylesheet" abp-href="/view-resources/Areas/App/Views/Shared/AppWorkspace.css" asp-append-version="true" />
+    <style>
+        .kanban-board {
+            display: flex;
+            gap: 16px;
+            padding: 16px;
+            overflow-x: auto;
+        }
+
+        .kanban-column {
+            flex: 0 0 320px;
+            display: flex;
+            flex-direction: column;
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .kanban-column-header {
+            font-weight: 600;
+            margin-bottom: 12px;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .kanban-column-count {
+            background: #007bff;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .kanban-list {
+            flex: 1;
+            min-height: 320px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .kanban-card {
+            background: white;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            cursor: move;
+        }
+
+        .kanban-card-title {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 8px;
+            word-break: break-word;
+        }
+
+        .kanban-card-meta {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+            font-size: 11px;
+        }
+
+        .badge-priority-low { background: #e3f2fd; color: #1976d2; }
+        .badge-priority-medium { background: #fff3e0; color: #f57c00; }
+        .badge-priority-high { background: #fcebee; color: #c2185b; }
+        .badge-priority-urgent { background: #ffebee; color: #d32f2f; }
+
+        .kanban-card-actions {
+            display: flex;
+            gap: 4px;
+            justify-content: flex-end;
+        }
+
+        .kanban-card-btn {
+            padding: 2px 6px;
+            font-size: 11px;
+            border: none;
+            background: #f0f0f0;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .kanban-add-button {
+            width: 100%;
+            padding: 12px;
+            border: 2px dashed #ccc;
+            border-radius: 6px;
+            background: transparent;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .status-color-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            border: 1px solid #d1d5db;
+        }
+    </style>
+}
+
+@section Scripts
+{
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="/view-resources/Areas/App/Views/Tasks/Index.js" asp-append-version="true"></script>
+}
+
+<abp-page-subheader title="@L("ToDoStatusBoard")" description="@L("ToDosDescription")">
+    <button id="AddTaskButton" class="btn btn-primary" abp-authorize="@AppPermissions.Pages_Tasks_Create">
+        <i class="fa fa-plus btn-md-icon"></i>
+        <span class="d-none d-md-inline-block">@L("AddNewToDo")</span>
+    </button>
+</abp-page-subheader>
+
+<div class="@(await GetContainerClass())">
+    <div class="card app-workspace-card app-workspace-page">
+        <div class="card-body p-0 app-board-body">
+            <div class="p-4 border-bottom">
+                <div class="row g-3 align-items-end">
+                    <div class="col-12 col-md-5 col-lg-4">
+                        <label for="KanbanProjectFilter" class="form-label mb-1">@L("FilterByProject")</label>
+                        <select id="KanbanProjectFilter" class="form-select">
+                            <option value="">@L("All")</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div id="KanbanBoard" class="kanban-board"></div>
+        </div>
+    </div>
+</div>
+
+<div id="createOrEditTaskModalContainer"></div>
