@@ -1,5 +1,6 @@
 @using CadentManagement.Web.Areas.App.Models.Common.Modals
 @using CadentManagement.TimeTracking.TimeEntries.Dto
+@using CadentManagement.Authorization
 @model GetTimeEntryForEditOutput
 
 @await Html.PartialAsync("~/Areas/App/Views/Common/Modals/_ModalHeader.cshtml",
@@ -60,4 +61,13 @@
     </form>
 </div>
 
-@await Html.PartialAsync("~/Areas/App/Views/Common/Modals/_ModalFooterWithSaveAndCancel.cshtml")
+<div class="modal-footer">
+    @if (IsGranted(AppPermissions.Pages_TimeTracking_TimeEntries_Create))
+    {
+        <button type="button" class="btn btn-light-info duplicate-button">
+            <i class="fa fa-copy"></i> <span>@L("Copy")</span>
+        </button>
+    }
+    <button type="button" class="btn btn-light-primary fw-bold close-button" data-bs-dismiss="modal">@L("Cancel")</button>
+    <button type="button" class="btn btn-primary save-button"><i class="fa fa-save"></i> <span>@L("Save")</span></button>
+</div>

@@ -14,8 +14,23 @@
                 updateDurationPreview();
             });
 
+            _modalManager.getModal().find('.duplicate-button').click(function (e) {
+                e.preventDefault();
+                duplicateToNextDay();
+            });
+
             updateDurationPreview();
         };
+
+        function formatDateTimeLocal(date) {
+            var localDate = date instanceof Date ? date : new Date(date);
+            var year = localDate.getFullYear();
+            var month = String(localDate.getMonth() + 1).padStart(2, '0');
+            var day = String(localDate.getDate()).padStart(2, '0');
+            var hours = String(localDate.getHours()).padStart(2, '0');
+            var minutes = String(localDate.getMinutes()).padStart(2, '0');
+            return year + '-' + month + '-' + day + 'T' + hours + ':' + minutes;
+        }
 
         function reloadTasks(projectId) {
             var sel = $('#TimeEntryTaskId');
@@ -57,6 +72,43 @@
 
             $('#DurationText').text(app.localize('DurationPreview') + ': ' + text);
             $('#DurationDisplay').removeClass('d-none');
+        }
+
+        function duplicateToNextDay() {
+            if (!$('form[name=TimeEntryForm]').valid()) {
+                abp.notify.warn(app.localize('InvalidFormMessage'));
+                return;
+            }
+
+            var duplicatedStart = new Date($('#TimeEntryStartTime').val());
+            var duplicatedEnd = new Date($('#TimeEntryEndTime').val());
+
+            if (isNaN(duplicatedStart.getTime()) || isNaN(duplicatedEnd.getTime()) || duplicatedEnd <= duplicatedStart) {
+                abp.notify.warn(app.localize('InvalidFormMessage'));
+                return;
+            }
+
+            duplicatedStart.setDate(duplicatedStart.getDate() + 1);
+            duplicatedEnd.setDate(duplicatedEnd.getDate() + 1);
+
+            var duplicateEntry = {
+                projectId: parseInt($('#TimeEntryProjectId').val()),
+                taskId: $('#TimeEntryTaskId').val() ? parseInt($('#TimeEntryTaskId').val()) : null,
+                startTime: formatDateTimeLocal(duplicatedStart),
+                endTime: formatDateTimeLocal(duplicatedEnd),
+                description: $('#TimeEntryDescription').val()
+            };
+
+            _modalManager.setBusy(true);
+            _timeEntryService.create(duplicateEntry)
+                .done(function () {
+                    abp.notify.info(app.localize('SavedSuccessfully'));
+                    _modalManager.close();
+                    abp.event.trigger('app.createOrEditTimeEntryModalSaved');
+                })
+                .always(function () {
+                    _modalManager.setBusy(false);
+                });
         }
 
         this.save = function () {

@@ -16,3 +16,15 @@
     max-height: 460px;
     overflow: auto;
 }
+
+.project-detail-page .tt-event-duplicate {
+    float: right;
+    margin-left: 6px;
+    color: #ffffff;
+    cursor: pointer;
+    opacity: 0.85;
+}
+
+.project-detail-page .tt-event-duplicate:hover {
+    opacity: 1;
+}
