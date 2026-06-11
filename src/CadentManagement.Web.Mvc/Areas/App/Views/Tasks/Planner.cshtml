@@ -136,11 +136,25 @@
                     </button>
                 </div>
                 <div id="PlannerRangeLabel" class="text-muted fw-semibold"></div>
-                <div class="d-flex align-items-end gap-2">
-                    <label for="PlannerProjectFilter" class="form-label mb-0">@L("FilterByProject")</label>
-                    <select id="PlannerProjectFilter" class="form-select form-select-sm" style="min-width: 240px;">
-                        <option value="">@L("All")</option>
-                    </select>
+                <div class="d-flex flex-wrap align-items-end gap-2">
+                    <div>
+                        <label for="PlannerProjectFilter" class="form-label mb-0">@L("FilterByProject")</label>
+                        <select id="PlannerProjectFilter" class="form-select form-select-sm" style="min-width: 220px;">
+                            <option value="">@L("All")</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="PlannerSearchFilter" class="form-label mb-0">@L("Search")</label>
+                        <input id="PlannerSearchFilter"
+                               type="text"
+                               class="form-control form-control-sm"
+                               placeholder="@L("SearchWithThreeDot")"
+                               style="min-width: 220px;" />
+                    </div>
+                    <div class="form-check mb-1">
+                        <input class="form-check-input" type="checkbox" id="PlannerShowCompletedToggle" />
+                        <label class="form-check-label" for="PlannerShowCompletedToggle">@L("ShowDoneItems")</label>
+                    </div>
                 </div>
             </div>
             <div id="TodoPlannerBoard" class="todo-planner-board"></div>

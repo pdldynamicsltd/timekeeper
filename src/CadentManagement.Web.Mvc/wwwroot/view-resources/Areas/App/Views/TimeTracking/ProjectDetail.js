@@ -8,6 +8,8 @@
     var _currentDate = new Date();
     var _currentMode = 'month';
     var _canCreateTimeEntries = abp.auth.isGranted('Pages.TimeTracking.TimeEntries.Create');
+    var _canDeleteTimeEntries = abp.auth.isGranted('Pages.TimeTracking.TimeEntries.Delete');
+    var _canEditTodos = abp.auth.isGranted('Pages.Tasks.Edit');
 
     var _createOrEditTaskModal = new app.ModalManager({
         viewUrl: abp.appPath + 'App/TimeTracking/CreateOrEditTaskModal',
@@ -28,7 +30,37 @@
     });
 
     function toLocalDateTimeString(date) {
-        return scheduler.date.date_to_str('%Y-%m-%dT%H:%i')(date instanceof Date ? date : new Date(date));
+        var value = date;
+
+        if (!(value instanceof Date) && typeof value === 'string') {
+            var schedulerParser = scheduler.date.str_to_date(scheduler.config.xml_date);
+            value = schedulerParser(value);
+        }
+
+        if (!(value instanceof Date) || isNaN(value.getTime())) {
+            value = new Date(date);
+        }
+
+        if (!(value instanceof Date) || isNaN(value.getTime())) {
+            return '';
+        }
+
+        return scheduler.date.date_to_str('%Y-%m-%dT%H:%i')(value);
+    }
+
+    function openCreateTimeEntryModal(startDate, endDate) {
+        var startTime = toLocalDateTimeString(startDate);
+        var endTime = toLocalDateTimeString(endDate);
+
+        if (!startTime || !endTime) {
+            return;
+        }
+
+        _createOrEditTimeEntryModal.open({
+            projectId: projectId,
+            startTime: startTime,
+            endTime: endTime
+        });
     }
 
     function duplicateTimeEntryForNextDay(event) {
@@ -51,6 +83,26 @@
             abp.notify.success(app.localize('SavedSuccessfully'));
             loadSchedulerEntries();
             refreshBudget();
+            loadTaskTable();
+        });
+    }
+
+    function deleteTimeEntry(event) {
+        if (!event || !event.dbId || !_canDeleteTimeEntries) {
+            return;
+        }
+
+        abp.message.confirm(app.localize('TimeEntryDeleteWarningMessage'), app.localize('AreYouSure'), function (confirmed) {
+            if (!confirmed) {
+                return;
+            }
+
+            _timeEntryService.delete({ id: event.dbId }).done(function () {
+                abp.notify.success(app.localize('SuccessfullyDeleted'));
+                loadSchedulerEntries();
+                refreshBudget();
+                loadTaskTable();
+            });
         });
     }
 
@@ -59,7 +111,9 @@
         scheduler.config.first_hour = 6;
         scheduler.config.last_hour = 22;
         scheduler.config.multi_day = true;
-        scheduler.config.details_on_create = false;
+        scheduler.config.drag_create = true;
+        scheduler.config.confirm_deleting = false;
+        scheduler.config.details_on_create = true;
         scheduler.config.details_on_dblclick = true;
         scheduler.config.header = ['day', 'week', 'month', 'date', 'prev', 'today', 'next'];
 
@@ -69,16 +123,22 @@
             var duplicateButton = _canCreateTimeEntries && event.dbId
                 ? '<span class="tt-event-duplicate js-duplicate-time-entry" data-event-id="' + event.id + '" title="' + app.localize('Copy') + '"><i class="fa fa-copy"></i></span>'
                 : '';
+            var deleteButton = _canDeleteTimeEntries && event.dbId
+                ? '<span class="tt-event-delete js-delete-time-entry" data-event-id="' + event.id + '" title="' + app.localize('Delete') + '"><i class="fa fa-trash"></i></span>'
+                : '';
 
-            return '<span class="tt-event-title"><b>' + event.text + '</b></span>' + duplicateButton;
+            return '<span class="tt-event-title"><b>' + event.text + '</b></span>' + deleteButton + duplicateButton;
         };
 
         scheduler.templates.event_text = function (start, end, event) {
             var duplicateButton = _canCreateTimeEntries && event.dbId
                 ? '<span class="tt-event-duplicate js-duplicate-time-entry" data-event-id="' + event.id + '" title="' + app.localize('Copy') + '"><i class="fa fa-copy"></i></span>'
                 : '';
+            var deleteButton = _canDeleteTimeEntries && event.dbId
+                ? '<span class="tt-event-delete js-delete-time-entry" data-event-id="' + event.id + '" title="' + app.localize('Delete') + '"><i class="fa fa-trash"></i></span>'
+                : '';
 
-            return '<span class="tt-event-title"><b>' + event.text + '</b></span>' + duplicateButton;
+            return '<span class="tt-event-title"><b>' + event.text + '</b></span>' + deleteButton + duplicateButton;
         };
 
         scheduler.templates.event_bar_date = function (start, end, event) {
@@ -102,10 +162,18 @@
                 description: event.description || event.text
             }).done(function () {
                 refreshBudget();
+                loadTaskTable();
             });
         });
 
         scheduler.attachEvent('onClick', function (id, e) {
+            var deleteButton = e ? $(e.target).closest('.js-delete-time-entry') : $();
+            if (deleteButton.length) {
+                var deleteEventId = deleteButton.attr('data-event-id') || id;
+                deleteTimeEntry(scheduler.getEvent(deleteEventId));
+                return false;
+            }
+
             var duplicateButton = e ? $(e.target).closest('.js-duplicate-time-entry') : $();
             if (!duplicateButton.length) {
                 return true;
@@ -122,16 +190,25 @@
                 return true;
             }
 
-            abp.message.confirm(app.localize('TimeEntryDeleteWarningMessage'), app.localize('AreYouSure'), function (confirmed) {
-                if (!confirmed) {
-                    return;
-                }
+            deleteTimeEntry(event);
 
-                _timeEntryService.delete({ id: event.dbId }).done(function () {
-                    scheduler.deleteEvent(id);
-                    refreshBudget();
-                });
-            });
+            return false;
+        });
+
+        scheduler.attachEvent('onBeforeLightbox', function (id) {
+            var event = scheduler.getEvent(id);
+
+            if (!event || event.dbId) {
+                return true;
+            }
+
+            var startDate = event.start_date;
+            var endDate = event.end_date;
+            scheduler.deleteEvent(id);
+
+            setTimeout(function () {
+                openCreateTimeEntryModal(startDate, endDate);
+            }, 0);
 
             return false;
         });
@@ -147,11 +224,7 @@
 
         scheduler.attachEvent('onEmptyClick', function (date) {
             var endDate = new Date(date.getTime() + 60 * 60 * 1000);
-            _createOrEditTimeEntryModal.open({
-                projectId: projectId,
-                startTime: toLocalDateTimeString(date),
-                endTime: toLocalDateTimeString(endDate)
-            });
+            openCreateTimeEntryModal(date, endDate);
 
             return false;
         });
@@ -264,42 +337,67 @@
             completedTable.empty();
 
             if (!items.length) {
-                allTable.append('<tr><td colspan="3" class="text-muted text-center py-4">' + app.localize('NoToDosFound') + '</td></tr>');
-                completedTable.append('<tr><td colspan="2" class="text-muted text-center py-4">' + app.localize('NoCompletedToDosFound') + '</td></tr>');
+                allTable.append('<tr><td colspan="4" class="text-muted text-center py-4">' + app.localize('NoToDosFound') + '</td></tr>');
+                completedTable.append('<tr><td colspan="3" class="text-muted text-center py-4">' + app.localize('NoCompletedToDosFound') + '</td></tr>');
                 return;
             }
 
             $.each(items, function (i, todo) {
                 var dueText = todo.dueDate ? moment(todo.dueDate).format('L') : '-';
+                var actionButtons = '';
+
+                if (_canEditTodos && !todo.completedAt) {
+                    actionButtons += '<button class="btn btn-xs btn-icon btn-light-success me-1 todo-complete-btn" data-id="' + todo.id + '" title="' + app.localize('Complete') + '"><i class="fa fa-check"></i></button>';
+                }
+
+                if (_canEditTodos) {
+                    actionButtons += '<button class="btn btn-xs btn-icon btn-light-primary todo-edit-btn" data-id="' + todo.id + '" title="' + app.localize('Edit') + '"><i class="ki-outline ki-pencil fs-5"></i></button>';
+                }
+
                 allTable.append(
-                    '<tr class="project-todo-row" data-id="' + todo.id + '">' +
+                    '<tr>' +
                     '<td>' + escapeHtml(todo.title) + '</td>' +
                     '<td>' + escapeHtml(todo.statusName || '') + '</td>' +
                     '<td>' + dueText + '</td>' +
+                    '<td class="text-end">' + actionButtons + '</td>' +
                     '</tr>'
                 );
 
                 if (todo.completedAt) {
+                    var completedActions = _canEditTodos
+                        ? '<button class="btn btn-xs btn-icon btn-light-primary todo-edit-btn" data-id="' + todo.id + '" title="' + app.localize('Edit') + '"><i class="ki-outline ki-pencil fs-5"></i></button>'
+                        : '';
+
                     completedTable.append(
-                        '<tr class="project-todo-row" data-id="' + todo.id + '">' +
+                        '<tr>' +
                         '<td>' + escapeHtml(todo.title) + '</td>' +
                         '<td>' + moment(todo.completedAt).format('L LT') + '</td>' +
+                        '<td class="text-end">' + completedActions + '</td>' +
                         '</tr>'
                     );
                 }
             });
 
             if (!completedTable.children().length) {
-                completedTable.append('<tr><td colspan="2" class="text-muted text-center py-4">' + app.localize('NoCompletedToDosFound') + '</td></tr>');
+                completedTable.append('<tr><td colspan="3" class="text-muted text-center py-4">' + app.localize('NoCompletedToDosFound') + '</td></tr>');
             }
         });
     }
 
     function refreshBudget() {
         _projectService.getProjectBudgetSummary({ id: projectId }).done(function (summary) {
-            var percent = Math.min(Math.round(summary.utilizationPercentage), 100);
+            var totalBudgetHours = summary.totalBudgetHours || 0;
+            var usedHours = summary.usedHours || 0;
+            var remainingHours = summary.remainingHours || 0;
+            var percent = Math.min(Math.round(summary.utilizationPercentage || 0), 100);
             var cls = percent >= 90 ? 'danger' : percent >= 75 ? 'warning' : 'success';
 
+            $('#BudgetTypeLabel').text(summary.budgetType || '');
+            $('#TotalBudgetHoursLabel').text(totalBudgetHours.toFixed(1));
+            $('#UsedHoursLabel').text(usedHours.toFixed(1));
+            $('#RemainingHoursLabel').text(remainingHours.toFixed(1))
+                .removeClass('text-success text-danger')
+                .addClass(remainingHours < 0 ? 'text-danger' : 'text-success');
             $('#BudgetProgressBar').css('width', percent + '%')
                 .removeClass('bg-success bg-warning bg-danger')
                 .addClass('bg-' + cls);
@@ -335,17 +433,30 @@
         _createOrEditTodoModal.open({ projectId: projectId });
     });
 
+    $('#AddTodoInlineButton').click(function () {
+        _createOrEditTodoModal.open({ projectId: projectId });
+    });
+
     $('#TaskTableBody').on('click', '.edit-task-btn', function () {
         _createOrEditTaskModal.open({ id: $(this).data('id') });
     });
 
-    $('#ProjectTodosTableBody, #ProjectCompletedTodosTableBody').on('click', '.project-todo-row', function () {
+    $('#ProjectTodosTableBody, #ProjectCompletedTodosTableBody').on('click', '.todo-edit-btn', function () {
         _createOrEditTodoModal.open({ id: $(this).data('id') });
+    });
+
+    $('#ProjectTodosTableBody').on('click', '.todo-complete-btn', function () {
+        var todoId = $(this).data('id');
+        _userTaskService.complete({ id: todoId }).done(function () {
+            abp.notify.success(app.localize('SavedSuccessfully'));
+            loadProjectTodos();
+        });
     });
 
     abp.event.on('app.createOrEditTimeEntryModalSaved', function () {
         loadSchedulerEntries();
         refreshBudget();
+        loadTaskTable();
     });
 
     abp.event.on('app.createOrEditTaskModalSaved', function () {

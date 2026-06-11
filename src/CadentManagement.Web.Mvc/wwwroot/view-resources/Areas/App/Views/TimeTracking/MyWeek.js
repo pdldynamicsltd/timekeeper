@@ -7,6 +7,7 @@
         modalClass: 'CreateOrEditTimeEntryModal'
     });
     var _canCreateTimeEntries = abp.auth.isGranted('Pages.TimeTracking.TimeEntries.Create');
+    var _canDeleteTimeEntries = abp.auth.isGranted('Pages.TimeTracking.TimeEntries.Delete');
 
     var _currentDate = getWeekStart(new Date());
     var _currentMode = scheduler.createUnitsView ? 'ttUnits' : 'week';
@@ -139,6 +140,27 @@
         });
     }
 
+    function deleteTimeEntry(eventId, event) {
+        if (!_canDeleteTimeEntries || !event || event.isCompletedTask || eventId < 0) {
+            return;
+        }
+
+        abp.message.confirm(
+            app.localize('TimeEntryDeleteWarningMessage'),
+            app.localize('AreYouSure'),
+            function (confirmed) {
+                if (!confirmed) {
+                    return;
+                }
+
+                _timeEntryService.delete({ id: eventId }).done(function () {
+                    abp.notify.success(app.localize('SuccessfullyDeleted'));
+                    loadPeriodEntries();
+                });
+            }
+        );
+    }
+
     function initScheduler() {
         var header = [
             'day',
@@ -164,6 +186,7 @@
         scheduler.config.details_on_create = false;
         scheduler.config.details_on_dblclick = true;
         scheduler.config.readonly = !abp.auth.isGranted('Pages.TimeTracking.TimeEntries.Edit');
+        scheduler.config.confirm_deleting = false;
 
         scheduler.locale.labels.ttUnits_tab = app.localize('MyWeek');
 
@@ -185,22 +208,8 @@
             var duplicateButton = _canCreateTimeEntries && !event.isCompletedTask
                 ? '<span class="tt-event-duplicate js-duplicate-time-entry" data-event-id="' + event.id + '" title="' + app.localize('Copy') + '"><i class="fa fa-copy"></i></span>'
                 : '';
-
-            if (event.isCompletedTask) {
-                return '<b>' + (event.taskName || event.text || app.localize('TaskTitle')) + '</b>' +
-                    (event.projectName ? '<br/><small>' + event.projectName + '</small>' : '') +
-                    '<br/><small>' + app.localize('ConvertToTimeEntry') + '</small>';
-            }
-
-            return '<span class="tt-event-title"><b>' + (event.projectName || '') + '</b>' +
-                (event.taskName ? ' / ' + event.taskName : '') +
-                (event.description ? '<br/><small>' + event.description + '</small>' : '') +
-                '</span>' + duplicateButton;
-        };
-
-        scheduler.templates.event_text = function (start, end, event) {
-            var duplicateButton = _canCreateTimeEntries && !event.isCompletedTask
-                ? '<span class="tt-event-duplicate js-duplicate-time-entry" data-event-id="' + event.id + '" title="' + app.localize('Copy') + '"><i class="fa fa-copy"></i></span>'
+            var deleteButton = _canDeleteTimeEntries && !event.isCompletedTask
+                ? '<span class="tt-event-delete js-delete-time-entry" data-event-id="' + event.id + '" title="' + app.localize('Delete') + '"><i class="fa fa-trash"></i></span>'
                 : '';
 
             if (event.isCompletedTask) {
@@ -212,7 +221,27 @@
             return '<span class="tt-event-title"><b>' + (event.projectName || '') + '</b>' +
                 (event.taskName ? ' / ' + event.taskName : '') +
                 (event.description ? '<br/><small>' + event.description + '</small>' : '') +
-                '</span>' + duplicateButton;
+                '</span>' + deleteButton + duplicateButton;
+        };
+
+        scheduler.templates.event_text = function (start, end, event) {
+            var duplicateButton = _canCreateTimeEntries && !event.isCompletedTask
+                ? '<span class="tt-event-duplicate js-duplicate-time-entry" data-event-id="' + event.id + '" title="' + app.localize('Copy') + '"><i class="fa fa-copy"></i></span>'
+                : '';
+            var deleteButton = _canDeleteTimeEntries && !event.isCompletedTask
+                ? '<span class="tt-event-delete js-delete-time-entry" data-event-id="' + event.id + '" title="' + app.localize('Delete') + '"><i class="fa fa-trash"></i></span>'
+                : '';
+
+            if (event.isCompletedTask) {
+                return '<b>' + (event.taskName || event.text || app.localize('TaskTitle')) + '</b>' +
+                    (event.projectName ? '<br/><small>' + event.projectName + '</small>' : '') +
+                    '<br/><small>' + app.localize('ConvertToTimeEntry') + '</small>';
+            }
+
+            return '<span class="tt-event-title"><b>' + (event.projectName || '') + '</b>' +
+                (event.taskName ? ' / ' + event.taskName : '') +
+                (event.description ? '<br/><small>' + event.description + '</small>' : '') +
+                '</span>' + deleteButton + duplicateButton;
         };
 
         scheduler.templates.event_class = function (start, end, event) {
@@ -262,32 +291,42 @@
             });
         });
 
-        scheduler.attachEvent('onEventDeleted', function (id, ev) {
+        scheduler.attachEvent('onBeforeEventDelete', function (id, ev) {
             if (ev && ev.isCompletedTask) {
                 return false;
             }
 
             if (id < 0) {
-                return;
+                return true;
             }
 
-            abp.message.confirm(
-                app.localize('TimeEntryDeleteWarningMessage'),
-                app.localize('AreYouSure'),
-                function (confirmed) {
-                    if (confirmed) {
-                        _timeEntryService.delete({ id: id }).done(function () {
-                            abp.notify.success(app.localize('SuccessfullyDeleted'));
-                            loadPeriodEntries();
-                        });
-                    } else {
-                        loadPeriodEntries();
-                    }
-                }
-            );
+            deleteTimeEntry(id, ev);
+            return false;
+        });
+
+        scheduler.attachEvent('onEventAdded', function (id, ev) {
+            if (!ev || ev.isCompletedTask || id >= 0) {
+                return true;
+            }
+
+            _createOrEditModal.open({
+                startTime: toLocalDateTimeString(ev.start_date),
+                endTime: toLocalDateTimeString(ev.end_date)
+            });
+
+            scheduler.deleteEvent(id);
+            return true;
         });
 
         scheduler.attachEvent('onClick', function (id, e) {
+            var deleteButton = e ? $(e.target).closest('.js-delete-time-entry') : $();
+            if (deleteButton.length) {
+                var deleteEventId = parseInt(deleteButton.attr('data-event-id') || id);
+                var eventToDelete = scheduler.getEvent(deleteEventId);
+                deleteTimeEntry(deleteEventId, eventToDelete);
+                return false;
+            }
+
             var duplicateButton = e ? $(e.target).closest('.js-duplicate-time-entry') : $();
             if (duplicateButton.length) {
                 var eventId = duplicateButton.attr('data-event-id') || id;

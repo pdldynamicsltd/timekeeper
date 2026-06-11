@@ -8,10 +8,11 @@
     });
 
     var _statuses = [];
-    var _completedStatusValue = null;
+    var _completedStatusValues = [];
     var _sortableInstances = {};
     var _daysToShow = 14;
     var _weekOffset = 0;
+    var _searchDebounceHandle = null;
 
     function getStartOfDay(date) {
         var value = new Date(date);
@@ -74,9 +75,9 @@
     function loadStatuses(callback) {
         _userTaskService.getTodoStatuses().done(function (statuses) {
             _statuses = statuses || [];
-            var completed = _statuses.filter(function (s) { return s.isCompleted; })
-                .sort(function (a, b) { return a.sortOrder - b.sortOrder; })[0];
-            _completedStatusValue = completed ? completed.value : 3;
+            _completedStatusValues = _statuses
+                .filter(function (s) { return s.isCompleted; })
+                .map(function (s) { return s.value; });
 
             if (callback) {
                 callback();
@@ -106,12 +107,12 @@
         var board = $('#TodoPlannerBoard');
         board.empty();
 
-        var openTasks = (tasks || []).filter(function (task) {
-            return task.status !== _completedStatusValue;
+        var filteredTasks = (tasks || []).filter(function (task) {
+            return isShowingCompleted() || _completedStatusValues.indexOf(task.status) === -1;
         });
 
         columns.forEach(function (column) {
-            var columnTasks = openTasks.filter(function (task) {
+            var columnTasks = filteredTasks.filter(function (task) {
                 return getColumnKey(task) === column.key;
             });
 
@@ -193,7 +194,14 @@
         board.off('click', '.add-btn').on('click', '.add-btn', function (e) {
             e.preventDefault();
             var dueDate = $(this).data('due-date');
-            _createOrEditModal.open({ dueDate: dueDate });
+            var selectedProjectId = getSelectedProjectId();
+            var modalArgs = { dueDate: dueDate };
+
+            if (selectedProjectId) {
+                modalArgs.projectId = selectedProjectId;
+            }
+
+            _createOrEditModal.open(modalArgs);
         });
     }
 
@@ -216,16 +224,44 @@
         $('#PlannerProjectFilter').on('change', function () {
             loadTasks();
         });
+
+        $('#PlannerSearchFilter').on('input', function () {
+            if (_searchDebounceHandle) {
+                clearTimeout(_searchDebounceHandle);
+            }
+
+            _searchDebounceHandle = setTimeout(function () {
+                loadTasks();
+            }, 300);
+        });
+
+        $('#PlannerShowCompletedToggle').on('change', function () {
+            loadTasks();
+        });
     }
 
     function loadTasks() {
-        var selectedProjectId = $('#PlannerProjectFilter').val();
+        var selectedProjectId = getSelectedProjectId();
         _userTaskService.getTasks({
             maxResultCount: 500,
-            projectId: selectedProjectId ? parseInt(selectedProjectId) : null
+            projectId: selectedProjectId,
+            filter: getSearchFilterText()
         }).done(function (result) {
             render(result.items || []);
         });
+    }
+
+    function getSelectedProjectId() {
+        var selectedProjectId = $('#PlannerProjectFilter').val();
+        return selectedProjectId ? parseInt(selectedProjectId) : null;
+    }
+
+    function getSearchFilterText() {
+        return ($('#PlannerSearchFilter').val() || '').trim();
+    }
+
+    function isShowingCompleted() {
+        return $('#PlannerShowCompletedToggle').is(':checked');
     }
 
     function loadProjectFilterOptions(callback) {

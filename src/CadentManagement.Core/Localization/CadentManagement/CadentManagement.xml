@@ -1281,6 +1281,7 @@
     <text name="Continue">Continue</text>
     <text name="Copy">Copy</text>
     <text name="Done">Done</text>
+    <text name="ShowDoneItems">Show done items</text>
     <text name="TwoFactorAuthenticationEnabled">Two-factor authentication is enabled</text>
     <text name="TwoFactorAuthenticationDisabled">Two-factor authentication is disabled</text>
     <text name="UiCustomization_Toolbar_DesktopFixedHeader">Desktop fixed header</text>
