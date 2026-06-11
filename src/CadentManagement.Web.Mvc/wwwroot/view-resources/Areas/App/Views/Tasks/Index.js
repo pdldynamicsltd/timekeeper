@@ -15,6 +15,7 @@
         { value: 3, label: app.localize('UrgentPriority'), className: 'badge-priority-urgent' }
     ];
     var _sortableInstances = {};
+    var _searchDebounceHandle = null;
 
     function getPriorityLabel(priorityValue) {
         var priority = _priorities.find(function (p) { return p.value === priorityValue; });
@@ -39,7 +40,11 @@
         var board = $('#KanbanBoard');
         board.empty();
 
-        _statuses.forEach(function (status) {
+        var visibleStatuses = _statuses.filter(function (status) {
+            return isShowingCompleted() || !status.isCompleted;
+        });
+
+        visibleStatuses.forEach(function (status) {
             var statusTasks = tasks.filter(function (t) { return t.status === status.value; });
             var columnHtml = '<div class="kanban-column">' +
                 '<div class="kanban-column-header">' +
@@ -50,6 +55,9 @@
 
             statusTasks.forEach(function (task) {
                 var description = task.description ? escapeHtml(task.description.substring(0, 100)) : '';
+                var completeButton = status.isCompleted
+                    ? ''
+                    : '<button class="kanban-card-btn kanban-card-btn-complete complete-btn" title="' + app.localize('Complete') + '"><i class="fa fa-check"></i></button>';
                 columnHtml += '<li class="kanban-card" data-id="' + task.id + '">' +
                     '<div class="kanban-card-title">' + escapeHtml(task.title) + '</div>' +
                     '<div class="kanban-card-meta">' +
@@ -58,6 +66,7 @@
                     '</div>' +
                     (description ? '<div class="kanban-card-description" style="font-size:12px;color:#666;margin-bottom:8px;">' + description + '</div>' : '') +
                     '<div class="kanban-card-actions">' +
+                    completeButton +
                     '<button class="kanban-card-btn edit-btn" title="' + app.localize('Edit') + '"><i class="fa fa-edit"></i></button>' +
                     '<button class="kanban-card-btn delete-btn" title="' + app.localize('Delete') + '"><i class="fa fa-trash"></i></button>' +
                     '</div>' +
@@ -73,7 +82,7 @@
             board.append(columnHtml);
         });
 
-        _statuses.forEach(function (status) {
+        visibleStatuses.forEach(function (status) {
             var list = board.find('[data-status-value="' + status.value + '"]');
             var key = status.value.toString();
 
@@ -127,18 +136,45 @@
             });
         });
 
+        board.off('click', '.complete-btn').on('click', '.complete-btn', function (e) {
+            e.preventDefault();
+            var taskId = parseInt($(this).closest('.kanban-card').attr('data-id'));
+            _userTaskService.complete({ id: taskId }).done(loadTasks);
+        });
+
         board.off('click', '.kanban-add-button').on('click', '.kanban-add-button', function (e) {
             e.preventDefault();
             var statusValue = parseInt($(this).data('status-value'));
-            _createOrEditModal.open({ status: statusValue });
+            var selectedProjectId = getSelectedProjectId();
+            var modalArgs = { status: statusValue };
+
+            if (selectedProjectId) {
+                modalArgs.projectId = selectedProjectId;
+            }
+
+            _createOrEditModal.open(modalArgs);
         });
     }
 
-    function loadTasks() {
+    function getSelectedProjectId() {
         var selectedProjectId = $('#KanbanProjectFilter').val();
+        return selectedProjectId ? parseInt(selectedProjectId) : null;
+    }
+
+    function getSearchFilterText() {
+        return ($('#KanbanSearchFilter').val() || '').trim();
+    }
+
+    function isShowingCompleted() {
+        return $('#KanbanShowCompletedToggle').is(':checked');
+    }
+
+    function loadTasks() {
+        var selectedProjectId = getSelectedProjectId();
         _userTaskService.getTasks({
             maxResultCount: 500,
-            projectId: selectedProjectId ? parseInt(selectedProjectId) : null
+            projectId: selectedProjectId,
+            filter: getSearchFilterText()
         }).done(function (response) {
             renderKanban(response.items || []);
         });
@@ -181,10 +217,31 @@
     }
 
     $('#AddTaskButton').click(function () {
-        _createOrEditModal.open({});
+        var selectedProjectId = getSelectedProjectId();
+        var modalArgs = {};
+
+        if (selectedProjectId) {
+            modalArgs.projectId = selectedProjectId;
+        }
+
+        _createOrEditModal.open(modalArgs);
     });
 
     $('#KanbanProjectFilter').on('change', function () {
+        loadTasks();
+    });
+
+    $('#KanbanSearchFilter').on('input', function () {
+        if (_searchDebounceHandle) {
+            clearTimeout(_searchDebounceHandle);
+        }
+
+        _searchDebounceHandle = setTimeout(function () {
+            loadTasks();
+        }, 300);
+    });
+
+    $('#KanbanShowCompletedToggle').on('change', function () {
         loadTasks();
     });
 
