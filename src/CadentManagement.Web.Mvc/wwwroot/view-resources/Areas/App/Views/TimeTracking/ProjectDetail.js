@@ -310,9 +310,11 @@
                 indentedName: '<span style="padding-left:' + (depth * 1.5) + 'rem" class="fw-semibold">' + escapeHtml(task.name) + '</span>',
                 statusClass: statusClass,
                 statusText: statusText,
-                budgetHours: task.budgetHours ? task.budgetHours.toFixed(1) + 'h' : '-',
-                usedHours: (task.usedHours || 0).toFixed(1) + 'h',
-                remainingHours: (task.remainingHours || 0).toFixed(1) + 'h',
+                budgetHours: task.budgetHours
+                    ? task.budgetHours.toFixed(1) + 'h <span class="text-muted fs-8">(' + (task.budgetHours / 8).toFixed(1) + 'd)</span>'
+                    : '-',
+                usedHours: (task.usedHours || 0).toFixed(1) + 'h <span class="text-muted fs-8">(' + ((task.usedHours || 0) / 8).toFixed(1) + 'd)</span>',
+                remainingHours: (task.remainingHours || 0).toFixed(1) + 'h <span class="text-muted fs-8">(' + ((task.remainingHours || 0) / 8).toFixed(1) + 'd)</span>',
                 remainingClass: (task.remainingHours || 0) < 0 ? 'text-danger' : ''
             });
 
@@ -394,10 +396,13 @@
 
             $('#BudgetTypeLabel').text(summary.budgetType || '');
             $('#TotalBudgetHoursLabel').text(totalBudgetHours.toFixed(1));
+            $('#TotalBudgetDaysLabel').text((totalBudgetHours / 8).toFixed(1) + 'd');
             $('#UsedHoursLabel').text(usedHours.toFixed(1));
+            $('#UsedDaysLabel').text((usedHours / 8).toFixed(1) + 'd');
             $('#RemainingHoursLabel').text(remainingHours.toFixed(1))
                 .removeClass('text-success text-danger')
                 .addClass(remainingHours < 0 ? 'text-danger' : 'text-success');
+            $('#RemainingDaysLabel').text((remainingHours / 8).toFixed(1) + 'd');
             $('#BudgetProgressBar').css('width', percent + '%')
                 .removeClass('bg-success bg-warning bg-danger')
                 .addClass('bg-' + cls);

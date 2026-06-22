@@ -73,18 +73,21 @@
                             <div class="tw-stat-tile">
                                 <span class="tw-stat-value text-gray-900" id="TotalBudgetHoursLabel">@Model.TotalBudgetHours.ToString("F1")</span>
                                 <span class="tw-stat-label">@L("BudgetHours")</span>
+                                <span class="text-muted fs-8" id="TotalBudgetDaysLabel">@((Model.TotalBudgetHours / 8).ToString("F1"))d</span>
                             </div>
                         </div>
                         <div class="col-md-2">
                             <div class="tw-stat-tile">
                                 <span class="tw-stat-value text-danger" id="UsedHoursLabel">@Model.UsedHours.ToString("F1")</span>
                                 <span class="tw-stat-label">@L("UsedHours")</span>
+                                <span class="text-muted fs-8" id="UsedDaysLabel">@((Model.UsedHours / 8).ToString("F1"))d</span>
                             </div>
                         </div>
                         <div class="col-md-2">
                             <div class="tw-stat-tile">
                                 <span class="tw-stat-value text-@(Model.RemainingHours < 0 ? "danger" : "success")" id="RemainingHoursLabel">@Model.RemainingHours.ToString("F1")</span>
                                 <span class="tw-stat-label">@L("RemainingHours")</span>
+                                <span class="text-muted fs-8" id="RemainingDaysLabel">@((Model.RemainingHours / 8).ToString("F1"))d</span>
                             </div>
                         </div>
                         <div class="col-md-3">

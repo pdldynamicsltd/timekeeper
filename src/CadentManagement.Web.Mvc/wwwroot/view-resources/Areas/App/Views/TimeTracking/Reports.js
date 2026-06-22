@@ -54,15 +54,15 @@
                 '<div class="fw-bold fs-5 mb-3">' + report.projectName + '</div>' +
                 '<div class="d-flex justify-content-between mb-2">' +
                 '<span>' + app.localize('BudgetHours') + '</span>' +
-                '<span class="fw-bold">' + (report.totalBudgetHours || 0).toFixed(1) + 'h</span>' +
+                '<span class="fw-bold">' + (report.totalBudgetHours || 0).toFixed(1) + 'h <span class="text-muted fs-8">(' + ((report.totalBudgetHours || 0) / 8).toFixed(1) + 'd)</span></span>' +
                 '</div>' +
                 '<div class="d-flex justify-content-between mb-2">' +
                 '<span>' + app.localize('UsedHours') + '</span>' +
-                '<span class="fw-bold text-' + cls + '">' + (report.usedHours || 0).toFixed(1) + 'h</span>' +
+                '<span class="fw-bold text-' + cls + '">' + (report.usedHours || 0).toFixed(1) + 'h <span class="text-muted fs-8">(' + ((report.usedHours || 0) / 8).toFixed(1) + 'd)</span></span>' +
                 '</div>' +
                 '<div class="d-flex justify-content-between mb-3">' +
                 '<span>' + app.localize('RemainingHours') + '</span>' +
-                '<span class="fw-bold text-' + (report.remainingHours < 0 ? 'danger' : 'success') + '">' + (report.remainingHours || 0).toFixed(1) + 'h</span>' +
+                '<span class="fw-bold text-' + (report.remainingHours < 0 ? 'danger' : 'success') + '">' + (report.remainingHours || 0).toFixed(1) + 'h <span class="text-muted fs-8">(' + ((report.remainingHours || 0) / 8).toFixed(1) + 'd)</span></span>' +
                 '</div>' +
                 '<div class="progress h-8px">' +
                 '<div class="progress-bar bg-' + cls + '" style="width:' + percent + '%"></div>' +
@@ -90,9 +90,9 @@
                     var tc = tp >= 90 ? 'danger' : tp >= 75 ? 'warning' : 'success';
                     taskCard.find('tbody').append($('<tr>' +
                         '<td>' + t.taskName + '</td>' +
-                        '<td>' + (t.taskBudgetHours || 0).toFixed(1) + '</td>' +
-                        '<td class="text-' + tc + '">' + (t.usedHours || 0).toFixed(1) + '</td>' +
-                        '<td class="text-' + (t.remainingHours < 0 ? 'danger' : 'success') + '">' + (t.remainingHours || 0).toFixed(1) + '</td>' +
+                        '<td>' + (t.taskBudgetHours || 0).toFixed(1) + 'h <span class="text-muted fs-8">(' + ((t.taskBudgetHours || 0) / 8).toFixed(1) + 'd)</span></td>' +
+                        '<td class="text-' + tc + '">' + (t.usedHours || 0).toFixed(1) + 'h <span class="text-muted fs-8">(' + ((t.usedHours || 0) / 8).toFixed(1) + 'd)</span></td>' +
+                        '<td class="text-' + (t.remainingHours < 0 ? 'danger' : 'success') + '">' + (t.remainingHours || 0).toFixed(1) + 'h <span class="text-muted fs-8">(' + ((t.remainingHours || 0) / 8).toFixed(1) + 'd)</span></td>' +
                         '<td><div class="progress h-6px" style="min-width:80px"><div class="progress-bar bg-' + tc + '" style="width:' + tp + '%"></div></div></td>' +
                         '</tr>'));
                 });
