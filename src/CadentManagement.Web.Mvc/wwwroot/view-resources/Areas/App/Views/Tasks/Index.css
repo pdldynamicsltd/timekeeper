@@ -1,0 +1,179 @@
+/* To-Do Board — flat material kanban.
+   Holds everything previously inlined in Tasks/Index.cshtml. */
+
+.kanban-board {
+    display: flex;
+    gap: 16px;
+    padding: 16px;
+    overflow-x: auto;
+}
+
+.kanban-column {
+    flex: 0 0 320px;
+    display: flex;
+    flex-direction: column;
+    background: var(--tw-surface-muted, #f6f8fb);
+    border: 1px solid var(--tw-border, #eceef3);
+    border-radius: 16px;
+    padding: 14px;
+    max-height: min(70vh, 760px);
+}
+
+.kanban-column-header {
+    font-weight: 600;
+    margin-bottom: 12px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--tw-text-muted, #78829d);
+}
+
+.kanban-column-count {
+    background: var(--bs-primary, #009ef7);
+    color: #fff;
+    padding: 2px 9px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.kanban-list {
+    flex: 1;
+    list-style: none;
+    padding: 2px;
+    margin: 0;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.kanban-card {
+    background: var(--tw-surface, #fff);
+    border: 1px solid var(--tw-border, #eceef3);
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    cursor: grab;
+    transition: box-shadow 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
+}
+
+.kanban-card:hover {
+    box-shadow: 0 12px 28px -12px rgba(15, 23, 42, 0.22);
+    border-color: var(--bs-primary, #009ef7);
+    transform: translateY(-2px);
+}
+
+.kanban-card:active {
+    cursor: grabbing;
+}
+
+.kanban-card.sortable-ghost {
+    opacity: 0.45;
+    border-style: dashed;
+}
+
+.kanban-card.sortable-chosen {
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
+}
+
+.kanban-card-title {
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 8px;
+    word-break: break-word;
+}
+
+.kanban-card-meta {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+    font-size: 11px;
+}
+
+.kanban-card-meta .badge {
+    border-radius: 999px;
+    font-weight: 600;
+    padding: 0.35em 0.7em;
+}
+
+.kanban-card-description {
+    font-size: 12px;
+    color: var(--tw-text-muted, #78829d);
+    margin-bottom: 8px;
+}
+
+.badge-priority-low { background: #e8f0fe; color: #1967d2; }
+.badge-priority-medium { background: #fff4e5; color: #e8830c; }
+.badge-priority-high { background: #fde8ef; color: #c2185b; }
+.badge-priority-urgent { background: #fde7e9; color: #d32f2f; }
+
+.kanban-card-actions {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+}
+
+.kanban-card-btn {
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    font-size: 12px;
+    border: none;
+    background: var(--tw-surface-muted, #f4f6fa);
+    color: var(--tw-text-muted, #78829d);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.kanban-card-btn:hover {
+    background: var(--tw-surface-sunken, #eef1f6);
+    color: var(--bs-gray-800, #252f4a);
+}
+
+.kanban-card-btn-complete {
+    background: var(--bs-success, #50cd89);
+    color: #fff;
+}
+
+.kanban-card-btn-complete:hover {
+    background: var(--bs-success, #47be7d);
+    color: #fff;
+}
+
+.kanban-add-button {
+    width: 100%;
+    padding: 11px;
+    border: 1px dashed var(--bs-gray-400, #c4cada);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--tw-text-muted, #78829d);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 10px;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+}
+
+.kanban-add-button:hover {
+    border-color: var(--bs-primary, #009ef7);
+    color: var(--bs-primary, #009ef7);
+    background: var(--tw-surface, #fff);
+}
+
+.status-color-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+    border: 1px solid var(--tw-border, #d1d5db);
+}

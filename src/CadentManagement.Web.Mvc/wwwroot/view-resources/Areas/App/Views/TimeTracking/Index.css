@@ -1,5 +1,8 @@
+/* Projects list — flat material accents on top of AppWorkspace.css */
+
 .project-name-link {
     font-weight: 600;
+    letter-spacing: -0.01em;
 }
 
 .project-budget-cell {
@@ -8,4 +11,31 @@
 
 .project-actions {
     white-space: nowrap;
+}
+
+/* Import panel reads as a calm, sunken utility strip */
+.time-workspace .tt-import-card .card-body {
+    background-color: var(--tw-surface-muted, #f4f6fa);
+}
+
+.time-workspace .tt-import-card .form-control {
+    background-color: var(--tw-surface, #fff);
+}
+
+/* Thinner, rounded budget bar in the table */
+.project-budget-cell .progress {
+    height: 6px;
+}
+
+/* Historic (completed) projects read as a calm, de-emphasised group */
+.time-workspace .tt-historic-card {
+    background-color: var(--tw-surface-muted, #f6f8fb);
+}
+
+.time-workspace .tt-historic-row > td {
+    opacity: 0.72;
+}
+
+.time-workspace .tt-historic-row:hover > td {
+    opacity: 1;
 }

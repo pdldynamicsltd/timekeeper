@@ -1,16 +1,30 @@
+/* ==========================================================================
+   Flat Material design system for the Time Tracking workspace
+   Shared by: Projects, Project Detail, My Week and the To-Do Board.
+   Uses Metronic/Bootstrap CSS variables so it follows the active theme
+   (including dark mode) while presenting a clean, modern, low-elevation feel.
+   ========================================================================== */
+
+.time-workspace {
+    --tw-surface: var(--bs-card-bg, #ffffff);
+    --tw-surface-muted: var(--bs-gray-100, #f6f8fb);
+    --tw-surface-sunken: var(--bs-gray-200, #eef1f6);
+    --tw-border: var(--bs-border-color, #eceef3);
+    --tw-text: var(--bs-gray-900, #1c1e26);
+    --tw-text-muted: var(--bs-gray-600, #78829d);
+    --tw-primary: var(--bs-primary, #009ef7);
+    --tw-primary-soft: rgba(0, 158, 247, 0.10);
+    --tw-radius-lg: 18px;
+    --tw-radius: 14px;
+    --tw-radius-sm: 10px;
+    --tw-elevation: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 1px rgba(15, 23, 42, 0.03);
+    --tw-elevation-hover: 0 12px 30px -10px rgba(15, 23, 42, 0.18);
+    --tw-ring: 0 0 0 4px rgba(0, 158, 247, 0.12);
+    --tw-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 .app-workspace-page {
     min-height: calc(100vh - 170px);
-}
-
-.app-workspace-card {
-    border: 1px solid #eef0f4;
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
-    overflow: hidden;
-}
-
-.app-workspace-card > .card-body {
-    height: 100%;
 }
 
 .app-board-body {
@@ -24,4 +38,166 @@
     gap: 12px;
     margin-bottom: 12px;
     flex-wrap: wrap;
+}
+
+/* --- Flat surfaces ------------------------------------------------------- */
+.time-workspace .card,
+.app-workspace-card {
+    border: 1px solid var(--tw-border, #eceef3);
+    border-radius: var(--tw-radius-lg, 18px);
+    box-shadow: var(--tw-elevation);
+    background-color: var(--tw-surface, #fff);
+    transition: var(--tw-transition);
+    overflow: hidden;
+}
+
+.time-workspace .card:hover,
+.app-workspace-card:hover {
+    box-shadow: var(--tw-elevation-hover);
+    border-color: var(--bs-gray-300, #dde0e9);
+}
+
+.app-workspace-card > .card-body {
+    height: 100%;
+}
+
+.time-workspace .card-header {
+    background-color: transparent;
+    border-bottom: 1px solid var(--tw-border, #eceef3);
+    min-height: 62px;
+    padding-top: 0.85rem;
+    padding-bottom: 0.85rem;
+}
+
+.time-workspace .card-title {
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+/* Subtle accent bar before card titles for a modern editorial feel */
+.time-workspace .card-header .card-title::before {
+    content: "";
+    width: 4px;
+    height: 18px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, var(--tw-primary), color-mix(in srgb, var(--tw-primary) 55%, transparent));
+    flex-shrink: 0;
+}
+
+/* --- Inputs ------------------------------------------------------------- */
+.time-workspace .form-control,
+.time-workspace .form-select {
+    border-radius: var(--tw-radius-sm, 10px);
+    border-color: var(--tw-border, #eceef3);
+    transition: var(--tw-transition);
+}
+
+.time-workspace .form-control:focus,
+.time-workspace .form-select:focus {
+    border-color: var(--tw-primary);
+    box-shadow: var(--tw-ring);
+}
+
+.time-workspace .input-group > .form-control,
+.time-workspace .input-group > .form-select {
+    border-radius: var(--tw-radius-sm, 10px);
+}
+
+.time-workspace .input-group > :not(:last-child) {
+    margin-right: 8px;
+}
+
+.time-workspace .input-group > .btn {
+    border-radius: var(--tw-radius-sm, 10px);
+}
+
+/* --- Buttons (flat material) -------------------------------------------- */
+.time-workspace .btn {
+    border-radius: var(--tw-radius-sm, 10px);
+    font-weight: 600;
+    transition: var(--tw-transition);
+}
+
+.time-workspace .btn:hover {
+    transform: translateY(-1px);
+}
+
+.time-workspace .btn:active {
+    transform: translateY(0);
+}
+
+.time-workspace .btn-icon:hover {
+    transform: translateY(-1px);
+}
+
+/* --- Badges become flat material chips ---------------------------------- */
+.time-workspace .badge {
+    border-radius: 999px;
+    padding: 0.42em 0.78em;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+/* --- Tables ------------------------------------------------------------- */
+.time-workspace .table > thead tr {
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    color: var(--tw-text-muted, #78829d);
+}
+
+.time-workspace .table > tbody > tr {
+    transition: background-color 0.15s ease;
+}
+
+.time-workspace .table > tbody > tr:hover > * {
+    background-color: var(--tw-surface-muted, #f6f8fb);
+}
+
+/* --- Progress bars ------------------------------------------------------ */
+.time-workspace .progress {
+    background-color: var(--tw-surface-sunken, #eef1f6);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.time-workspace .progress-bar {
+    border-radius: 999px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --- Modern stat tiles (shared by Detail + My Week) --------------------- */
+.tw-stat-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 16px 18px;
+    border-radius: var(--tw-radius, 14px);
+    background: var(--tw-surface-muted, #f6f8fb);
+    border: 1px solid var(--tw-border, #eceef3);
+    transition: var(--tw-transition);
+}
+
+.tw-stat-tile:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--tw-elevation-hover);
+}
+
+.tw-stat-value {
+    font-size: 1.7rem;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+}
+
+.tw-stat-label {
+    font-size: 0.74rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--tw-text-muted, #78829d);
 }

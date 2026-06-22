@@ -121,7 +121,7 @@
             },
             columnDefs: [
                 { targets: 0, data: null, defaultContent: '', orderable: false, className: 'control' },
-                { targets: 1, data: 'date', render: function (d) { return d ? moment(d).format('DD/MM/YYYY') : ''; } },
+                { targets: 1, data: 'startTime', render: function (d) { return d ? moment(d).format('DD/MM/YYYY') : ''; } },
                 { targets: 2, data: 'startTime', render: function (d) { return d ? moment(d).format('HH:mm') : ''; } },
                 { targets: 3, data: 'endTime', render: function (d) { return d ? moment(d).format('HH:mm') : ''; } },
                 {
