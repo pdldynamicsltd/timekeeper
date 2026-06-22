@@ -27,35 +27,43 @@
 
 <div class="@(await GetContainerClass()) time-workspace">
     <div class="card tt-import-card mb-5">
-        <div class="card-header">
-            <div class="card-title fw-bold">@L("TimeTrackingImports")</div>
+        <div class="card-header collapsed" data-bs-toggle="collapse" data-bs-target="#ImportCardBody" aria-expanded="false" style="cursor:pointer;">
+            <div class="card-title fw-bold">
+                <i class="ki-outline ki-file-up fs-4 me-2"></i>
+                @L("TimeTrackingImports")
+            </div>
+            <div class="card-toolbar">
+                <i class="ki-outline ki-down fs-4 rotate-icon"></i>
+            </div>
         </div>
-        <div class="card-body">
-            <div class="row g-4">
-                @if (IsGranted(AppPermissions.Pages_TimeTracking_Projects_Create))
-                {
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">@L("ImportProjectsCsv")</label>
-                        <div class="input-group">
-                            <input type="file" id="ProjectsCsvFileInput" class="form-control" accept=".csv" />
-                            <button id="ImportProjectsCsvButton" class="btn btn-light-primary" type="button">
-                                @L("Import")
-                            </button>
+        <div id="ImportCardBody" class="collapse">
+            <div class="card-body">
+                <div class="row g-4">
+                    @if (IsGranted(AppPermissions.Pages_TimeTracking_Projects_Create))
+                    {
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">@L("ImportProjectsCsv")</label>
+                            <div class="input-group">
+                                <input type="file" id="ProjectsCsvFileInput" class="form-control" accept=".csv" />
+                                <button id="ImportProjectsCsvButton" class="btn btn-light-primary" type="button">
+                                    @L("Import")
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                }
-                @if (IsGranted(AppPermissions.Pages_TimeTracking_TimeEntries_Create))
-                {
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">@L("ImportTimeEntriesCsv")</label>
-                        <div class="input-group">
-                            <input type="file" id="TimeEntriesCsvFileInput" class="form-control" accept=".csv" />
-                            <button id="ImportTimeEntriesCsvButton" class="btn btn-light-success" type="button">
-                                @L("Import")
-                            </button>
+                    }
+                    @if (IsGranted(AppPermissions.Pages_TimeTracking_TimeEntries_Create))
+                    {
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">@L("ImportTimeEntriesCsv")</label>
+                            <div class="input-group">
+                                <input type="file" id="TimeEntriesCsvFileInput" class="form-control" accept=".csv" />
+                                <button id="ImportTimeEntriesCsvButton" class="btn btn-light-success" type="button">
+                                    @L("Import")
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                }
+                    }
+                </div>
             </div>
         </div>
     </div>

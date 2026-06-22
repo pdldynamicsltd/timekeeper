@@ -18,9 +18,11 @@
         var isCompleted = project.status === 3;
 
         var budgetTypeText = project.budgetHours > 0 ? app.localize('ProjectBudget') : app.localize('NoBudget');
-        var budgetText = project.budgetHours > 0 ? project.budgetHours.toFixed(1) + 'h' : '-';
-        var usedText = (project.usedHours || 0).toFixed(1) + 'h';
-        var remainingText = ((project.remainingHours || 0)).toFixed(1) + 'h';
+        var budgetText = project.budgetHours > 0
+            ? project.budgetHours.toFixed(1) + 'h <span class="text-muted fs-8">(' + (project.budgetHours / 8).toFixed(1) + 'd)</span>'
+            : '-';
+        var usedText = (project.usedHours || 0).toFixed(1) + 'h <span class="text-muted fs-8">(' + ((project.usedHours || 0) / 8).toFixed(1) + 'd)</span>';
+        var remainingText = ((project.remainingHours || 0)).toFixed(1) + 'h <span class="text-muted fs-8">(' + ((project.remainingHours || 0) / 8).toFixed(1) + 'd)</span>';
 
         return $('<tr' + (isCompleted ? ' class="tt-historic-row"' : '') + '>' +
             '<td>' +
