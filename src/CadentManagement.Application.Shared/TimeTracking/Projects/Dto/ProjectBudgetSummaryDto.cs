@@ -10,6 +10,8 @@ public class ProjectBudgetSummaryDto
 
     public string ProjectName { get; set; }
 
+    public ProjectStatus Status { get; set; }
+
     public BudgetType BudgetType { get; set; }
 
     public decimal TotalBudgetHours { get; set; }

@@ -1539,6 +1539,13 @@
     <text name="ActiveStatus">Active</text>
     <text name="ArchivedStatus">Archived</text>
     <text name="CompletedStatus">Completed</text>
+    <text name="CurrentProjects">Current Projects</text>
+    <text name="CompletedProjects">Completed Projects</text>
+    <text name="CompletedProjectsHint">Completed projects are read-only and available for reporting only.</text>
+    <text name="ProjectCompletedTitle">This project is completed</text>
+    <text name="ProjectCompletedReadOnlyHint">It is read-only. You can still view its details and reports, but you cannot log time or add to-dos to it.</text>
+    <text name="CannotLogTimeToCompletedProject">You cannot log time to a completed project.</text>
+    <text name="CannotAddTodoToCompletedProject">You cannot add a to-do to a completed project.</text>
     <text name="CreateOrEditProject">Create/Edit Project</text>
     <text name="CreateOrEditTask">Create/Edit Task</text>
     <text name="CreateOrEditTimeEntry">Create/Edit Time Entry</text>

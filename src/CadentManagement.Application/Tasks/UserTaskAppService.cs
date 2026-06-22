@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CadentManagement.Authorization;
 using CadentManagement.Mappers;
+using CadentManagement.TimeTracking;
 using CadentManagement.TimeTracking.Projects;
 using CadentManagement.TimeTracking.TimeEntries;
 using CadentManagement.UserTasks.Dto;
@@ -53,9 +54,19 @@ public class UserTaskAppService : CadentManagementAppServiceBase, IUserTaskAppSe
         var projects = await _projectRepository.GetAllListAsync();
         var projectTasks = await _projectTaskRepository.GetAllListAsync();
 
+        // Completed projects are read-only and must not be selectable for new to-dos.
+        var editingProjectId = input.Id.HasValue
+            ? (await _taskRepository.GetAsync(input.Id.Value)).ProjectId
+            : null;
+
+        var selectableProjects = projects
+            .Where(p => p.Status != ProjectStatus.Completed
+                        || (editingProjectId.HasValue && p.Id == editingProjectId.Value))
+            .ToList();
+
         var output = new GetUserTaskForEditOutput
         {
-            ProjectOptions = projects.Select(p => new ComboboxItemDto(p.Id.ToString(), p.Name)).ToList(),
+            ProjectOptions = selectableProjects.Select(p => new ComboboxItemDto(p.Id.ToString(), p.Name)).ToList(),
             ProjectTaskOptions = new List<ComboboxItemDto>(),
             StatusOptions = await GetStatusOptionsAsync(),
             PriorityOptions = GetPriorityOptions()
@@ -102,6 +113,15 @@ public class UserTaskAppService : CadentManagementAppServiceBase, IUserTaskAppSe
     public async Task<int> CreateAsync(CreateOrEditUserTaskDto input)
     {
         await EnsureDefaultStatusesAsync();
+
+        if (input.ProjectId.HasValue)
+        {
+            var project = await _projectRepository.FirstOrDefaultAsync(input.ProjectId.Value);
+            if (project != null && project.Status == ProjectStatus.Completed)
+            {
+                throw new UserFriendlyException(L("CannotAddTodoToCompletedProject"));
+            }
+        }
 
         var task = _toUserTaskMapper.Map(input);
         task.TenantId = AbpSession.TenantId ?? 0;

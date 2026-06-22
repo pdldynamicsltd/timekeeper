@@ -6,6 +6,7 @@
 
 @section Styles
 {
+    <link rel="stylesheet" abp-href="/view-resources/Areas/App/Views/Shared/AppWorkspace.css" asp-append-version="true" />
     <link rel="stylesheet" abp-href="/view-resources/Areas/App/Views/TimeTracking/Index.css" asp-append-version="true" />
 }
 
@@ -24,8 +25,8 @@
     }
 </abp-page-subheader>
 
-<div class="@(await GetContainerClass())">
-    <div class="card mb-5">
+<div class="@(await GetContainerClass()) time-workspace">
+    <div class="card tt-import-card mb-5">
         <div class="card-header">
             <div class="card-title fw-bold">@L("TimeTrackingImports")</div>
         </div>
@@ -59,9 +60,10 @@
         </div>
     </div>
 
-    <div class="card">
+    <div class="card mb-5" id="CurrentProjectsCard">
         <div class="card-header">
             <div class="card-title">
+                <span class="fw-bold me-4">@L("CurrentProjects")</span>
                 <div class="input-group">
                     <input type="text" id="ProjectFilterText" class="form-control" placeholder="@L("SearchWithThreeDot")" />
                     <select id="ProjectStatusFilter" class="form-select" style="max-width:160px;">
@@ -96,6 +98,38 @@
                             <td colspan="8" class="text-center text-muted py-10">@L("Loading")...</td>
                         </tr>
                     </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card tt-historic-card" id="CompletedProjectsCard" style="display:none;">
+        <div class="card-header">
+            <div class="card-title fw-bold">
+                <i class="ki-outline ki-archive fs-3 me-2 text-muted"></i>
+                @L("CompletedProjects")
+                <span class="badge badge-light-secondary ms-2" id="CompletedProjectsCount">0</span>
+            </div>
+            <div class="card-toolbar">
+                <span class="text-muted fs-8">@L("CompletedProjectsHint")</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-row-dashed align-middle gy-4">
+                    <thead>
+                        <tr class="fw-semibold text-muted">
+                            <th>@L("ProjectName")</th>
+                            <th>@L("ProjectStatus")</th>
+                            <th>@L("ProjectBudgetType")</th>
+                            <th>@L("BudgetHours")</th>
+                            <th>@L("UsedHours")</th>
+                            <th>@L("RemainingHours")</th>
+                            <th>@L("UtilizationPercentage")</th>
+                            <th class="text-end">@L("Actions")</th>
+                        </tr>
+                    </thead>
+                    <tbody id="CompletedProjectsTableBody"></tbody>
                 </table>
             </div>
         </div>

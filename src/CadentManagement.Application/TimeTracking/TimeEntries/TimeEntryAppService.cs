@@ -54,9 +54,14 @@ public class TimeEntryAppService : CadentManagementAppServiceBase, ITimeEntryApp
     {
         var projects = await _projectRepository.GetAllListAsync(p => p.TenantId == AbpSession.TenantId);
 
+        // Completed projects are read-only and must not be selectable for new time entries.
+        var selectableProjects = projects
+            .Where(p => p.Status != ProjectStatus.Completed)
+            .ToList();
+
         var output = new GetTimeEntryForEditOutput
         {
-            ProjectOptions = projects.Select(p => new ComboboxItemDto(p.Id.ToString(), p.Name)).ToList()
+            ProjectOptions = selectableProjects.Select(p => new ComboboxItemDto(p.Id.ToString(), p.Name)).ToList()
         };
 
         if (input.Id.HasValue)
@@ -71,6 +76,16 @@ public class TimeEntryAppService : CadentManagementAppServiceBase, ITimeEntryApp
                 EndTime = entry.EndTime,
                 Description = entry.Description
             };
+
+            // Keep the entry's own (possibly completed) project selectable while editing.
+            if (output.ProjectOptions.All(o => o.Value != entry.ProjectId.ToString()))
+            {
+                var entryProject = await _projectRepository.FirstOrDefaultAsync(entry.ProjectId);
+                if (entryProject != null)
+                {
+                    output.ProjectOptions.Add(new ComboboxItemDto(entryProject.Id.ToString(), entryProject.Name));
+                }
+            }
 
             var tasks = await _taskRepository.GetAllListAsync(t => t.ProjectId == entry.ProjectId);
             output.TaskOptions = tasks.Select(t => new ComboboxItemDto(t.Id.ToString(), t.Name)).ToList();
@@ -90,6 +105,8 @@ public class TimeEntryAppService : CadentManagementAppServiceBase, ITimeEntryApp
     [AbpAuthorize(AppPermissions.Pages_TimeTracking_TimeEntries_Create)]
     public async Task<int> CreateAsync(CreateOrEditTimeEntryDto input)
     {
+        await EnsureProjectIsOpenAsync(input.ProjectId);
+
         var entry = _toTimeEntryMapper.Map(input);
         entry.TenantId = AbpSession.TenantId ?? 0;
         entry.UserId = AbpSession.UserId ?? 0;
@@ -284,6 +301,15 @@ public class TimeEntryAppService : CadentManagementAppServiceBase, ITimeEntryApp
         }
 
         return result;
+    }
+
+    private async Task EnsureProjectIsOpenAsync(int projectId)
+    {
+        var project = await _projectRepository.FirstOrDefaultAsync(projectId);
+        if (project != null && project.Status == ProjectStatus.Completed)
+        {
+            throw new UserFriendlyException(L("CannotLogTimeToCompletedProject"));
+        }
     }
 
     private async Task RecalculateBudgetAsync(int projectId, int? taskId)

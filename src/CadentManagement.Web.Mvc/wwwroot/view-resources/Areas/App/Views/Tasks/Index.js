@@ -64,7 +64,7 @@
                     (task.projectName ? '<span class="badge badge-secondary">' + escapeHtml(task.projectName) + '</span>' : '') +
                     '<span class="badge ' + getPriorityClass(task.priority) + '">' + getPriorityLabel(task.priority) + '</span>' +
                     '</div>' +
-                    (description ? '<div class="kanban-card-description" style="font-size:12px;color:#666;margin-bottom:8px;">' + description + '</div>' : '') +
+                    (description ? '<div class="kanban-card-description">' + description + '</div>' : '') +
                     '<div class="kanban-card-actions">' +
                     completeButton +
                     '<button class="kanban-card-btn edit-btn" title="' + app.localize('Edit') + '"><i class="fa fa-edit"></i></button>' +

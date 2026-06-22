@@ -1,10 +1,12 @@
 @using CadentManagement.Authorization
+@using CadentManagement.TimeTracking
 @using CadentManagement.TimeTracking.Projects.Dto
 @model ProjectBudgetSummaryDto
 @{
     ViewBag.CurrentPageName = "TimeTracking.ProjectDetail";
     var budgetPercent = (int)Math.Min(Model.UtilizationPercentage, 100);
     var budgetClass = budgetPercent >= 90 ? "danger" : budgetPercent >= 75 ? "warning" : "success";
+    var isCompleted = Model.Status == ProjectStatus.Completed;
 }
 
 @section Styles
@@ -13,7 +15,6 @@
     <link rel="stylesheet" abp-href="/Common/Styles/dhtmlxscheduler.min.css" asp-append-version="true" />
     <link rel="stylesheet" abp-href="/view-resources/Areas/App/Views/TimeTracking/ProjectDetail.css" asp-append-version="true" />
 }
-
 @section Scripts
 {
     <script src="/Common/Scripts/dhtmlxscheduler.js" asp-append-version="true"></script>
@@ -25,7 +26,7 @@
         <i class="ki-outline ki-arrow-left fs-3"></i>
         @L("Back")
     </a>
-    @if (IsGranted(AppPermissions.Pages_TimeTracking_TimeEntries_Create))
+    @if (!isCompleted && IsGranted(AppPermissions.Pages_TimeTracking_TimeEntries_Create))
     {
         <button id="AddTimeEntryButton" class="btn btn-primary" data-project-id="@Model.ProjectId">
             <i class="fa fa-plus btn-md-icon"></i>
@@ -39,7 +40,7 @@
             <span class="d-none d-md-inline-block">@L("AddNewProjectTask")</span>
         </button>
     }
-    @if (IsGranted(AppPermissions.Pages_Tasks_Create))
+    @if (!isCompleted && IsGranted(AppPermissions.Pages_Tasks_Create))
     {
         <button id="AddTodoButton" class="btn btn-light-info ms-2" data-project-id="@Model.ProjectId">
             <i class="fa fa-plus btn-md-icon"></i>
@@ -48,27 +49,43 @@
     }
 </abp-page-subheader>
 
-<div class="@(await GetContainerClass()) project-detail-page">
+<div class="@(await GetContainerClass()) time-workspace project-detail-page">
+    @if (isCompleted)
+    {
+        <div class="alert alert-secondary d-flex align-items-center mb-5" role="alert">
+            <i class="ki-outline ki-archive fs-2 me-3 text-muted"></i>
+            <div>
+                <div class="fw-bold">@L("ProjectCompletedTitle")</div>
+                <div class="fs-7 text-muted">@L("ProjectCompletedReadOnlyHint")</div>
+            </div>
+        </div>
+    }
     <div class="row g-5 mb-5">
         <div class="col-12">
             <div class="card">
                 <div class="card-body py-4">
-                    <div class="row align-items-center">
+                    <div class="row align-items-center g-4">
                         <div class="col-md-3">
-                            <div class="fw-bold fs-6 text-gray-800">@L("BudgetSummary")</div>
+                            <div class="fw-bold fs-5 text-gray-900">@L("BudgetSummary")</div>
                             <div class="text-muted fs-7" id="BudgetTypeLabel">@Model.BudgetType</div>
                         </div>
-                        <div class="col-md-2 text-center">
-                            <span class="fs-2 fw-bold text-gray-800" id="TotalBudgetHoursLabel">@Model.TotalBudgetHours.ToString("F1")</span>
-                            <div class="text-muted fs-7">@L("BudgetHours")</div>
+                        <div class="col-md-2">
+                            <div class="tw-stat-tile">
+                                <span class="tw-stat-value text-gray-900" id="TotalBudgetHoursLabel">@Model.TotalBudgetHours.ToString("F1")</span>
+                                <span class="tw-stat-label">@L("BudgetHours")</span>
+                            </div>
                         </div>
-                        <div class="col-md-2 text-center">
-                            <span class="fs-2 fw-bold text-danger" id="UsedHoursLabel">@Model.UsedHours.ToString("F1")</span>
-                            <div class="text-muted fs-7">@L("UsedHours")</div>
+                        <div class="col-md-2">
+                            <div class="tw-stat-tile">
+                                <span class="tw-stat-value text-danger" id="UsedHoursLabel">@Model.UsedHours.ToString("F1")</span>
+                                <span class="tw-stat-label">@L("UsedHours")</span>
+                            </div>
                         </div>
-                        <div class="col-md-2 text-center">
-                            <span class="fs-2 fw-bold text-@(Model.RemainingHours < 0 ? "danger" : "success")" id="RemainingHoursLabel">@Model.RemainingHours.ToString("F1")</span>
-                            <div class="text-muted fs-7">@L("RemainingHours")</div>
+                        <div class="col-md-2">
+                            <div class="tw-stat-tile">
+                                <span class="tw-stat-value text-@(Model.RemainingHours < 0 ? "danger" : "success")" id="RemainingHoursLabel">@Model.RemainingHours.ToString("F1")</span>
+                                <span class="tw-stat-label">@L("RemainingHours")</span>
+                            </div>
                         </div>
                         <div class="col-md-3">
                             <div class="d-flex justify-content-between mb-2">
@@ -135,7 +152,7 @@
                 <div class="card-header">
                     <div class="card-title fw-bold">@L("ProjectToDos")</div>
                     <div class="card-toolbar">
-                        @if (IsGranted(AppPermissions.Pages_Tasks_Create))
+                        @if (!isCompleted && IsGranted(AppPermissions.Pages_Tasks_Create))
                         {
                             <button id="AddTodoInlineButton" class="btn btn-sm btn-light-primary" data-project-id="@Model.ProjectId">
                                 <i class="fa fa-plus"></i> @L("AddNewToDo")

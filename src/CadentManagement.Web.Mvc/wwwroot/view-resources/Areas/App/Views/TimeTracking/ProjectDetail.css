@@ -2,12 +2,6 @@
     min-height: calc(100vh - 170px);
 }
 
-.project-detail-page .card {
-    border: 1px solid #eef0f4;
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
-}
-
 .project-detail-page #scheduler_here {
     min-height: calc(100vh - 420px);
 }
@@ -17,18 +11,11 @@
     overflow: auto;
 }
 
-.project-detail-page .tt-event-duplicate {
-    float: right;
-    margin-left: 6px;
-    color: #ffffff;
-    cursor: pointer;
-    opacity: 0.85;
+.project-detail-page .progress {
+    height: 8px;
 }
 
-.project-detail-page .tt-event-duplicate:hover {
-    opacity: 1;
-}
-
+.project-detail-page .tt-event-duplicate,
 .project-detail-page .tt-event-delete {
     float: right;
     margin-left: 6px;
@@ -37,6 +24,7 @@
     opacity: 0.85;
 }
 
+.project-detail-page .tt-event-duplicate:hover,
 .project-detail-page .tt-event-delete:hover {
     opacity: 1;
 }

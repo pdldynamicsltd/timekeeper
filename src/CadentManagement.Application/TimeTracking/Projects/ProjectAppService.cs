@@ -166,6 +166,7 @@ public class ProjectAppService : CadentManagementAppServiceBase, IProjectAppServ
         {
             ProjectId = project.Id,
             ProjectName = project.Name,
+            Status = project.Status,
             BudgetType = project.BudgetType,
             TotalBudgetHours = totalBudgetHours,
             UsedHours = usedHours,

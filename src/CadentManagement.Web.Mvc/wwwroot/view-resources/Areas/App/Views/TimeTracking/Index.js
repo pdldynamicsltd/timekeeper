@@ -8,6 +8,52 @@
     });
     var _filterDebounceTimer = null;
 
+    function buildProjectRow(project) {
+        var budgetPercent = project.budgetHours > 0
+            ? Math.min(Math.round((project.usedHours / project.budgetHours) * 100), 100)
+            : 0;
+        var budgetClass = budgetPercent >= 90 ? 'danger' : budgetPercent >= 75 ? 'warning' : 'success';
+        var statusBadge = getStatusBadge(project.status);
+        var color = project.color || '#3498db';
+        var isCompleted = project.status === 3;
+
+        var budgetTypeText = project.budgetHours > 0 ? app.localize('ProjectBudget') : app.localize('NoBudget');
+        var budgetText = project.budgetHours > 0 ? project.budgetHours.toFixed(1) + 'h' : '-';
+        var usedText = (project.usedHours || 0).toFixed(1) + 'h';
+        var remainingText = ((project.remainingHours || 0)).toFixed(1) + 'h';
+
+        return $('<tr' + (isCompleted ? ' class="tt-historic-row"' : '') + '>' +
+            '<td>' +
+            '<div class="d-flex flex-column">' +
+            '<a href="/App/TimeTracking/ProjectDetail/' + project.id + '" class="text-dark text-hover-primary project-name-link">' + project.name + '</a>' +
+            (project.description ? '<span class="text-muted fs-8">' + project.description + '</span>' : '') +
+            '</div>' +
+            '</td>' +
+            '<td>' + statusBadge + '</td>' +
+            '<td><span class="badge badge-light-info">' + budgetTypeText + '</span></td>' +
+            '<td>' + budgetText + '</td>' +
+            '<td>' + usedText + '</td>' +
+            '<td class="' + ((project.remainingHours || 0) < 0 ? 'text-danger' : '') + '">' + remainingText + '</td>' +
+            '<td class="project-budget-cell">' +
+            '<div class="d-flex align-items-center gap-2">' +
+            '<div class="progress flex-grow-1 h-6px">' +
+            '<div class="progress-bar bg-' + budgetClass + '" style="width:' + budgetPercent + '%; background-color:' + color + ' !important;"></div>' +
+            '</div>' +
+            '<span class="fw-semibold text-' + budgetClass + '">' + budgetPercent + '%</span>' +
+            '</div>' +
+            '</td>' +
+            '<td class="text-end project-actions">' +
+            '<a href="/App/TimeTracking/ProjectDetail/' + project.id + '" class="btn btn-sm btn-light-primary me-1">' + app.localize('ViewDetails') + '</a>' +
+            (abp.auth.isGranted('Pages.TimeTracking.Projects.Edit')
+                ? '<button class="btn btn-sm btn-icon btn-light-primary edit-project-btn me-1" data-id="' + project.id + '" title="' + app.localize('Edit') + '"><i class="ki-outline ki-pencil fs-4"></i></button>'
+                : '') +
+            (abp.auth.isGranted('Pages.TimeTracking.Projects.Delete')
+                ? '<button class="btn btn-sm btn-icon btn-light-danger delete-project-btn" data-id="' + project.id + '" data-name="' + project.name + '" title="' + app.localize('Delete') + '"><i class="ki-outline ki-trash fs-4"></i></button>'
+                : '') +
+            '</td>' +
+            '</tr>');
+    }
+
     function getProjects() {
         var statusVal = $('#ProjectStatusFilter').val();
         var input = {
@@ -20,60 +66,29 @@
         $('#ProjectsTableBody').html('<tr><td colspan="8" class="text-center py-10"><i class="ki-outline ki-loading fs-3x spin"></i></td></tr>');
 
         _projectService.getProjects(input).done(function (result) {
-            var container = $('#ProjectsTableBody');
-            container.empty();
+            var currentBody = $('#ProjectsTableBody');
+            var completedBody = $('#CompletedProjectsTableBody');
+            currentBody.empty();
+            completedBody.empty();
 
-            if (!result.items || result.items.length === 0) {
-                container.html('<tr><td colspan="8" class="text-center text-muted py-10">' + app.localize('NoProjects') + '</td></tr>');
-                return;
+            var items = result.items || [];
+            var completed = items.filter(function (p) { return p.status === 3; });
+            var current = items.filter(function (p) { return p.status !== 3; });
+
+            if (current.length === 0) {
+                currentBody.html('<tr><td colspan="8" class="text-center text-muted py-10">' + app.localize('NoProjects') + '</td></tr>');
+            } else {
+                $.each(current, function (i, project) {
+                    currentBody.append(buildProjectRow(project));
+                });
             }
 
-            $.each(result.items, function (i, project) {
-                var budgetPercent = project.budgetHours > 0
-                    ? Math.min(Math.round((project.usedHours / project.budgetHours) * 100), 100)
-                    : 0;
-                var budgetClass = budgetPercent >= 90 ? 'danger' : budgetPercent >= 75 ? 'warning' : 'success';
-                var statusBadge = getStatusBadge(project.status);
-                var color = project.color || '#3498db';
-
-                var budgetTypeText = project.budgetHours > 0 ? app.localize('ProjectBudget') : app.localize('NoBudget');
-                var budgetText = project.budgetHours > 0 ? project.budgetHours.toFixed(1) + 'h' : '-';
-                var usedText = (project.usedHours || 0).toFixed(1) + 'h';
-                var remainingText = ((project.remainingHours || 0)).toFixed(1) + 'h';
-
-                var row = $('<tr>' +
-                    '<td>' +
-                    '<div class="d-flex flex-column">' +
-                    '<a href="/App/TimeTracking/ProjectDetail/' + project.id + '" class="text-dark text-hover-primary project-name-link">' + project.name + '</a>' +
-                    (project.description ? '<span class="text-muted fs-8">' + project.description + '</span>' : '') +
-                    '</div>' +
-                    '</td>' +
-                    '<td>' + statusBadge + '</td>' +
-                    '<td><span class="badge badge-light-info">' + budgetTypeText + '</span></td>' +
-                    '<td>' + budgetText + '</td>' +
-                    '<td>' + usedText + '</td>' +
-                    '<td class="' + ((project.remainingHours || 0) < 0 ? 'text-danger' : '') + '">' + remainingText + '</td>' +
-                    '<td class="project-budget-cell">' +
-                    '<div class="d-flex align-items-center gap-2">' +
-                    '<div class="progress flex-grow-1 h-6px">' +
-                    '<div class="progress-bar bg-' + budgetClass + '" style="width:' + budgetPercent + '%; background-color:' + color + ' !important;"></div>' +
-                    '</div>' +
-                    '<span class="fw-semibold text-' + budgetClass + '">' + budgetPercent + '%</span>' +
-                    '</div>' +
-                    '</td>' +
-                    '<td class="text-end project-actions">' +
-                    '<a href="/App/TimeTracking/ProjectDetail/' + project.id + '" class="btn btn-sm btn-light-primary me-1">' + app.localize('ViewDetails') + '</a>' +
-                    (abp.auth.isGranted('Pages.TimeTracking.Projects.Edit')
-                        ? '<button class="btn btn-sm btn-icon btn-light-primary edit-project-btn me-1" data-id="' + project.id + '" title="' + app.localize('Edit') + '"><i class="ki-outline ki-pencil fs-4"></i></button>'
-                        : '') +
-                    (abp.auth.isGranted('Pages.TimeTracking.Projects.Delete')
-                        ? '<button class="btn btn-sm btn-icon btn-light-danger delete-project-btn" data-id="' + project.id + '" data-name="' + project.name + '" title="' + app.localize('Delete') + '"><i class="ki-outline ki-trash fs-4"></i></button>'
-                        : '') +
-                    '</td>' +
-                    '</tr>');
-
-                container.append(row);
+            $.each(completed, function (i, project) {
+                completedBody.append(buildProjectRow(project));
             });
+
+            $('#CompletedProjectsCount').text(completed.length);
+            $('#CompletedProjectsCard').toggle(completed.length > 0);
         }).fail(function () {
             abp.notify.error(app.localize('LoadError'));
             $('#ProjectsTableBody').html('<tr><td colspan="8" class="text-center text-danger py-10">' + app.localize('LoadError') + '</td></tr>');
@@ -208,11 +223,11 @@
         }, 300);
     });
 
-    $('#ProjectsTableBody').on('click', '.edit-project-btn', function () {
+    $('#ProjectsTableBody, #CompletedProjectsTableBody').on('click', '.edit-project-btn', function () {
         _createOrEditModal.open({ id: $(this).data('id') });
     });
 
-    $('#ProjectsTableBody').on('click', '.delete-project-btn', function () {
+    $('#ProjectsTableBody, #CompletedProjectsTableBody').on('click', '.delete-project-btn', function () {
         deleteProject($(this).data('id'), $(this).data('name'));
     });
 
