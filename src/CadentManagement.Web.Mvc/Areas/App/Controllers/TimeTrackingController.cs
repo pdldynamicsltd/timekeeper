@@ -95,10 +95,22 @@ public class TimeTrackingController : CadentManagementControllerBase
             {
                 output.TimeEntry.StartTime = parsedStart;
             }
+            else
+            {
+                // Default new entries to 08:00 today
+                var today = DateTime.Today;
+                output.TimeEntry.StartTime = today.AddHours(8);
+            }
 
             if (DateTime.TryParse(endTime, out var parsedEnd))
             {
                 output.TimeEntry.EndTime = parsedEnd;
+            }
+            else
+            {
+                // Default new entries to 16:00 today
+                var today = DateTime.Today;
+                output.TimeEntry.EndTime = today.AddHours(16);
             }
 
             if (!string.IsNullOrWhiteSpace(description))

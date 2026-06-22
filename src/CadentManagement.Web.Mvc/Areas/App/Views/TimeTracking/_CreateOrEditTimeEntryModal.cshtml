@@ -25,13 +25,34 @@
 
         <div class="mb-5">
             <label class="form-label">@L("TimeEntryTask")</label>
-            <select id="TimeEntryTaskId" name="TaskId" class="form-select">
-                <option value="">@L("NoTask")</option>
-                @foreach (var option in Model.TaskOptions)
+            <div class="d-flex gap-2 align-items-center">
+                <select id="TimeEntryTaskId" name="TaskId" class="form-select flex-grow-1">
+                    <option value="">@L("NoTask")</option>
+                    @foreach (var option in Model.TaskOptions)
+                    {
+                        <option value="@option.Value" selected="@(Model.TimeEntry.TaskId?.ToString() == option.Value)">@option.DisplayText</option>
+                    }
+                </select>
+                @if (IsGranted(AppPermissions.Pages_TimeTracking_Tasks_Create))
                 {
-                    <option value="@option.Value" selected="@(Model.TimeEntry.TaskId?.ToString() == option.Value)">@option.DisplayText</option>
+                    <button type="button" id="ShowQuickAddTaskBtn" class="btn btn-sm btn-light-success text-nowrap" title="@L("AddNewTask")">
+                        <i class="ki-outline ki-plus fs-4"></i> @L("AddTask")
+                    </button>
                 }
-            </select>
+            </div>
+            @if (IsGranted(AppPermissions.Pages_TimeTracking_Tasks_Create))
+            {
+                <div id="QuickAddTaskPanel" class="d-none mt-3 p-3 bg-light-info rounded">
+                    <div class="fw-semibold text-info mb-2 fs-7">@L("AddNewTask")</div>
+                    <div class="d-flex gap-2">
+                        <input type="text" id="QuickTaskName" class="form-control form-control-sm" placeholder="@L("TaskName")" maxlength="256" />
+                        <button type="button" id="QuickAddTaskSaveBtn" class="btn btn-sm btn-info text-nowrap">
+                            <i class="ki-outline ki-check fs-4"></i> @L("Save")
+                        </button>
+                        <button type="button" id="QuickAddTaskCancelBtn" class="btn btn-sm btn-light text-nowrap">@L("Cancel")</button>
+                    </div>
+                </div>
+            }
         </div>
 
         <div class="row mb-5">

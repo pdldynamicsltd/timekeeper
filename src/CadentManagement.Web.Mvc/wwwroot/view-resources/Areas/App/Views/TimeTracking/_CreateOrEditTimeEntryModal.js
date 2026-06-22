@@ -2,12 +2,15 @@
     app.modals.CreateOrEditTimeEntryModal = function () {
         var _modalManager;
         var _timeEntryService = abp.services.app.timeEntry;
+        var _taskService = abp.services.app.projectTask;
 
         this.init = function (modalManager) {
             _modalManager = modalManager;
 
             $('#TimeEntryProjectId').change(function () {
                 reloadTasks($(this).val());
+                // hide quick-add panel when project changes
+                hideQuickAddPanel();
             });
 
             $('#TimeEntryStartTime, #TimeEntryEndTime').change(function () {
@@ -19,8 +22,70 @@
                 duplicateToNextDay();
             });
 
+            $('#ShowQuickAddTaskBtn').click(function () {
+                $('#QuickAddTaskPanel').removeClass('d-none');
+                $('#ShowQuickAddTaskBtn').addClass('d-none');
+                $('#QuickTaskName').val('').focus();
+            });
+
+            $('#QuickAddTaskCancelBtn').click(function () {
+                hideQuickAddPanel();
+            });
+
+            $('#QuickAddTaskSaveBtn').click(function () {
+                quickAddTask();
+            });
+
+            $('#QuickTaskName').keydown(function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    quickAddTask();
+                }
+                if (e.key === 'Escape') {
+                    hideQuickAddPanel();
+                }
+            });
+
             updateDurationPreview();
         };
+
+        function hideQuickAddPanel() {
+            $('#QuickAddTaskPanel').addClass('d-none');
+            $('#ShowQuickAddTaskBtn').removeClass('d-none');
+            $('#QuickTaskName').val('');
+        }
+
+        function quickAddTask() {
+            var name = $.trim($('#QuickTaskName').val());
+            if (!name) {
+                $('#QuickTaskName').addClass('is-invalid').focus();
+                return;
+            }
+            $('#QuickTaskName').removeClass('is-invalid');
+
+            var projectId = parseInt($('#TimeEntryProjectId').val());
+            if (!projectId) {
+                abp.notify.warn(app.localize('PleaseSelectAProject'));
+                return;
+            }
+
+            $('#QuickAddTaskSaveBtn').prop('disabled', true);
+
+            _taskService.create({
+                projectId: projectId,
+                name: name,
+                status: 1  // Active
+            }).done(function (newTaskId) {
+                var newOption = $('<option>').val(newTaskId).text(name);
+                $('#TimeEntryTaskId').append(newOption).val(newTaskId);
+                abp.notify.success(app.localize('SavedSuccessfully'));
+                hideQuickAddPanel();
+            }).fail(function () {
+                abp.notify.error(app.localize('AnErrorOccurred'));
+            }).always(function () {
+                $('#QuickAddTaskSaveBtn').prop('disabled', false);
+            });
+        }
 
         function formatDateTimeLocal(date) {
             var localDate = date instanceof Date ? date : new Date(date);
@@ -37,7 +102,7 @@
             sel.find('option:not(:first)').remove();
             if (!projectId) return;
 
-            abp.services.app.projectTask.getTasks({
+            _taskService.getTasks({
                 projectId: parseInt(projectId),
                 maxResultCount: 200,
                 skipCount: 0
