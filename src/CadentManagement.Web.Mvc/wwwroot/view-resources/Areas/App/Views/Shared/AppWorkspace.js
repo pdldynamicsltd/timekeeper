@@ -38,4 +38,13 @@ app.workspace = app.workspace || {};
             timer = setTimeout(function () { fn.apply(null, args); }, delay);
         };
     };
+
+    // Returns {start, end} Date objects for a new time entry defaulting to 08:00–09:00
+    // on the supplied date (today if omitted).
+    workspace.defaultEntryTimes = function (date) {
+        var d = (date instanceof Date && !isNaN(date)) ? date : new Date();
+        var start = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 8, 0, 0);
+        var end   = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 9, 0, 0);
+        return { start: start, end: end };
+    };
 }(app.workspace));

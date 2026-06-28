@@ -208,8 +208,8 @@
         });
 
         scheduler.attachEvent('onEmptyClick', function (date) {
-            var endDate = new Date(date.getTime() + 60 * 60 * 1000);
-            openCreateTimeEntryModal(date, endDate);
+            var times = app.workspace.defaultEntryTimes(date);
+            openCreateTimeEntryModal(times.start, times.end);
 
             return false;
         });
@@ -403,7 +403,12 @@
     }
 
     $('#AddTimeEntryButton').click(function () {
-        _createOrEditTimeEntryModal.open({ projectId: projectId });
+        var times = app.workspace.defaultEntryTimes(new Date());
+        _createOrEditTimeEntryModal.open({
+            projectId: projectId,
+            startTime: toLocalDateTimeString(times.start),
+            endTime: toLocalDateTimeString(times.end)
+        });
     });
 
     $('#AddTaskButton').click(function () {
