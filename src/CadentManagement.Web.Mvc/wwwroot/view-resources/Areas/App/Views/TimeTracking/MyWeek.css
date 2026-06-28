@@ -62,16 +62,4 @@
     opacity: 0.85;
 }
 
-.tt-event-duplicate,
-.tt-event-delete {
-    float: right;
-    margin-left: 6px;
-    color: #ffffff;
-    cursor: pointer;
-    opacity: 0.85;
-}
 
-.tt-event-duplicate:hover,
-.tt-event-delete:hover {
-    opacity: 1;
-}

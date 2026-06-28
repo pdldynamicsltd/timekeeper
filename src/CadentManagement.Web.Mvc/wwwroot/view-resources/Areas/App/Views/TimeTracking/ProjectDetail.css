@@ -14,17 +14,3 @@
 .project-detail-page .progress {
     height: 8px;
 }
-
-.project-detail-page .tt-event-duplicate,
-.project-detail-page .tt-event-delete {
-    float: right;
-    margin-left: 6px;
-    color: #ffffff;
-    cursor: pointer;
-    opacity: 0.85;
-}
-
-.project-detail-page .tt-event-duplicate:hover,
-.project-detail-page .tt-event-delete:hover {
-    opacity: 1;
-}

@@ -47,24 +47,15 @@
     }
 
     function toSchedulerDate(dt) {
-        return dt instanceof Date ? dt : new Date(dt);
+        return app.workspace.toSchedulerDate(dt);
     }
 
     function toLocalDateTimeString(date) {
-        return scheduler.date.date_to_str('%Y-%m-%dT%H:%i')(toSchedulerDate(date));
+        return app.workspace.toLocalDateTimeString(date);
     }
 
     function escapeHtml(text) {
-        if (!text) {
-            return '';
-        }
-
-        return String(text)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/\"/g, '&quot;')
-            .replace(/'/g, '&#039;');
+        return app.workspace.escapeHtml(text);
     }
 
     function openPrefilledTimeEntryModal(task) {
@@ -363,38 +354,11 @@
             return false;
         });
 
-        scheduler.attachEvent('onEmptyClick', function (date, evt) {
-            var startDate = date;
-            
-            // In units view, we need to extract the actual time from the event position
-            if (_currentMode === 'ttUnits' && evt) {
-                var target = evt.target || evt.srcElement;
-                var container = scheduler.config.container || 'myWeekScheduler';
-                var rect = target.getBoundingClientRect();
-                var containerRect = document.getElementById(container).getBoundingClientRect();
-                
-                // Get the position within the container
-                var relativeY = rect.top - containerRect.top;
-                
-                // Calculate the time based on hour_size_px and first_hour
-                var hourSize = scheduler.config.hour_size_px || 44;
-                var firstHour = scheduler.config.first_hour || 0;
-                var timeStep = scheduler.config.time_step || 15;
-                
-                // Calculate hours and minutes from the click position
-                var totalMinutes = Math.round((relativeY / hourSize) * 60);
-                var steps = Math.floor(totalMinutes / timeStep);
-                totalMinutes = steps * timeStep;
-                
-                var clickDate = new Date(startDate);
-                clickDate.setHours(firstHour + Math.floor(totalMinutes / 60), totalMinutes % 60, 0, 0);
-                startDate = clickDate;
-            }
-            
-            var endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+        scheduler.attachEvent('onEmptyClick', function (date) {
+            var times = app.workspace.defaultEntryTimes(date);
             _createOrEditModal.open({
-                startTime: toLocalDateTimeString(startDate),
-                endTime: toLocalDateTimeString(endDate)
+                startTime: toLocalDateTimeString(times.start),
+                endTime: toLocalDateTimeString(times.end)
             });
             return false;
         });
@@ -622,11 +586,10 @@
     });
 
     $('#LogTimeButton').click(function () {
-        var now = new Date();
-        var end = new Date(now.getTime() + 60 * 60 * 1000);
+        var times = app.workspace.defaultEntryTimes(new Date());
         _createOrEditModal.open({
-            startTime: toLocalDateTimeString(now),
-            endTime: toLocalDateTimeString(end)
+            startTime: toLocalDateTimeString(times.start),
+            endTime: toLocalDateTimeString(times.end)
         });
     });
 
@@ -636,7 +599,7 @@
         var projectIdRaw = button.attr('data-project-id');
         var projectTaskIdRaw = button.attr('data-project-task-id');
 
-        convertCompletedTaskToTimeEntry({
+        openPrefilledTimeEntryModal({
             taskId: taskId,
             projectId: projectIdRaw ? parseInt(projectIdRaw, 10) : null,
             projectTaskId: projectTaskIdRaw ? parseInt(projectTaskIdRaw, 10) : null,

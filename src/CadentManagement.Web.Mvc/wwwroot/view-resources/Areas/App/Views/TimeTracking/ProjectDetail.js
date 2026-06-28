@@ -30,22 +30,7 @@
     });
 
     function toLocalDateTimeString(date) {
-        var value = date;
-
-        if (!(value instanceof Date) && typeof value === 'string') {
-            var schedulerParser = scheduler.date.str_to_date(scheduler.config.xml_date);
-            value = schedulerParser(value);
-        }
-
-        if (!(value instanceof Date) || isNaN(value.getTime())) {
-            value = new Date(date);
-        }
-
-        if (!(value instanceof Date) || isNaN(value.getTime())) {
-            return '';
-        }
-
-        return scheduler.date.date_to_str('%Y-%m-%dT%H:%i')(value);
+        return app.workspace.toLocalDateTimeString(date);
     }
 
     function openCreateTimeEntryModal(startDate, endDate) {
@@ -223,8 +208,8 @@
         });
 
         scheduler.attachEvent('onEmptyClick', function (date) {
-            var endDate = new Date(date.getTime() + 60 * 60 * 1000);
-            openCreateTimeEntryModal(date, endDate);
+            var times = app.workspace.defaultEntryTimes(date);
+            openCreateTimeEntryModal(times.start, times.end);
 
             return false;
         });
@@ -414,20 +399,16 @@
     }
 
     function escapeHtml(text) {
-        if (!text) {
-            return '';
-        }
-
-        return text.toString()
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
+        return app.workspace.escapeHtml(text);
     }
 
     $('#AddTimeEntryButton').click(function () {
-        _createOrEditTimeEntryModal.open({ projectId: projectId });
+        var times = app.workspace.defaultEntryTimes(new Date());
+        _createOrEditTimeEntryModal.open({
+            projectId: projectId,
+            startTime: toLocalDateTimeString(times.start),
+            endTime: toLocalDateTimeString(times.end)
+        });
     });
 
     $('#AddTaskButton').click(function () {
