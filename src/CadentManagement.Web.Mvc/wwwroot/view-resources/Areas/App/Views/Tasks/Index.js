@@ -15,7 +15,6 @@
         { value: 3, label: app.localize('UrgentPriority'), className: 'badge-priority-urgent' }
     ];
     var _sortableInstances = {};
-    var _searchDebounceHandle = null;
 
     function getPriorityLabel(priorityValue) {
         var priority = _priorities.find(function (p) { return p.value === priorityValue; });
@@ -204,16 +203,7 @@
     }
 
     function escapeHtml(text) {
-        if (text === undefined || text === null) {
-            return '';
-        }
-
-        return text.toString()
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
+        return app.workspace.escapeHtml(text);
     }
 
     $('#AddTaskButton').click(function () {
@@ -231,15 +221,9 @@
         loadTasks();
     });
 
-    $('#KanbanSearchFilter').on('input', function () {
-        if (_searchDebounceHandle) {
-            clearTimeout(_searchDebounceHandle);
-        }
-
-        _searchDebounceHandle = setTimeout(function () {
-            loadTasks();
-        }, 300);
-    });
+    $('#KanbanSearchFilter').on('input', app.workspace.debounce(function () {
+        loadTasks();
+    }, 300));
 
     $('#KanbanShowCompletedToggle').on('change', function () {
         loadTasks();

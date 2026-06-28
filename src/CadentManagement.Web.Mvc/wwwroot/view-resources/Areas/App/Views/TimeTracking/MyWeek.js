@@ -47,24 +47,15 @@
     }
 
     function toSchedulerDate(dt) {
-        return dt instanceof Date ? dt : new Date(dt);
+        return app.workspace.toSchedulerDate(dt);
     }
 
     function toLocalDateTimeString(date) {
-        return scheduler.date.date_to_str('%Y-%m-%dT%H:%i')(toSchedulerDate(date));
+        return app.workspace.toLocalDateTimeString(date);
     }
 
     function escapeHtml(text) {
-        if (!text) {
-            return '';
-        }
-
-        return String(text)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/\"/g, '&quot;')
-            .replace(/'/g, '&#039;');
+        return app.workspace.escapeHtml(text);
     }
 
     function openPrefilledTimeEntryModal(task) {
@@ -636,7 +627,7 @@
         var projectIdRaw = button.attr('data-project-id');
         var projectTaskIdRaw = button.attr('data-project-task-id');
 
-        convertCompletedTaskToTimeEntry({
+        openPrefilledTimeEntryModal({
             taskId: taskId,
             projectId: projectIdRaw ? parseInt(projectIdRaw, 10) : null,
             projectTaskId: projectTaskIdRaw ? parseInt(projectTaskIdRaw, 10) : null,

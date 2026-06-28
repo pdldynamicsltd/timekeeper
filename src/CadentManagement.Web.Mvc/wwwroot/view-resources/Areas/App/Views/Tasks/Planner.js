@@ -12,7 +12,6 @@
     var _sortableInstances = {};
     var _daysToShow = 14;
     var _weekOffset = 0;
-    var _searchDebounceHandle = null;
 
     function getStartOfDay(date) {
         var value = new Date(date);
@@ -225,15 +224,9 @@
             loadTasks();
         });
 
-        $('#PlannerSearchFilter').on('input', function () {
-            if (_searchDebounceHandle) {
-                clearTimeout(_searchDebounceHandle);
-            }
-
-            _searchDebounceHandle = setTimeout(function () {
-                loadTasks();
-            }, 300);
-        });
+        $('#PlannerSearchFilter').on('input', app.workspace.debounce(function () {
+            loadTasks();
+        }, 300));
 
         $('#PlannerShowCompletedToggle').on('change', function () {
             loadTasks();
@@ -288,16 +281,7 @@
     }
 
     function escapeHtml(text) {
-        if (text === undefined || text === null) {
-            return '';
-        }
-
-        return text.toString()
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
+        return app.workspace.escapeHtml(text);
     }
 
     attachToolbarHandlers();

@@ -6,8 +6,6 @@
         scriptUrl: abp.appPath + 'view-resources/Areas/App/Views/TimeTracking/_CreateOrEditProjectModal.js',
         modalClass: 'CreateOrEditProjectModal'
     });
-    var _filterDebounceTimer = null;
-
     function buildProjectRow(project) {
         var budgetPercent = project.budgetHours > 0
             ? Math.min(Math.round((project.usedHours / project.budgetHours) * 100), 100)
@@ -215,15 +213,9 @@
         getProjects();
     });
 
-    $('#ProjectFilterText').keyup(function () {
-        if (_filterDebounceTimer) {
-            clearTimeout(_filterDebounceTimer);
-        }
-
-        _filterDebounceTimer = setTimeout(function () {
-            getProjects();
-        }, 300);
-    });
+    $('#ProjectFilterText').keyup(app.workspace.debounce(function () {
+        getProjects();
+    }, 300));
 
     $('#ProjectsTableBody, #CompletedProjectsTableBody').on('click', '.edit-project-btn', function () {
         _createOrEditModal.open({ id: $(this).data('id') });
